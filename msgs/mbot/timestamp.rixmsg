@@ -1,0 +1,6 @@
+version: 1.0.0;
+package: mbot;
+
+Timestamp {
+    int64_t utime;
+}

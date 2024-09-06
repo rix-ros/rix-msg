@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: geometry;
+
+template: uint32_t N;
+TF {
+    geometry::TransformStamped transforms[N];
+}

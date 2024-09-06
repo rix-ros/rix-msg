@@ -1,0 +1,6 @@
+1.0.0;
+package: core;
+
+ID {
+    char id[32];
+}

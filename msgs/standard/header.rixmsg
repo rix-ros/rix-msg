@@ -1,0 +1,8 @@
+version: 1.0.0;
+package: standard;
+
+Header {
+    uint32_t seq;
+    standard::Time stamp;
+    char frameID[32];
+}

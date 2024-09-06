@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: geometry;
+
+Vector3Stamped {
+    standard::Header header;
+    geometry::Vector3 vector3;
+}

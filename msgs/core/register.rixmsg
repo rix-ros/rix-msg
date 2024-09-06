@@ -1,0 +1,9 @@
+1.0.0;
+package: core;
+
+Register {
+    standard::Header header;
+    char topic[32];
+    char msgType[32];
+    char id[32];
+}

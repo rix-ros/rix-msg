@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: geometry;
+
+Transform {
+    geometry::Vector3 translation;
+    geometry::Quaternion rotation;
+}

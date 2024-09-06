@@ -1,0 +1,9 @@
+1.0.0;
+package: core;
+
+Request {
+    standard::Header header;
+    char topic[32];
+    char protocol[16];
+    char id[32];
+}
