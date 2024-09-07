@@ -97,7 +97,7 @@ def generate_headers(dir, msgs):
                     file.write("\n")
 
                 file.write(f'namespace rix {{\n')
-                file.write(f'namespace msgs {{\n')
+                file.write(f'namespace msg {{\n')
                 file.write(f'namespace {package} {{\n\n')
                 file.write(f'#pragma pack(push, 1)\n')
 
@@ -186,7 +186,7 @@ def generate_headers(dir, msgs):
                 file.write(f'}};\n')
                 file.write('#pragma pack(pop)\n\n')
                 file.write(f"}} // namespace {package}\n")
-                file.write("} // namespace msgs\n")
+                file.write("} // namespace msg\n")
                 file.write("} // namespace rix\n")
 
 def main():
