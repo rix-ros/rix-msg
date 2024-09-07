@@ -36,18 +36,18 @@ if [ $func == "show" ]; then
     package=$(echo $arg1 | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
     msg=$(echo $arg1 | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
 
-    if [ ! -e /usr/local/include/rix/msgs/defs/$package/$msg.rixmsg ]; then
+    if [ ! -e /usr/local/include/rix/msg/defs/$package/$msg.rixmsg ]; then
         echo "Error: Package $package does not exist"
         exit 1
     fi
 
-    cat /usr/local/include/rix/msgs/defs/$package/$msg.rixmsg
+    cat /usr/local/include/rix/msg/defs/$package/$msg.rixmsg
     exit 0
 fi
 
 # List all packages
 if [ $func == "packages" ]; then
-    packages=$(ls /usr/local/include/rix/msgs/defs)
+    packages=$(ls /usr/local/include/rix/msg/defs)
     for package in $packages; do
         echo $package
     done
@@ -65,12 +65,12 @@ if [ $func == "package" ]; then
 
     package=$(echo $arg1 | tr '[:upper:]' '[:lower:]')
 
-    if [ ! -d /usr/local/include/rix/msgs/defs/$package ]; then
+    if [ ! -d /usr/local/include/rix/msg/defs/$package ]; then
         echo "Error: Package $package does not exist"
         exit 1
     fi
 
-    msgs=$(ls /usr/local/include/rix/msgs/defs/$package)
+    msgs=$(ls /usr/local/include/rix/msg/defs/$package)
     for msg in $msgs; do
         echo $msg | cut -d'.' -f1
     done

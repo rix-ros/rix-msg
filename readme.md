@@ -1,17 +1,29 @@
 # RIX-MSG
 
-The `rix-msg` library contains definitions for the base message types used in `rix`.
+The `rix-msg` library contains definitions for the base message types used in `rix` and the `rixmsg` executable.
 
 ## Install
 
 To install `rixmsg`, run the following command:
 
 ```bash
-sudo chmod +x install.sh
-./install.sh
+cd rix-msg
+mkdir build
+cd build
+cmake ..
+make install
 ```
 
-This will install `rixmsg` executable into `/usr/local/bin`. 
+The default installation will generate header files for the message definitions in `include/rix/msg/defs/`. If you do not want these files generated, toggle the `GEN_MSGS` flag off.
+```bash
+cd rix-msg
+mkdir build
+cd build
+cmake -DGEN_MSGS=OFF ..
+make install
+```
+
+This will install the `rixmsg` executable into `/usr/local/bin`. 
 
 ## Usage
 
@@ -23,17 +35,8 @@ This will install `rixmsg` executable into `/usr/local/bin`.
 * `rixmsg show <package>/<name>`: This will print the `.rixmsg` file of the specified message.
 * `rixmsg create <path>`: This will generate C++ header files from `.rixmsg` files and install them into `/usr/local/include/rix/msgs/<package>/<name>.hpp`. `<path>` should specify a path to a directory containing `.rixmsg` files.
 
-To build all of the base `rixmsg` types, run the following commands:
 
-```bash
-rixmsg create msgs/standard
-rixmsg create msgs/core
-rixmsg create msgs/geometry
-rixmsg create msgs/sensor
-rixmsg create msgs/mbot
-```
-
-After running these commands, `rixmsg packages` should output:
+After the default installation, `rixmsg packages` should output:
 ```txt
 core
 geometry
@@ -55,6 +58,19 @@ twist
 twiststamped
 vector3
 vector3stamped
+```
+
+RIX packages are designed to be easy to include in your existing CMake projects. For example:
+```cmake
+cmake_minimum_required(VERSION 3.5)
+
+project(msg_test)
+
+set(CMAKE_CXX_STANDARD 11)
+
+find_package(rix_msg REQUIRED)
+
+add_executable(test test.cpp)
 ```
 
 ## The `.rixmsg` Format

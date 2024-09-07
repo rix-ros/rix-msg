@@ -89,7 +89,7 @@ def generate_headers(dir, msgs):
                         other_package = fieldType.split("::")[0]
                         fieldType = fieldType.split("::")[1]
                         include = True
-                        file.write(f'#include "rix/msgs/{other_package}/{fieldType.lower()}.hpp"\n')
+                        file.write(f'#include "rix/msg/{other_package}/{fieldType.lower()}.hpp"\n')
                     elif fieldType not in types:
                             raise Exception(f"Unknown type {fieldType}")
 
@@ -192,7 +192,7 @@ def generate_headers(dir, msgs):
 def main():
     parser = argparse.ArgumentParser(description='Generate C++ header file from message definition')
     parser.add_argument('in_dir', type=str, help='Message definition file')
-    parser.add_argument('-o', '--out_dir', type=str, help='Output directory', default="/usr/local/include/rix/msgs/")
+    parser.add_argument('-o', '--out_dir', type=str, help='Output directory', default="/usr/local/include/rix/msg/")
     args = parser.parse_args()
 
     msgs = parse_message_definition(args.in_dir, args.out_dir)

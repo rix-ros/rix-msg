@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "rix/msgs/error.hpp"
-#include "rix/msgs/standard/header.hpp"
+#include "rix/msg/error.hpp"
+#include "rix/msg/standard/header.hpp"
 
 using namespace rix;
 
