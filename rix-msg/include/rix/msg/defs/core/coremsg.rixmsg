@@ -1,0 +1,13 @@
+version: 1.0.0;
+package: core;
+
+CoreMsg {
+    uint64_t msg[3][2];
+    uint64_t component;
+    uint64_t machineID;
+    uint16_t opcode;
+    uint8_t protocol;
+    uint8_t error;
+    char topic[32];
+    core::ID id[8];
+}

@@ -82,21 +82,17 @@ def generate_headers(dir, msgs):
                 file.write("#include <memory>\n")
                 file.write("#include <ostream>\n\n")
 
-                include = False
+                file.write("#include \"rix/msg/common.hpp\"\n")
                 for field in fields:
                     fieldType = field[0]
                     if "::" in fieldType:
                         other_package = fieldType.split("::")[0]
                         fieldType = fieldType.split("::")[1]
-                        include = True
                         file.write(f'#include "rix/msg/{other_package}/{fieldType.lower()}.hpp"\n')
                     elif fieldType not in types:
                             raise Exception(f"Unknown type {fieldType}")
 
-                if include:
-                    file.write("\n")
-
-                file.write(f'namespace rix {{\n')
+                file.write(f'\nnamespace rix {{\n')
                 file.write(f'namespace msg {{\n')
                 file.write(f'namespace {package} {{\n\n')
                 file.write(f'#pragma pack(push, 1)\n')
@@ -109,8 +105,7 @@ def generate_headers(dir, msgs):
                 if template:
                     for t in template:
                         file.write(f'    const {t[0]} {t[1].lower()};\n')
-                file.write(f'    const uint64_t _hash1;\n')
-                file.write(f'    const uint64_t _hash2;\n')
+                file.write(f'    const Hash _hash;\n')
                 file.write('public:\n')
 
                 for field in fields:
@@ -122,26 +117,29 @@ def generate_headers(dir, msgs):
                 if template:
                     for t in template:
                         file.write(f'{t[1].lower()}({t[1]}), ')
-                file.write(f'_hash1({message_name}::hash1()), _hash2({message_name}::hash2()){{}}\n\n')
+                file.write(f'_hash({message_name}::hash()) {{}}\n\n')
                 if template:
-                    file.write(f'    static uint32_t size() {{ return sizeof({message_name}<{", ".join(t[1] for t in template)}>); }}\n\n')
+                    file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}<{", ".join(t[1] for t in template)}>); }}\n\n')
                 else:
-                    file.write(f'    static uint32_t size() {{ return sizeof({message_name}); }}\n\n')
-                file.write(f'    static std::shared_ptr<{message_name}> decode(const std::shared_ptr<char> &msg){{\n')
-                file.write(f'        auto {message_name.lower()}Msg = std::reinterpret_pointer_cast<{message_name}>(msg);\n')
+                    file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}); }}\n\n')
+                file.write(f'    static const {message_name}* decode(const void *msg, size_t size) {{\n')
+                file.write(f'        if (size != {message_name}::size()) {{\n')
+                file.write(f'            return nullptr;\n')
+                file.write(f'        }}\n')
+                file.write(f'        const {message_name} *{message_name.lower()}Msg = static_cast<const {message_name}*>(msg);\n')
                 if template:
                     file.write("        if (")
                     for t in template:
                         file.write(f"{message_name.lower()}Msg->{t[1].lower()} != {t[1]} || ")
-                    file.write(f"{message_name.lower()}Msg->_hash1 != {message_name}::hash1() || {message_name.lower()}Msg->_hash2 != {message_name}::hash2()){{\n")
+                    file.write(f"{message_name.lower()}Msg->_hash != {message_name}::hash()) {{\n")
                 else:
-                    file.write(f'        if ({message_name.lower()}Msg->_hash1 != {message_name}::hash1() || {message_name.lower()}Msg->_hash2 != {message_name}::hash2()){{\n')
+                    file.write(f'        if ({message_name.lower()}Msg->_hash != {message_name}::hash()) {{\n')
                 file.write(f'            return nullptr;\n')
                 file.write(f'        }}\n')
                 file.write(f'        return {message_name.lower()}Msg;\n')
                 file.write(f'    }}\n\n')
-                file.write(f'    static std::shared_ptr<char> encode(const std::shared_ptr<{message_name}> &{message_name.lower()}Msg){{\n')
-                file.write(f'        return std::reinterpret_pointer_cast<char>({message_name.lower()}Msg);\n')
+                file.write(f'    static const void* encode(const {message_name} *msg) {{\n')
+                file.write(f'        return static_cast<const void*>(msg);\n')
                 file.write(f'    }}\n\n')
                 file.write(f'    static std::string def()\n')
                 file.write(f'    {{\n')
@@ -150,13 +148,10 @@ def generate_headers(dir, msgs):
                     file.write(f'    {field[0]} {field[1]}{field[2]}{field[3]};\\n')
                 file.write(f'    }}";\n')
                 file.write(f'    }}\n\n')
-                file.write(f'    static void hash(char data[16]){{\n')
-                file.write(f'        uint64_t hash1 = {message_name}::hash1();\n')
-                file.write(f'        uint64_t hash2 = {message_name}::hash2();\n')
-                file.write(f'        memcpy(data, &hash1, 8);\n')
-                file.write(f'        memcpy(data + 8, &hash2, 8);\n')
+                file.write(f'    static inline Hash hash() {{\n')
+                file.write(f'        return Hash({hashValue[0]}ULL, {hashValue[1]}ULL);\n')
                 file.write(f'    }}\n\n')
-                file.write(f'    friend std::ostream &operator<<(std::ostream &os, const {message_name} &{message_name.lower()}Msg){{\n')
+                file.write(f'    friend std::ostream &operator<<(std::ostream &os, const {message_name} &{message_name.lower()}Msg) {{\n')
                 file.write(f'        os << "{message_name} {{\\n";\n')
                 for field in fields:
                     # If the field is an array or an array of strings, we need to iterate over it
@@ -179,10 +174,7 @@ def generate_headers(dir, msgs):
                         file.write(f'        os << "{field[1]}: " << {message_name.lower()}Msg.{field[1]} << "\\n";\n')
                 file.write(f'        os << "}}";\n')
                 file.write(f'        return os;\n')
-                file.write(f'    }}\n\n')
-                file.write('private:\n')
-                file.write(f'    static uint64_t hash1() {{ return {hashValue[0]}ULL; }}\n')
-                file.write(f'    static uint64_t hash2() {{ return {hashValue[1]}ULL; }}\n')
+                file.write(f'    }}\n')
                 file.write(f'}};\n')
                 file.write('#pragma pack(pop)\n\n')
                 file.write(f"}} // namespace {package}\n")
