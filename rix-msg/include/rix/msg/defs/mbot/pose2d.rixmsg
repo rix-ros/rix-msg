@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: mbot;
-
-Pose2D {
-    int64_t utime;
-    float x;
-    float y;
-    float theta;
-}

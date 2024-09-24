@@ -40,7 +40,6 @@ After the default installation, `rixmsg packages` should output:
 ```txt
 core
 geometry
-mbot
 sensor
 standard
 ```

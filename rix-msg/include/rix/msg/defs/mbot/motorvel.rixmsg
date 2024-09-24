@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: mbot;
-
-MotorVel {
-    int64_t utime;
-    float velocity[3];
-}
