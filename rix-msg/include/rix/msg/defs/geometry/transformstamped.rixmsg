@@ -3,6 +3,6 @@ package: geometry;
 
 TransformStamped {
     standard::Header header;
-    char childFrameID[32];
+    char child_frame_id[32];
     geometry::Transform transform;
 }

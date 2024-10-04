@@ -4,5 +4,5 @@ package: standard;
 Header {
     uint32_t seq;
     standard::Time stamp;
-    char frameID[32];
+    char frame_id[32];
 }

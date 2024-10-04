@@ -95,33 +95,68 @@ def generate_headers(dir, msgs):
                 file.write(f'\nnamespace rix {{\n')
                 file.write(f'namespace msg {{\n')
                 file.write(f'namespace {package} {{\n\n')
-                file.write(f'#pragma pack(push, 1)\n')
 
                 if template:
                     file.write("template <" + ', '.join([f'{t[0]} {t[1]}' for t in template]) + '>\n')
 
                 file.write(f'class {message_name} {{\n')
                 file.write(f'private:\n')
+
+                # Template parameters
                 if template:
                     for t in template:
                         file.write(f'    const {t[0]} {t[1].lower()};\n')
+
+                # Hash
                 file.write(f'    const Hash _hash;\n')
                 file.write('public:\n')
 
+                # Fields
                 for field in fields:
                     if field[2]:
                         file.write(f'    {field[0]} {field[1]}{field[2]}{field[3]};\n')
                     else:
                         file.write(f'    {field[0]} {field[1]};\n')
+                
+                # Constructor
                 file.write(f'\n    {message_name}() : ')
                 if template:
                     for t in template:
                         file.write(f'{t[1].lower()}({t[1]}), ')
                 file.write(f'_hash({message_name}::hash()) {{}}\n\n')
+
+                # Assignment Operator
+                file.write(f'    {message_name}& operator=(const {message_name}& other) {{\n')
+                file.write(f'        if (this != &other) {{\n')
+                for field in fields:
+                    if field[2]:
+                        file.write(f'            std::memcpy({field[1]}, other.{field[1]}, sizeof({field[1]}));\n')
+                    else:
+                        file.write(f'            {field[1]} = other.{field[1]};\n')
+                file.write(f'        }}\n')
+                file.write(f'        return *this;\n')
+                file.write(f'    }}\n\n')
+
+                # Copy Constructor
+                file.write(f'    {message_name}(const {message_name}& other) : ')
+                file.write(f'_hash({message_name}::hash()) {{\n')
+                for field in fields:
+                    if field[2]:
+                        file.write(f'        std::memcpy({field[1]}, other.{field[1]}, sizeof({field[1]}));\n')
+                    else:
+                        file.write(f'        {field[1]} = other.{field[1]};\n')
+                file.write(f'    }}\n\n')
+
+                # Destructor (default)
+                file.write(f'    ~{message_name}() = default;\n\n')
+
+                # Size
                 if template:
                     file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}<{", ".join(t[1] for t in template)}>); }}\n\n')
                 else:
                     file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}); }}\n\n')
+
+                # Decode
                 file.write(f'    static const {message_name}* decode(const void *msg, size_t size) {{\n')
                 file.write(f'        if (size != {message_name}::size()) {{\n')
                 file.write(f'            return nullptr;\n')
@@ -138,9 +173,13 @@ def generate_headers(dir, msgs):
                 file.write(f'        }}\n')
                 file.write(f'        return {message_name.lower()}Msg;\n')
                 file.write(f'    }}\n\n')
+
+                # Encode
                 file.write(f'    static const void* encode(const {message_name} *msg) {{\n')
                 file.write(f'        return static_cast<const void*>(msg);\n')
                 file.write(f'    }}\n\n')
+
+                # Def
                 file.write(f'    static std::string def()\n')
                 file.write(f'    {{\n')
                 file.write(f'        return "{message_name} {{\\n')
@@ -148,9 +187,13 @@ def generate_headers(dir, msgs):
                     file.write(f'    {field[0]} {field[1]}{field[2]}{field[3]};\\n')
                 file.write(f'    }}";\n')
                 file.write(f'    }}\n\n')
+
+                # Hash
                 file.write(f'    static inline Hash hash() {{\n')
                 file.write(f'        return Hash({hashValue[0]}ULL, {hashValue[1]}ULL);\n')
                 file.write(f'    }}\n\n')
+
+                # Operator<<
                 file.write(f'    friend std::ostream &operator<<(std::ostream &os, const {message_name} &{message_name.lower()}Msg) {{\n')
                 file.write(f'        os << "{message_name} {{\\n";\n')
                 for field in fields:
@@ -175,12 +218,11 @@ def generate_headers(dir, msgs):
                 file.write(f'        os << "}}";\n')
                 file.write(f'        return os;\n')
                 file.write(f'    }}\n')
-                file.write(f'}};\n')
-                file.write('#pragma pack(pop)\n\n')
+                file.write(f'}};\n\n')
                 file.write(f"}} // namespace {package}\n")
                 file.write("} // namespace msg\n")
                 file.write("} // namespace rix\n")
-
+            
 def main():
     parser = argparse.ArgumentParser(description='Generate C++ header file from message definition')
     parser.add_argument('in_dir', type=str, help='Message definition file')
