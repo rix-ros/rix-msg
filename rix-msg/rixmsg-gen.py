@@ -7,6 +7,7 @@ import hashlib
 
 types = {"char", "int8_t", "int16_t", "int32_t", "int64_t", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "float", "double", "bool" }
 sizes = {"char": 1, "int8_t": 1, "int16_t": 2, "int32_t": 4, "int64_t": 8, "uint8_t": 1, "uint16_t": 2, "uint32_t": 4, "uint64_t": 8, "float": 4, "double": 8, "bool": 1 }
+format_chars = {"char": "c", "int8_t": "b", "int16_t": "h", "int32_t": "i", "int64_t": "q", "uint8_t": "B", "uint16_t": "H", "uint32_t": "I", "uint64_t": "Q", "float": "f", "double": "d", "bool": "?" }
 
 def parse_message_definition(in_dir, out_dir):
     if in_dir[-1] != '/':
@@ -83,12 +84,17 @@ def generate_headers(dir, msgs):
                 file.write("#include <ostream>\n\n")
 
                 file.write("#include \"rix/msg/common.hpp\"\n")
+
+                include_set = set()
                 for field in fields:
                     fieldType = field[0]
                     if "::" in fieldType:
                         other_package = fieldType.split("::")[0]
                         fieldType = fieldType.split("::")[1]
-                        file.write(f'#include "rix/msg/{other_package}/{fieldType.lower()}.hpp"\n')
+                        include_file = f'{other_package}/{fieldType.lower()}'
+                        if include_file not in include_set:
+                            include_set.add(include_file)
+                            file.write(f'#include "rix/msg/{include_file}.hpp"\n')
                     elif fieldType not in types:
                             raise Exception(f"Unknown type {fieldType}")
 
@@ -102,13 +108,14 @@ def generate_headers(dir, msgs):
                 file.write(f'class {message_name} {{\n')
                 file.write(f'private:\n')
 
+                # Hash
+                file.write(f'    const Hash _hash;\n')
+
                 # Template parameters
                 if template:
                     for t in template:
                         file.write(f'    const {t[0]} {t[1].lower()};\n')
 
-                # Hash
-                file.write(f'    const Hash _hash;\n')
                 file.write('public:\n')
 
                 # Fields
@@ -222,15 +229,161 @@ def generate_headers(dir, msgs):
                 file.write(f"}} // namespace {package}\n")
                 file.write("} // namespace msg\n")
                 file.write("} // namespace rix\n")
-            
+
+def generate_js(dir, msgs):
+    if dir[-1] != '/':
+        dir += '/'
+
+    for package in msgs:
+        newDir = dir + package + '/'
+        os.makedirs(newDir, exist_ok=True)
+
+        for msg in msgs[package]:
+            message_name = msg[0]
+            fields = msg[1]
+            template = msg[2]
+            hashValue = msg[3]
+
+            filename = newDir + message_name.lower() + '.js'
+            with open(filename, 'w') as file:
+                file.write(f'import {{Structure}} from \'rix-js\';\n')
+
+                include_set = set()
+                for field in fields:
+                    fieldType = field[0]
+                    if "::" in fieldType:
+                        fieldType = fieldType.split("::")[1]
+                        include_file = fieldType.lower()
+                        if include_file not in include_set:
+                            include_set.add(include_file)
+                            file.write(f'import {fieldType} from \'./{include_file}\';\n')
+                    elif fieldType not in types:
+                            raise Exception(f"Unknown type {fieldType}")
+                
+                file.write(f'\nexport class {message_name} extends Structure {{\n')
+
+                # fields
+                file.write(f'    static fields(')
+                if template:
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f') {{\n')
+                file.write(f'        return [\n')
+                file.write(f'            {{name: "hash1", format: "Q"}},\n')
+                file.write(f'            {{name: "hash2", format: "Q"}},\n')
+                for t in template:
+                    file.write(f'            {{name: "{t[1].lower()}", format: "{format_chars[t[0]]}"}},\n')
+                for field in fields:
+                    is_array = field[2] or field[3]
+                    is_double_array = field[3]
+                    is_nested = "::" in field[0]
+                    if is_array:
+                        size1 = field[2][1:-1]
+                        try:
+                            size1 = int(size1)
+                        except ValueError:
+                            size1 = size1.lower()
+
+                        size2 = field[3][1:-1] if is_double_array else 1
+                        try:
+                            size2 = int(size2)
+                        except ValueError:
+                            size2 = size2.lower()
+                        
+                        if is_nested:
+                            typeName = field[0].split("::")[1]
+                            file.write(f'            {{name: "{field[1]}", format: Array({size1} * {size2}).fill().map(() => new {typeName}())}},\n')
+                        else:
+                            typeName = field[0]
+                            file.write(f'            {{name: "{field[1]}", format: `${{ {size1} * {size2} }}{format_chars[field[0]]}`}},\n')
+
+                    elif is_nested:
+                        typeName = field[0].split("::")[1]
+                        file.write(f'            {{name: "{field[1]}", format: new {typeName}()}},\n')
+                    else:
+                        file.write(f'            {{name: "{field[1]}", format: "{format_chars[field[0]]}"}},\n')
+                file.write(f'        ];\n\n')
+                file.write(f'    }}\n\n')
+
+                # hash
+                file.write(f'    static hash() {{\n')
+                file.write(f'        return [{hashValue[0]}n, {hashValue[1]}n];\n')
+                file.write(f'    }}\n\n')
+
+                # size
+                file.write(f'    static size(')
+                if template:
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f') {{\n')
+                file.write(f'        return Structure.sizeof({message_name}.fields(')
+                if template:
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f'));\n')
+                file.write(f'    }}\n\n')
+
+                # decode
+                file.write(f'    static decode(msg')
+                if template:
+                    file.write(', ')
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f') {{\n')
+                file.write(f'        if (msg.byteLength !== {message_name}.size(')
+                if template:
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f')) {{\n')
+                file.write(f'            return null;\n')
+                file.write(f'        }}\n\n')
+                file.write(f'        let hash = Structure.decode_hash(msg);\n')
+                file.write(f'        let _hash = {message_name}.hash();\n')
+                file.write(f'        if (hash[0] !== _hash[0] || hash[1] !== _hash[1]) {{\n')
+                file.write(f'            return null;\n')
+                file.write(f'        }}\n')
+                file.write(f'        return new {message_name}(msg')
+                if template:
+                    file.write(', ')
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f');\n')
+                file.write(f'    }}\n\n')
+
+                # constructor
+                file.write(f'    constructor(msg')
+                if template:
+                    file.write(', ')
+                    file.write(', '.join([f'{t[1].lower()}' for t in template]))
+                file.write(f') {{\n')
+                file.write(f'        super({message_name}.fields')
+                if template:
+                    file.write(f'({", ".join([f'{t[1].lower()}' for t in template])})')
+                file.write(f', msg);\n')
+                file.write(f'        this.hash1 = {message_name}.hash()[0];\n')
+                file.write(f'        this.hash2 = {message_name}.hash()[1];\n')
+                file.write(f'    }}\n\n')
+
+                # encode
+                file.write(f'    encode() {{\n')
+                file.write(f'        return this.buffer;\n')
+                file.write(f'    }}\n\n')
+
+                # toString
+                file.write(f'    toString() {{\n')
+                file.write(f'        return JSON.stringify(this);\n')
+                file.write(f'    }}\n\n')
+                file.write(f'}}\n')
+
 def main():
     parser = argparse.ArgumentParser(description='Generate C++ header file from message definition')
     parser.add_argument('in_dir', type=str, help='Message definition file')
     parser.add_argument('-o', '--out_dir', type=str, help='Output directory', default="/usr/local/include/rix/msg/")
+    parser.add_argument('--no_js', type=str, help='Flag to block generation of js wrappers', default="false")
     args = parser.parse_args()
 
     msgs = parse_message_definition(args.in_dir, args.out_dir)
     generate_headers(args.out_dir, msgs)
+
+    if args.no_js == "true":
+        return
+    
+    root = os.getenv("HOME")
+    generate_js(root + "/.rix/js/", msgs)
 
 
 if __name__ == '__main__':

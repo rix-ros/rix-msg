@@ -17,7 +17,7 @@ int main() {
     header.seq = 1234;
     header.stamp.sec = 5678;
     header.stamp.nsec = 9012;
-    std::strcpy(header.frameID, "Hello, World!");
+    std::strcpy(header.frame_id, "Hello, World!");
 
     std::cout << "\nHeader:\n" << header << std::endl;
 
