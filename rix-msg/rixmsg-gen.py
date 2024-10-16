@@ -80,6 +80,7 @@ def generate_headers(dir, msgs):
                 file.write(f'#pragma once\n\n')
                 file.write("#include \"sys/types.h\"\n\n")
                 file.write("#include <string>\n")
+                file.write("#include <cstring>\n")
                 file.write("#include <memory>\n")
                 file.write("#include <ostream>\n\n")
 
