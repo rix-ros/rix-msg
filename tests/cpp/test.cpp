@@ -3,29 +3,28 @@
 #include "rix/msg/common.hpp"
 #include "rix/msg/standard/header.hpp"
 
-using namespace rix;
+using Header = rix::msg::standard::Header;
 
-using msg::standard::Header;
+void print_header(const Header &header) {
+    std::cout << "Header:\n";
+    std::cout << "seq: " << header.seq << std::endl;
+    std::cout << "stamp.sec: " << header.stamp.sec << std::endl;
+    std::cout << "stamp.nsec: " << header.stamp.nsec << std::endl;
+    std::cout << "frame_id: " << header.frame_id << std::endl;
+}
 
 int main() {
     ASSERT_RIXMSG_TYPE(Header);
-
-    std::cout << "Header size: " << msg::standard::Header::size() << std::endl;
-    std::cout << "\nHeader def:\n" << msg::standard::Header::def() << std::endl;
 
     Header header;
     header.seq = 1234;
     header.stamp.sec = 5678;
     header.stamp.nsec = 9012;
-    std::strcpy(header.frame_id, "Hello, World!");
+    std::strcpy(header.frame_id, "Hello, world!");
 
-    std::cout << "\nHeader:\n" << header << std::endl;
+    print_header(header);
 
-    const void *encodedHeader = msg::standard::Header::encode(&header);
-    const Header *decodedHeader = msg::standard::Header::decode(encodedHeader, msg::standard::Header::size());
+    const Header *decodedHeader = Header::decode(header.encode(), Header::size());
 
-    std::cout << "\nDecoded Header:\n" << *decodedHeader << std::endl;
-
-    std::cout << "\nHeader addr: " << &header << std::endl;
-    std::cout << "Decoded Header addr: " << decodedHeader << std::endl;
+    print_header(*decodedHeader);
 }

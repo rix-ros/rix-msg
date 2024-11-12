@@ -28,7 +28,8 @@ install(CODE "
     execute_process(COMMAND rm -f /usr/local/bin/rixmsg)
     execute_process(COMMAND ln -sf /usr/local/lib/rixmsg_lib/rixmsg /usr/local/bin/rixmsg)
     execute_process(COMMAND mkdir -p $ENV{HOME}/.rix/node_modules/rix-msg)
-    execute_process(COMMAND mkdir -p $ENV{HOME}/.rix/python/rixmsg)"
+    execute_process(COMMAND mkdir -p $ENV{HOME}/.rix/python/rixmsg)
+    execute_process(COMMAND chown -R $ENV{USER} $ENV{HOME}/.rix/)"
 )
 
 option(GEN_MSGS "Generate message headers" ON)

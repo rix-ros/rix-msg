@@ -111,6 +111,10 @@ cd tests/js/
 npm install
 node test.js
 ```
+Note: When running the Python or JavaScript examples, there may be an error with the permissions to edit the `~/.rix/` directory. To fix this, run:
+```bash
+sudo chown -R [USER] ~/.rix/
+```
 
 ## The `.rixmsg` Format
 

@@ -45,7 +45,6 @@ def generate_cpp(dir, msgs):
                     file.write("template <" + ', '.join([f'{t[0]} {t[1]}' for t in template]) + '>\n')
 
                 file.write(f'struct {message_name} {{\n')
-                file.write(f'private:\n')
 
                 # Fields
                 for field in fields:
