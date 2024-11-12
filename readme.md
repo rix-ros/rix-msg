@@ -56,21 +56,21 @@ geometry
 
 Additionally `rixmsg package geometry` should output:
 ```txt
-vector3_stamped
-particle
-tf
-vector3
-twist
-point_stamped
-twist_stamped
-pose2d
-particles
-quaternion
-transform
-transform_stamped
+Particle
+TF
+Vector3
+Vector3Stamped
+PointStamped
+Twist
+TwistStamped
+QuaternionStamped
+Pose2D
+Particles
+Quaternion
+Transform
 point
-twist2d
-quaternion_stamped
+Twist2D
+TransformStamped
 ```
 
 RIX packages are designed to be easy to include in your existing CMake projects. For example:
