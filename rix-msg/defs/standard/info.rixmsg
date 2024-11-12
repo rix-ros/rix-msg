@@ -1,0 +1,9 @@
+version: 1.0.0;
+package: standard;
+
+Info {
+    standard::ComponentInfo component_info;
+    standard::ID contact_id;
+    uint8_t opcode;
+    uint8_t error;
+}
