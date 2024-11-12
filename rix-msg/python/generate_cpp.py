@@ -55,29 +55,29 @@ def generate_cpp(dir, msgs):
                         file.write(f'    {field[0]} {field[1]};\n')
                 
                 # Constructor
-                file.write(f'\n    {message_name}() = default;\n')
+                # file.write(f'\n    {message_name}() = default;\n')
 
                 # Assignment Operator
-                file.write(f'    {message_name}& operator=(const {message_name}& other) {{\n')
-                file.write(f'        if (this != &other) {{\n')
-                file.write(f'            std::memcpy(this, &other, sizeof({message_name}));\n')
-                file.write(f'        }}\n')
-                file.write(f'        return *this;\n')
-                file.write(f'    }}\n\n')
+                # file.write(f'    {message_name}& operator=(const {message_name}& other) {{\n')
+                # file.write(f'        if (this != &other) {{\n')
+                # file.write(f'            std::memcpy(this, &other, sizeof({message_name}));\n')
+                # file.write(f'        }}\n')
+                # file.write(f'        return *this;\n')
+                # file.write(f'    }}\n\n')
 
                 # Copy Constructor
-                file.write(f'    {message_name}(const {message_name}& other) {{\n')
-                file.write(f'        std::memcpy(this, &other, sizeof({message_name}));\n')
-                file.write(f'    }}\n\n')
+                # file.write(f'    {message_name}(const {message_name}& other) {{\n')
+                # file.write(f'        std::memcpy(this, &other, sizeof({message_name}));\n')
+                # file.write(f'    }}\n\n')
 
                 # Destructor (default)
-                file.write(f'    ~{message_name}() = default;\n\n')
+                # file.write(f'    ~{message_name}() = default;\n\n')
 
                 # Size
                 if template:
-                    file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}<{", ".join(t[1] for t in template)}>); }}\n\n')
+                    file.write(f'\n    static inline uint32_t size() {{ return sizeof({message_name}<{", ".join(t[1] for t in template)}>); }}\n\n')
                 else:
-                    file.write(f'    static inline uint32_t size() {{ return sizeof({message_name}); }}\n\n')
+                    file.write(f'\n    static inline uint32_t size() {{ return sizeof({message_name}); }}\n\n')
 
                 # Decode
                 file.write(f'    static const {message_name}* decode(const uint8_t *msg, size_t size) {{\n')
@@ -95,7 +95,7 @@ def generate_cpp(dir, msgs):
                 # Hash
                 file.write(f'    static inline Hash hash() {{\n')
                 file.write(f'        return Hash({hashValue[0]}ULL, {hashValue[1]}ULL);\n')
-                file.write(f'    }}\n\n')
+                file.write(f'    }}\n')
 
                 file.write(f'}};\n')
                 file.write(f'#pragma pack(pop)\n\n')
