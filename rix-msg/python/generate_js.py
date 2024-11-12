@@ -34,14 +34,14 @@ def generate_js(dir, msgs):
                 template = msg[2]
                 if template:
                     message_name += 'Template'
-                file.write(f'export {{ {message_name} }} from \'./{msg[4]}.js\';\n')
+                file.write(f'export {{ {message_name} }} from \'./{message_name}.js\';\n')
 
         for msg in msgs[package]:
             message_name = msg[0]
             fields = msg[1]
             template = msg[2]
             hashValue = msg[3]
-            filename = newDir + msg[4] + '.js'
+            filename = newDir + message_name + '.js'
 
             with open(filename, 'w') as file:
                 file.write(f'import {{ Structure }} from \'rix-structjs\';\n')
@@ -51,7 +51,7 @@ def generate_js(dir, msgs):
                     fieldType = field[0]
                     if "::" in fieldType:
                         other_package, field_type = fieldType.split("::")
-                        include_file = field_type.lower()
+                        include_file = field_type
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'import {{ {field_type} }} from \'../{other_package}/{include_file}.js\';\n')
@@ -116,7 +116,7 @@ def generate_js(dir, msgs):
 
                 # size
                 file.write(f'    {spacing}static size() {{\n')
-                file.write(f'        {spacing}return Structure.sizeof({message_name}.fields);\n')
+                file.write(f'        {spacing}return Structure.sizeof({message_name}.fields, true);\n')
                 file.write(f'    {spacing}}}\n\n')
 
                 # decode

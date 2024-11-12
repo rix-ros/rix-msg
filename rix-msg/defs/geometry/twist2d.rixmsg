@@ -1,7 +1,7 @@
 version: 1.0.0;
 package: geometry;
 
-Pose2D {
+Twist2D {
     int64_t utime;
     float vx;
     float vy;

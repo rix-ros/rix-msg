@@ -14,7 +14,7 @@ def generate_cpp(dir, msgs):
             fields = msg[1]
             template = msg[2]
             hashValue = msg[3]
-            filename = newDir + msg[4] + '.hpp'
+            filename = newDir + message_name + '.hpp'
 
             with open(filename, 'w') as file:
                 file.write(f'#pragma once\n\n')
@@ -30,7 +30,7 @@ def generate_cpp(dir, msgs):
                     if "::" in fieldType:
                         other_package = fieldType.split("::")[0]
                         fieldType = fieldType.split("::")[1]
-                        include_file = f'{other_package}/{fieldType.lower()}'
+                        include_file = f'{other_package}/{fieldType}'
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'#include "rix/msg/{include_file}.hpp"\n')
@@ -40,6 +40,7 @@ def generate_cpp(dir, msgs):
                 file.write(f'\nnamespace rix {{\n')
                 file.write(f'namespace msg {{\n')
                 file.write(f'namespace {package} {{\n\n')
+                file.write(f'#pragma pack(push, 1)\n')
 
                 if template:
                     file.write("template <" + ', '.join([f'{t[0]} {t[1]}' for t in template]) + '>\n')
@@ -96,7 +97,8 @@ def generate_cpp(dir, msgs):
                 file.write(f'        return Hash({hashValue[0]}ULL, {hashValue[1]}ULL);\n')
                 file.write(f'    }}\n\n')
 
-                file.write(f'}};\n\n')
+                file.write(f'}};\n')
+                file.write(f'#pragma pack(pop)\n\n')
                 file.write(f'}} // namespace {package}\n')
                 file.write("} // namespace msg\n")
                 file.write("} // namespace rix\n")

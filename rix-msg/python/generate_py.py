@@ -23,7 +23,7 @@ def generate_py(dir, msgs):
             fields = msg[1]
             template = msg[2]
             hashValue = msg[3]
-            filename = newDir + msg[4] + '.py'
+            filename = newDir + message_name + '.py'
 
             with open(filename, 'w') as file:
                 file.write(f'import ctypes\n')
@@ -33,7 +33,7 @@ def generate_py(dir, msgs):
                     fieldType = field[0]
                     if "::" in fieldType:
                         other_package, field_type = fieldType.split("::")
-                        include_file = field_type.lower()
+                        include_file = field_type
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'from rixmsg.{other_package}.{include_file} import {field_type}\n')

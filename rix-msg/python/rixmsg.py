@@ -47,13 +47,12 @@ def parse_message_definition(in_dir):
                 template.append((key, value))
         
         message_match = re.findall(r'(\w+)\s*{\s*([^}]+)\s*}', content)
-        filename = filename[:-7]
         for match in message_match:
             message_name = match[0]
             fields = re.findall(r'((?:\w+::)?\w+)\s+(\w+)(\[[^\]]+\])?(\[[^\]]+\])?;', match[1])
 
             if package and message_name and fields:
-                msgs[package].append((message_name, fields, template, hashValue, filename))
+                msgs[package].append((message_name, fields, template, hashValue))
 
     return msgs
 
