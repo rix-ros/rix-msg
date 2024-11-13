@@ -39,7 +39,7 @@ mkdir -p "$HOME/.rix/node_modules/rix-msg"
 mkdir -p "$HOME/.rix/python/rixmsg"
 
 # Copy include to rix-msg directory
-cp -r rix-msg/include /usr/local/include/rix/msg/
+sudo cp -r rix-msg/include/* /usr/local/include/rix/msg/
 
 # Run CMake for rix-msg
 mkdir -p rix-msg/build
@@ -57,5 +57,23 @@ sudo -E rixmsg create rix-msg/defs/geometry
 sudo -E rixmsg create rix-msg/defs/navigation
 
 echo "Default rix message implementation files created successfully"
+
+echo "Installing Node.JS packages"
+cd rix-structjs
+npm install
+echo "Linking rix-structjs"
+npm link
+cd ..
+
+# Store the current directory
+DIR=$(pwd)
+
+cd "$HOME/.rix/node_modules/rix-msg/"
+echo "Linking rix-structjs to rix-msg"
+npm link rix-structjs
+npm install
+
+# Return to the original directory
+cd $DIR
 
 exit 0

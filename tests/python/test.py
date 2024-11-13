@@ -1,4 +1,4 @@
-from rixmsg.standard.header import Header
+from rixmsg.standard.Header import Header
 
 def print_header(msg: Header):
     print(f"seq: {msg.seq}")

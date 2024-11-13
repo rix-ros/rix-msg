@@ -1,4 +1,4 @@
-import { Header } from 'rix-msg/standard/header.js';
+import { Header } from 'rix-msg/standard/Header.js';
 
 function print_header(msg) {
     console.log('seq:', msg.seq);

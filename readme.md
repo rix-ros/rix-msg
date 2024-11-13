@@ -108,6 +108,7 @@ python3 test.py
 JavaScript
 ```bash
 cd tests/js/
+npm link ~/.rix/node_modules/rix-msg/
 npm install
 node test.js
 ```
