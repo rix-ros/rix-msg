@@ -1,0 +1,6 @@
+version: 1.0.0;
+package: standard;
+
+Int32 {
+    int32_t data;
+}

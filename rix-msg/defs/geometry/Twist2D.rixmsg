@@ -1,0 +1,9 @@
+version: 1.0.0;
+package: geometry;
+
+Twist2D {
+    int64_t utime;
+    float vx;
+    float vy;
+    float wz;
+}

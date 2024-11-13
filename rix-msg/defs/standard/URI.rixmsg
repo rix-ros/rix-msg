@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: standard;
+
+URI {
+    uint16_t port;
+    char address[16];
+}

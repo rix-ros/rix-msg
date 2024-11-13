@@ -1,0 +1,6 @@
+version: 1.0.0;
+package: standard;
+
+UInt16 {
+    uint16_t data;
+}

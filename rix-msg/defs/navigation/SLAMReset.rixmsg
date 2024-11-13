@@ -1,0 +1,9 @@
+version: 1.0.0;
+package: navigation;
+
+SLAMReset {
+    int64_t    utime;
+    int32_t    slam_mode;
+    char       slam_map_location[64];
+    int8_t     retain_pose;
+}

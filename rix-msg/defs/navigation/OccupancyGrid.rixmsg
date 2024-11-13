@@ -1,0 +1,14 @@
+version: 1.0.0;
+package: navigation;
+
+template: uint32_t W, uint32_t H;
+OccupancyGrid {
+    int64_t    utime;
+    float      origin_x;
+    float      origin_y;
+    float      meters_per_cell;
+    int32_t    width;
+    int32_t    height;
+    int32_t    num_cells;
+    uint8_t    cells[W * H];
+}
