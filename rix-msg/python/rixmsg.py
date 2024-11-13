@@ -75,8 +75,6 @@ def help():
 
 def show(rixmsg):
     package, msg = rixmsg.split('/')
-    package = package.lower()
-    msg = msg.lower()
 
     filepath = f'{ROOT}/.rix/rix-msg/defs/{package}/{msg}.rixmsg'
     if not os.path.exists(filepath):
