@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-Timestamp {
-    int64_t utime;
-}

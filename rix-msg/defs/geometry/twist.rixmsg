@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-Twist {
-    geometry::Vector3 linear;
-    geometry::Vector3 angular;
-}

@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: navigation;
-
-SLAMStatus {
-    int64_t utime;
-    int32_t slam_mode;
-    char map_path[32];
-}

@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: sensor;
-
-MotorPWM {
-    int64_t utime;
-    float pwm[3];
-}

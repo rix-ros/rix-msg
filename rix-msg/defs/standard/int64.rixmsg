@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-Int64 {
-    int64_t data;
-}

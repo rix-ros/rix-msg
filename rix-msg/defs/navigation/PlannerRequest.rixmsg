@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: navigation;
-
-PlannerRequest {
-    int64_t utime;
-    geometry::Pose2D goal;
-    uint8_t require_plan;
-}

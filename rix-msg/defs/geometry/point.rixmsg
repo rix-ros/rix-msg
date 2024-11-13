@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-Point {
-    float x;
-    float y;
-    float z;
-}

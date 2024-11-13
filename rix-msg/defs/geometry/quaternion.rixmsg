@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-Quaternion {
-    float w;
-    float x;
-    float y;
-    float z;
-}

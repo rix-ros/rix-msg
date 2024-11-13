@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-QuaternionStamped {
-    standard::Header header;
-    geometry::Quaternion quaternion;
-}

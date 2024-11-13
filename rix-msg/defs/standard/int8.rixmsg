@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-Int8 {
-    int8_t data;
-}

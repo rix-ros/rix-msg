@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: sensor;
-
-MotorVelocity {
-    int64_t utime;
-    float velocity[3];
-}
