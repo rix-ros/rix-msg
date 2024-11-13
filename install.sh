@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install the required packages
-pip install pyinstaller
+# pip install pyinstaller
 
 # Create the executable
 pyinstaller -p=rix-msg/python/ --onedir --strip --noupx -y rix-msg/python/rixmsg.py
@@ -23,7 +23,7 @@ if [ ! -f "$HOME/.rix/rix-msg/rixmsg/rixmsg" ]; then
 fi
 
 # Create the symbolic link
-ln -sf "$HOME/.rix/rix-msg/rixmsg/rixmsg" /usr/local/bin/rixmsg
+sudo ln -sf "$HOME/.rix/rix-msg/rixmsg/rixmsg" /usr/local/bin/rixmsg
 
 # Verify the symbolic link
 if [ ! -L "/usr/local/bin/rixmsg" ]; then
@@ -45,16 +45,16 @@ cp -r rix-msg/include /usr/local/include/rix/msg/
 mkdir -p rix-msg/build
 cd rix-msg/build
 cmake ..
-make install
+sudo make install
 cd ../..
 
 echo "Installation completed successfully"
 echo "Creating default rix message implementation files"
 
-rixmsg create rix-msg/defs/standard
-rixmsg create rix-msg/defs/sensor
-rixmsg create rix-msg/defs/geometry
-rixmsg create rix-msg/defs/navigation
+sudo -E rixmsg create rix-msg/defs/standard
+sudo -E rixmsg create rix-msg/defs/sensor
+sudo -E rixmsg create rix-msg/defs/geometry
+sudo -E rixmsg create rix-msg/defs/navigation
 
 echo "Default rix message implementation files created successfully"
 
