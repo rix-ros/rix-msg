@@ -29,8 +29,8 @@ cd rix-structjs
 npm install
 npm link
 cd ~/.rix/node_modules/rix-msg/
-npm install
 npm link rix-structjs
+npm install
 ```
 
 This will install the `rixmsg` executable into `/usr/local/bin`. 

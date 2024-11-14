@@ -63,7 +63,7 @@ export class Structure {
      * @param {boolean} packed - Whether the structure is packed or not. Default is false.
      * @param {*} buffer - An ArrayBuffer to use as the underlying data buffer. Default is null.
      */
-    constructor(fields, packed=false, buffer=null) {
+    constructor(fields, packed=false, buffer=null) {    
         // Set the fields
         this.#fields = fields;
 
@@ -80,9 +80,9 @@ export class Structure {
             }
             this.buffer = buffer;
         } else {
-            this.buffer = new ArrayBuffer(this.#size);
+            this.buffer = new Uint8Array(this.#size);
         }
-        this.#view = new DataView(this.buffer);
+        this.#view = new DataView(this.buffer.buffer, this.buffer.byteOffset, this.buffer.byteLength);
         
         // Define the fields as properties of this object
         this.#fields.forEach((field, index) => {
@@ -100,11 +100,8 @@ export class Structure {
      * @returns {number} The size of the structure in bytes.
      */
     static alignof(format) {
-        if (format instanceof Array) {
-            // For an array, the alignment is the alignment of its elements
-            return Structure.alignof(format[0]);
-        } else if (isClass(format)) {
-            // For a nested structure, the alignment is the maximum alignment of its fields
+        if (isClass(format)) {
+            // For a nested structure (or array of nested structures), the alignment is the maximum alignment of its fields
             return Math.max(...format.fields.map(field => Structure.alignof(field.format)));
         }
         // For a primitive type, the alignment is the same as the size
@@ -123,10 +120,12 @@ export class Structure {
         for (let i = 0; i < fields.length; i++) {
 
             let size;
-            if (fields[i].format instanceof Array) {
-                size = fields[i].format[0].size() * fields[i].format.length;
-            } else if (isClass(fields[i].format)) {
-                size = fields[i].format.size();
+            if (isClass(fields[i].format)) {
+                if (fields[i].count) {
+                    size = fields[i].format.size() * fields[i].count;
+                } else {
+                    size = fields[i].format.size();
+                }
             } else {
                 size = Structure.#getTotalSizeFromFormat(fields[i].format);
             }
@@ -182,10 +181,12 @@ export class Structure {
         let offset = 0;
         for (let i = 0; i < index; i++) {
             let size;
-            if (this.#fields[i].format instanceof Array) {
-                size = this.#fields[i].format[0].size() * this.#fields[i].format.length;
-            } else if (isClass(this.#fields[i].format)) {
-                size = this.#fields[i].format.size();
+            if (isClass(this.#fields[i].format)) {
+                if (this.#fields[i].count) {
+                    size = this.#fields[i].format.size() * this.#fields[i].count;
+                } else {
+                    size = this.#fields[i].format.size();
+                }
             } else {
                 size = Structure.#getTotalSizeFromFormat(this.#fields[i].format);
             }
@@ -298,12 +299,18 @@ export class Structure {
     #getField(index) {
         const field = this.#fields[index];
         const offset = field.offset;
-        if (field.format instanceof Array) {
-            return field.format;
-        }
-        else if (isClass(field.format)) {
-            let tmp = this.buffer.slice(offset, offset + field.format.size())
-            return new field.format(tmp);
+        if (isClass(field.format)) {
+            if (field.count) {
+                const result = [];
+                for (let i = 0; i < field.count; i++) {
+                    const inner_offset = this.buffer.byteOffset + offset + i * field.format.size();
+                    const source = new Uint8Array(this.buffer.buffer, inner_offset, field.format.size());
+                    result.push(new field.format(source));
+                }
+                return result;
+            }
+            const source = new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, field.format.size());
+            return new field.format(source);
         }
 
         const match = field.format.match(/^(\d*)(.)/);
@@ -312,31 +319,31 @@ export class Structure {
 
         switch (type) {
             case 'b':
-                return (count > 1) ? new Int8Array(this.buffer, offset, count) : this.#view.getInt8(offset);
+                return (count > 1) ? new Int8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getInt8(offset);
             case 'B':
-                return (count > 1) ? new Uint8Array(this.buffer, offset, count) : this.#view.getUint8(offset);
+                return (count > 1) ? new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getUint8(offset);
             case '?':
-                return (count > 1) ? new Uint8Array(this.buffer, offset, count).map((value) => value !== 0) : this.#view.getUint8(offset) !== 0;
+                return (count > 1) ? new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count).map((value) => value !== 0) : this.#view.getUint8(offset) !== 0;
             case 'h':
-                return (count > 1) ? new Int16Array(this.buffer, offset, count) : this.#view.getInt16(offset, true);
+                return (count > 1) ? new Int16Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getInt16(offset, true);
             case 'H':
-                return (count > 1) ? new Uint16Array(this.buffer, offset, count) : this.#view.getUint16(offset, true);
+                return (count > 1) ? new Uint16Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getUint16(offset, true);
             case 'l':
             case 'i':
-                return (count > 1) ? new Int32Array(this.buffer, offset, count) : this.#view.getInt32(offset, true);
+                return (count > 1) ? new Int32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getInt32(offset, true);
             case 'L':
             case 'I':
-                return (count > 1) ? new Uint32Array(this.buffer, offset, count) : this.#view.getUint32(offset, true);
+                return (count > 1) ? new Uint32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getUint32(offset, true);
             case 'f':
-                return (count > 1) ? new Float32Array(this.buffer, offset, count) : this.#view.getFloat32(offset, true);
+                return (count > 1) ? new Float32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getFloat32(offset, true);
             case 'd':
-                return (count > 1) ? new Float64Array(this.buffer, offset, count) : this.#view.getFloat64(offset, true);
+                return (count > 1) ? new Float64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : this.#view.getFloat64(offset, true);
             case 'q':
-                return (count > 1) ? new BigInt64Array(this.buffer, offset, count) : getInt64(this.#view, offset, true);
+                return (count > 1) ? new BigInt64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : getInt64(this.#view, offset, true);
             case 'Q':
-                return (count > 1) ? new BigUint64Array(this.buffer, offset, count) : getUint64(this.#view, offset, true);
+                return (count > 1) ? new BigUint64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count) : getUint64(this.#view, offset, true);
             case 'c':
-                return (count > 1) ? new TextDecoder().decode(new Uint8Array(this.buffer, offset, count)).split('\0')[0] : this.#view.getInt8(offset);
+                return (count > 1) ? new TextDecoder().decode(new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)).split('\0')[0] : this.#view.getInt8(offset);
             default:
                 throw new Error(`Unsupported format: ${type}`);
         }
@@ -347,9 +354,9 @@ export class Structure {
         const offset = field.offset;
 
         if (isClass(field.format)) {
-            const destination = new Uint8Array(this.buffer);
-            const source = new Uint8Array(value.buffer);
-            destination.set(source, offset);
+            const destination = new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, field.format.size());
+            const source = new Uint8Array(value.buffer.buffer, value.buffer.byteOffset, value.buffer.byteLength);
+            destination.set(source);
             return;
         }
 
@@ -401,44 +408,57 @@ export class Structure {
                     throw new Error(`Unsupported format: ${type}`);
             }
         } else {
+            let destination = null;
             switch (type) {
                 case 'b':
-                    new Int8Array(this.buffer, offset, count).set(value);
+                    destination = new Int8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count);
+                    destination.set(value);
                     break;
                 case 'B':
-                    new Uint8Array(this.buffer, offset, count).set(value);
+                    destination = new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case '?':
-                    new Uint8Array(this.buffer, offset, count).set(value.map((v) => v ? 1 : 0));
+                    destination = new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value.map((v) => v ? 1 : 0));
                     break;
                 case 'h':
-                    new Int16Array(this.buffer, offset, count).set(value);
+                    destination = new Int16Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'H':
-                    new Uint16Array(this.buffer, offset, count).set(value);
+                    destination = new Uint16Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'l':
                 case 'i':
-                    new Int32Array(this.buffer, offset, count).set(value);
+                    destination = new Int32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'L':
                 case 'I':
-                    new Uint32Array(this.buffer, offset, count).set(value);
+                    destination = new Uint32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'f':
-                    new Float32Array(this.buffer, offset, count).set(value);
+                    destination = new Float32Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'd':
-                    new Float64Array(this.buffer, offset, count).set(value);
+                    destination = new Float64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value);
                     break;
                 case 'q':
-                    new BigInt64Array(this.buffer, offset, count).set(value.map((v) => BigInt(v)));
+                    destination = new BigInt64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value.map((v) => BigInt(v)));
                     break;
                 case 'Q':
-                    new BigUint64Array(this.buffer, offset, count).set(value.map((v) => BigInt(v)));
+                    destination = new BigUint64Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(value.map((v) => BigInt(v)));
                     break;
                 case 'c':
-                    new Uint8Array(this.buffer, offset, count).set(new TextEncoder().encode(value));
+                    destination = new Uint8Array(this.buffer.buffer, this.buffer.byteOffset + offset, count)
+                    destination.set(new TextEncoder().encode(value));
                     break;
                 default:
                     throw new Error(`Unsupported format: ${type}`);

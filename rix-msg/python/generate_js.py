@@ -71,36 +71,25 @@ def generate_js(dir, msgs):
                 # fields
                 file.write(f'    {spacing}static fields = [\n')
                 for field in fields:
-                    is_array = field[2] or field[3]
-                    is_double_array = field[3]
+                    is_array = field[2]
                     is_nested = "::" in field[0]
                     if is_array:
-                        size1 = None
+                        size = None
                         has_template = False
                         try:
-                            size1 = int(field[2][1:-1])
+                            size = int(field[2][1:-1])
                         except ValueError:
-                            size1 = field[2][1:-1]
-                            has_template = True
-
-                        size2 = None
-                        try:
-                            size2 = int(field[3][1:-1] if is_double_array else 1)
-                        except ValueError:
-                            size2 = field[3][1:-1] if is_double_array else 1
+                            size = field[2][1:-1]
                             has_template = True
                         
-                        if is_nested and has_template:
+                        if is_nested:
                             typeName = field[0].split("::")[1]
-                            file.write(f'        {spacing}{{name: "{field[1]}", format: Array({size1} * {size2}).fill().map(() => {typeName})}},\n')
-                        elif is_nested:
-                            typeName = field[0].split("::")[1]
-                            file.write(f'        {spacing}{{name: "{field[1]}", format: Array({size1 * size2}).fill().map(() => {typeName})}},\n')
+                            file.write(f'        {spacing}{{name: "{field[1]}", format: {typeName}, count: {size}}},\n')
                         elif has_template:
                             typeName = field[0]
-                            file.write(f'        {spacing}{{name: "{field[1]}", format: `${{ {size1} * {size2} }}{format_chars[field[0]]}`}},\n')
+                            file.write(f'        {spacing}{{name: "{field[1]}", format: `${{ {size} }}{format_chars[field[0]]}`}},\n')
                         else:
-                            file.write(f'        {spacing}{{name: "{field[1]}", format: \"{size1 * size2}{format_chars[field[0]]}\"}},\n')
+                            file.write(f'        {spacing}{{name: "{field[1]}", format: \"{size}{format_chars[field[0]]}\"}},\n')
 
                     elif is_nested:
                         typeName = field[0].split("::")[1]

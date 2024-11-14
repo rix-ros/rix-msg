@@ -49,7 +49,7 @@ def parse_message_definition(in_dir):
         message_match = re.findall(r'(\w+)\s*{\s*([^}]+)\s*}', content)
         for match in message_match:
             message_name = match[0]
-            fields = re.findall(r'((?:\w+::)?\w+)\s+(\w+)(\[[^\]]+\])?(\[[^\]]+\])?;', match[1])
+            fields = re.findall(r'((?:\w+::)?\w+)\s+(\w+)(\[[^\]]+\])?;', match[1])
 
             if package and message_name and fields:
                 msgs[package].append((message_name, fields, template, hashValue))

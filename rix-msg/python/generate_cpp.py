@@ -50,7 +50,7 @@ def generate_cpp(dir, msgs):
                 # Fields
                 for field in fields:
                     if field[2]:
-                        file.write(f'    {field[0]} {field[1]}{field[2]}{field[3]};\n')
+                        file.write(f'    {field[0]} {field[1]}{field[2]};\n')
                     else:
                         file.write(f'    {field[0]} {field[1]};\n')
                 

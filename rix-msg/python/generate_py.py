@@ -52,32 +52,21 @@ def generate_py(dir, msgs):
                 file.write(f'    {spacing}_pack_ = 1\n')
                 file.write(f'    {spacing}_fields_ = [\n')
                 for field in fields:
-                    is_array = field[2] or field[3]
-                    is_double_array = field[3]
+                    is_array = field[2]
                     is_nested = "::" in field[0]
                     if is_array:
                         has_template = False
                         try:
-                            size1 = int(field[2][1:-1])
+                            size = int(field[2][1:-1])
                         except ValueError:
-                            size1 = field[2][1:-1]
-                            has_template = True
-                        try:
-                            size2 = int(field[3][1:-1]) if is_double_array else 1
-                        except ValueError:
-                            size2 = field[3][1:-1] if is_double_array else 1
+                            size = field[2][1:-1]
                             has_template = True
 
-                        if is_nested and has_template:
+                        if is_nested:
                             typeName = field[0].split("::")[1]
-                            file.write(f'        {spacing}("{field[1]}", {typeName} * {size1} * {size2}),\n')
-                        elif is_nested:
-                            typeName = field[0].split("::")[1]
-                            file.write(f'        {spacing}("{field[1]}", {typeName} * {size1 * size2}),\n')
-                        elif has_template:
-                            file.write(f'        {spacing}("{field[1]}", ctypes.{ctypes_format_chars[field[0]]} * {size1} * {size2}),\n')
+                            file.write(f'        {spacing}("{field[1]}", {typeName} * {size}),\n')
                         else:
-                            file.write(f'        {spacing}("{field[1]}", ctypes.{ctypes_format_chars[field[0]]} * {size1 * size2}),\n')
+                            file.write(f'        {spacing}("{field[1]}", ctypes.{ctypes_format_chars[field[0]]} * {size}),\n')
                     elif is_nested:
                         typeName = field[0].split("::")[1]
                         file.write(f'        {spacing}("{field[1]}", {typeName}),\n')

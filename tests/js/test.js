@@ -7,7 +7,7 @@ function print_header(msg) {
     console.log('frame_id:', msg.frame_id);
 }
 
-const msg = new Header();
+var msg = new Header();
 msg.seq = 0;
 msg.stamp.sec = 1234;
 msg.stamp.nsec = 5678;
@@ -16,7 +16,7 @@ msg.frame_id = 'Hello, world!';
 console.log("Original: ");
 print_header(msg);
 
-const msg2 = Header.decode(msg.encode());
+var msg2 = Header.decode(msg.encode());
 
 console.log("Decoded: ");
 print_header(msg2);
