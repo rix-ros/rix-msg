@@ -39,6 +39,7 @@ mkdir -p "$HOME/.rix/node_modules/rix-msg"
 mkdir -p "$HOME/.rix/python/rixmsg"
 
 # Copy include to rix-msg directory
+sudo mkdir -p /usr/local/include/rix/msg/
 sudo cp -r rix-msg/include/* /usr/local/include/rix/msg/
 
 # Run CMake for rix-msg
