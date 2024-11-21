@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-Particle {
-    geometry::Pose2D pose;
-    geometry::Pose2D parent_pose;
-    double weight;
-}
