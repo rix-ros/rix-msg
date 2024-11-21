@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: standard;
+
+ID {
+    uint64_t component_id;
+    standard::URI uri;
+}

@@ -4,14 +4,14 @@ The `rix-msg` library contains definitions for the base message types used in `r
 
 ## Install
 
-To install `rixmsg`, run the following command:
+To install `rixmsg`, run the following commands:
 
 ```bash
 cd rix-msg
 mkdir build
 cd build
 cmake ..
-make install
+sudo make install
 ```
 
 The default installation will generate header files for the message definitions in `include/rix/msg/defs/`. If you do not want these files generated, toggle the `GEN_MSGS` flag off.
@@ -20,7 +20,17 @@ cd rix-msg
 mkdir build
 cd build
 cmake -DGEN_MSGS=OFF ..
-make install
+sudo make install
+```
+
+If you intend to use the JavaScript message libraries, run the following commands:
+```bash
+cd rix-structjs
+npm install
+npm link
+cd ~/.rix/node_modules/rix-msg/
+npm link rix-structjs
+npm install
 ```
 
 This will install the `rixmsg` executable into `/usr/local/bin`. 
@@ -38,25 +48,29 @@ This will install the `rixmsg` executable into `/usr/local/bin`.
 
 After the default installation, `rixmsg packages` should output:
 ```txt
-core
-geometry
-sensor
+navigation
 standard
+sensor
+geometry
 ```
 
 Additionally `rixmsg package geometry` should output:
 ```txt
+Particle
+TF
+Vector3
+Vector3Stamped
+PointStamped
+Twist
+TwistStamped
+QuaternionStamped
+Pose2D
+Particles
+Quaternion
+Transform
 point
-pointstamped
-quaternion
-quaternionstamped
-tf
-transform
-transformstamped
-twist
-twiststamped
-vector3
-vector3stamped
+Twist2D
+TransformStamped
 ```
 
 RIX packages are designed to be easy to include in your existing CMake projects. For example:
@@ -70,6 +84,37 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(rix_msg REQUIRED)
 
 add_executable(test test.cpp)
+```
+
+## Tests
+`rix-msg` supports three languages: C++, Python, and JavaScript. There are tests for each of these languages in the `tests` directory.
+
+C++
+```bash
+mkdir tests/cpp/build
+cd tests/cpp/build
+cmake ..
+make
+./test
+```
+Python
+```bash
+cd tests/python/
+python3 -m venv venv
+source venv/bin/activate
+pip install ~/.rix/python/rixmsg/
+python3 test.py
+```
+JavaScript
+```bash
+cd tests/js/
+npm link ~/.rix/node_modules/rix-msg/
+npm install
+node test.js
+```
+Note: When running the Python or JavaScript examples, there may be an error with the permissions to edit the `~/.rix/` directory. To fix this, run:
+```bash
+sudo chown -R [USER] ~/.rix/
 ```
 
 ## The `.rixmsg` Format

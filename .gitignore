@@ -1,3 +1,8 @@
-.DS_Store
-build/
 .vscode/
+build/
+dist/
+*.spec
+.DS_Store
+package-lock.json
+node_modules/
+venv/
