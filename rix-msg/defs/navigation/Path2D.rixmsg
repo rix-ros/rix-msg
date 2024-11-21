@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: navigation;
-
-template: uint32_t N;
-Path2D {
-    int64_t utime;
-    uint32_t num_poses;
-    geometry::Pose2D path[N];
-}

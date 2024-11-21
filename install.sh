@@ -54,7 +54,6 @@ echo "Creating default rix message implementation files"
 sudo -E rixmsg create rix-msg/defs/standard
 sudo -E rixmsg create rix-msg/defs/sensor
 sudo -E rixmsg create rix-msg/defs/geometry
-sudo -E rixmsg create rix-msg/defs/navigation
 
 echo "Default rix message implementation files created successfully"
 

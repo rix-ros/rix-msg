@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-Pose2D {
-    int64_t utime;
-    float x;
-    float y;
-    float theta;
-}

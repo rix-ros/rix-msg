@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: sensor;
-
-Encoders {
-    int64_t utime;
-    int64_t ticks[3];
-    int32_t delta_ticks[3];
-    int32_t delta_time;
-}
