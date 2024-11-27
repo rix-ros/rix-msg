@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: geometry;
+
+Pose {
+    geometry::Point position;
+    geometry::Quaternion orientation;
+}
