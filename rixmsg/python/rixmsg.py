@@ -32,7 +32,7 @@ def parse_message_definition(in_dir):
 
         if package:
             ROOT = os.getenv("HOME")
-            newDir = ROOT + "/.rix/rix-msg/defs/" + package + '/'
+            newDir = ROOT + "/.rix/rixmsg/defs/" + package + '/'
             os.makedirs(newDir, exist_ok=True)
             with open(newDir + filename, 'w') as file:
                 file.write(content)
@@ -49,7 +49,7 @@ def parse_message_definition(in_dir):
         message_match = re.findall(r'(\w+)\s*{\s*([^}]+)\s*}', content)
         for match in message_match:
             message_name = match[0]
-            fields = re.findall(r'((?:\w+::)?\w+)\s+(\w+)(\[[^\]]+\])?;', match[1])
+            fields = re.findall(r'((?:\w+::)?\w+(?:<[^>]+>)?)\s+(\w+)(\[[^\]]+\])?;', match[1])
 
             if package and message_name and fields:
                 msgs[package].append((message_name, fields, template, hashValue))
@@ -76,7 +76,7 @@ def help():
 def show(rixmsg):
     package, msg = rixmsg.split('/')
 
-    filepath = f'{ROOT}/.rix/rix-msg/defs/{package}/{msg}.rixmsg'
+    filepath = f'{ROOT}/.rix/rixmsg/defs/{package}/{msg}.rixmsg'
     if not os.path.exists(filepath):
         print(f'Error: Package {package} does not exist')
         sys.exit(1)
@@ -85,13 +85,13 @@ def show(rixmsg):
         print(file.read())
 
 def list_packages():
-    packages = os.listdir(f'{ROOT}/.rix/rix-msg/defs/')
+    packages = os.listdir(f'{ROOT}/.rix/rixmsg/defs/')
     for package in packages:
         print(package)
 
 def show_package(package):
     package = package.lower()
-    package_path =f'{ROOT}/.rix/rix-msg/defs/{package}'
+    package_path =f'{ROOT}/.rix/rixmsg/defs/{package}'
 
     if not os.path.isdir(package_path):
         print(f'Error: Package {package} does not exist')
@@ -107,9 +107,9 @@ def create_headers(path):
         sys.exit(1)
 
     msgs = parse_message_definition(path)
-    generate_cpp("/usr/local/include/rix/msg/", msgs)
-    os.makedirs(ROOT + "/.rix/node_modules/rix-msg/", exist_ok=True)
-    generate_js(ROOT + "/.rix/node_modules/rix-msg/", msgs)
+    generate_cpp(ROOT + "/.rix/include/rix/msg/", msgs)
+    os.makedirs(ROOT + "/.rix/node_modules/rixmsg/", exist_ok=True)
+    generate_js(ROOT + "/.rix/node_modules/rixmsg/", msgs)
     os.makedirs(ROOT + "/.rix/python/rixmsg/", exist_ok=True)
     generate_py(ROOT + "/.rix/python/rixmsg/", msgs)
 

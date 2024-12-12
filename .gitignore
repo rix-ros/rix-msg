@@ -1,5 +1,6 @@
 .vscode/
 build/
+debug/
 dist/
 *.spec
 .DS_Store

@@ -23,6 +23,8 @@ def generate_cpp(dir, msgs):
                 file.write("#include <cstring>\n\n")
 
                 file.write("#include \"rix/msg/common.hpp\"\n")
+                if message_name != "MessageInfo":
+                    file.write("#include \"rix/msg/component/MessageInfo.hpp\"\n\n")
 
                 include_set = set()
                 for field in fields:
@@ -30,6 +32,8 @@ def generate_cpp(dir, msgs):
                     if "::" in fieldType:
                         other_package = fieldType.split("::")[0]
                         fieldType = fieldType.split("::")[1]
+                        if "<" in fieldType:
+                            fieldType = fieldType.split("<")[0]
                         include_file = f'{other_package}/{fieldType}'
                         if include_file not in include_set:
                             include_set.add(include_file)
@@ -93,8 +97,8 @@ def generate_cpp(dir, msgs):
                 file.write(f'    }}\n\n')
 
                 # Hash
-                file.write(f'    static inline Hash hash() {{\n')
-                file.write(f'        return Hash({hashValue[0]}ULL, {hashValue[1]}ULL);\n')
+                file.write(f'    static inline rix::msg::component::MessageInfo info() {{\n')
+                file.write(f'        return {{{hashValue[0]}ULL, {hashValue[1]}ULL, sizeof({message_name})}};\n')
                 file.write(f'    }}\n')
 
                 file.write(f'}};\n')

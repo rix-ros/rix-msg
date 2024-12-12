@@ -27,6 +27,8 @@ def generate_py(dir, msgs):
 
             with open(filename, 'w') as file:
                 file.write(f'import ctypes\n')
+                if message_name != "MessageInfo":
+                    file.write(f'from rixmsg.component.MessageInfo import MessageInfo\n\n')
 
                 include_set = set()
                 for field in fields:
@@ -34,6 +36,9 @@ def generate_py(dir, msgs):
                     if "::" in fieldType:
                         other_package, field_type = fieldType.split("::")
                         include_file = field_type
+                        if "<" in field_type:
+                            include_file = field_type.split("<")[0]
+                            field_type = include_file + "Template"
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'from rixmsg.{other_package}.{include_file} import {field_type}\n')
@@ -64,11 +69,19 @@ def generate_py(dir, msgs):
 
                         if is_nested:
                             typeName = field[0].split("::")[1]
+                            if "<" in typeName:
+                                typeName, rest = typeName.split("<")
+                                rest = rest.split(">")[0]
+                                typeName = f'{typeName}Template({rest})'
                             file.write(f'        {spacing}("{field[1]}", {typeName} * {size}),\n')
                         else:
                             file.write(f'        {spacing}("{field[1]}", ctypes.{ctypes_format_chars[field[0]]} * {size}),\n')
                     elif is_nested:
                         typeName = field[0].split("::")[1]
+                        if "<" in typeName:
+                                typeName, rest = typeName.split("<")
+                                rest = rest.split(">")[0]
+                                typeName = f'{typeName}Template({rest})'
                         file.write(f'        {spacing}("{field[1]}", {typeName}),\n')
                     else:
                         file.write(f'        {spacing}("{field[1]}", ctypes.{ctypes_format_chars[field[0]]}),\n')
@@ -96,8 +109,12 @@ def generate_py(dir, msgs):
 
                 # Hash
                 file.write(f'    {spacing}@staticmethod\n')
-                file.write(f'    {spacing}def hash() -> tuple:\n')
-                file.write(f'        {spacing}return ({hashValue[0]}, {hashValue[1]})\n')
+                file.write(f'    {spacing}def info() -> \'MessageInfo\':\n')
+                file.write(f'        {spacing}msg_info = MessageInfo()\n')
+                file.write(f'        {spacing}msg_info.hash_upper = {hashValue[0]}\n')
+                file.write(f'        {spacing}msg_info.hash_lower = {hashValue[1]}\n')
+                file.write(f'        {spacing}msg_info.length = {message_name}.size()\n')
+                file.write(f'        {spacing}return msg_info\n')
 
                 if template:
                     file.write(f'\n    return {message_name}\n')

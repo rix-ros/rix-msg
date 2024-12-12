@@ -4,7 +4,8 @@ package: sensor;
 template: uint32_t N;
 JointState {
     standard::Header header;
-    char name[N][32];
+    uint32_t num_joint_states;
+    standard::String<32> name[N];
     double position[N];
     double velocity[N];
     double effort[N];

@@ -2,10 +2,10 @@
 get_filename_component(RIX_MSG_CURRENT_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 # Set the location of your headers.
-set(RIX_MSG_INC "/usr/local/include/")
+set(RIX_MSG_INC "~/.rix/include/rix")
 
 # Add the include directory
 include_directories(${RIX_MSG_INC})
 
 # Load the settings into the current CMake project.
-include(${RIX_MSG_CURRENT_DIR}/rix_msgTargets.cmake)
+include(${RIX_MSG_CURRENT_DIR}/rixmsgTargets.cmake)

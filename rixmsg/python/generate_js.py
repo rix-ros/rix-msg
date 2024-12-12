@@ -9,7 +9,7 @@ def generate_js(dir, msgs):
 
     with open(dir + 'package.json', 'w') as file:
         file.write('{\n')
-        file.write(f'    "name": "rix-msg",\n')
+        file.write(f'    "name": "rixmsg",\n')
         file.write(f'    "version": "1.0.0",\n')
         file.write(f'    "description": "Message definitions for RIX",\n')
         file.write(f'    "main": "index.js",\n')
@@ -19,7 +19,7 @@ def generate_js(dir, msgs):
         file.write(f'    "author": "",\n')
         file.write(f'    "license": "ISC",\n')
         file.write(f'    "dependencies": {{\n')
-        file.write(f'        "rix-structjs": "^1.0.0"\n')
+        file.write(f'        "cstructjs": "^1.0.0"\n')
         file.write(f'    }},\n')
         file.write(f'    "type": "module"\n')
         file.write('}\n')
@@ -45,6 +45,8 @@ def generate_js(dir, msgs):
 
             with open(filename, 'w') as file:
                 file.write(f'import {{ Structure }} from \'rix-structjs\';\n')
+                if (message_name != "MessageInfo"):
+                    file.write(f'import {{ MessageInfo }} from \'../component/MessageInfo.js\';\n')
 
                 include_set = set()
                 for field in fields:
@@ -52,6 +54,9 @@ def generate_js(dir, msgs):
                     if "::" in fieldType:
                         other_package, field_type = fieldType.split("::")
                         include_file = field_type
+                        if "<" in field_type:
+                            include_file = field_type.split("<")[0]
+                            field_type = include_file + "Template"
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'import {{ {field_type} }} from \'../{other_package}/{include_file}.js\';\n')
@@ -84,6 +89,10 @@ def generate_js(dir, msgs):
                         
                         if is_nested:
                             typeName = field[0].split("::")[1]
+                            if "<" in typeName:
+                                typeName, rest = typeName.split("<")
+                                rest = rest.split(">")[0]
+                                typeName = f'{typeName}Template({rest})'
                             file.write(f'        {spacing}{{name: "{field[1]}", format: {typeName}, count: {size}}},\n')
                         elif has_template:
                             typeName = field[0]
@@ -93,14 +102,22 @@ def generate_js(dir, msgs):
 
                     elif is_nested:
                         typeName = field[0].split("::")[1]
+                        if "<" in typeName:
+                            typeName, rest = typeName.split("<")
+                            rest = rest.split(">")[0]
+                            typeName = f'{typeName}Template({rest})'
                         file.write(f'        {spacing}{{name: "{field[1]}", format: {typeName}}},\n')
                     else:
                         file.write(f'        {spacing}{{name: "{field[1]}", format: "{format_chars[field[0]]}"}},\n')
                 file.write(f'    {spacing}];\n\n')
 
                 # hash
-                file.write(f'    {spacing}static hash() {{\n')
-                file.write(f'        {spacing}return [{hashValue[0]}n, {hashValue[1]}n];\n')
+                file.write(f'    {spacing}static info() {{\n')
+                file.write(f'        {spacing}let msg_info = new MessageInfo();\n')
+                file.write(f'        {spacing}msg_info.hash_upper = {hashValue[0]}n;\n')
+                file.write(f'        {spacing}msg_info.hash_lower = {hashValue[1]}n;\n')
+                file.write(f'        {spacing}msg_info.length = {message_name}.size();\n')
+                file.write(f'        {spacing}return msg_info;\n')
                 file.write(f'    {spacing}}}\n\n')
 
                 # size
