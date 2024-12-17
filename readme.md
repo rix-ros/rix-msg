@@ -84,13 +84,8 @@ npm link ~/.rix/node_modules/rixmsg/
 npm install
 node test.js
 ```
-Note: When running the Python or JavaScript examples, there may be an error with the permissions to edit the `~/.rix/` directory. To fix this, run:
-```bash
-sudo chown -R [USER] ~/.rix/
-```
 
 ## The `.rixmsg` Format
-
 Every `.rixmsg` must have the following format:
 ```txt
 version: <version>;
