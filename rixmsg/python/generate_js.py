@@ -44,7 +44,7 @@ def generate_js(dir, msgs):
             filename = newDir + message_name + '.js'
 
             with open(filename, 'w') as file:
-                file.write(f'import {{ Structure }} from \'rix-structjs\';\n')
+                file.write(f'import {{ Structure }} from \'cstructjs\';\n')
                 if (message_name != "MessageInfo"):
                     file.write(f'import {{ MessageInfo }} from \'../component/MessageInfo.js\';\n')
 

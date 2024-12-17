@@ -12,6 +12,16 @@ from generate_py import generate_py
 
 ROOT = os.getenv("HOME")
 
+USAGE = """rixmsg [-h] function [arg]
+
+Functions:
+  show <rixmsg>          - Show the definition file for a RIX message
+  packages               - List all installed packages
+  package <package name> - Show all messages names contained within a package
+  create <path>          - Create implementation files from RIX message 
+                           definition files
+"""
+
 def parse_message_definition(in_dir):
     if in_dir[-1] != '/':
         in_dir += '/'
@@ -25,7 +35,7 @@ def parse_message_definition(in_dir):
         with open(in_dir+filename, 'r') as file:
             content = file.read()
 
-        hashValue = getHash(content)
+        hash_value = get_hash(content)
 
         package_match = re.search(r'package:\s*(\w+);', content)
         package = package_match.group(1) if package_match else None
@@ -52,26 +62,16 @@ def parse_message_definition(in_dir):
             fields = re.findall(r'((?:\w+::)?\w+(?:<[^>]+>)?)\s+(\w+)(\[[^\]]+\])?;', match[1])
 
             if package and message_name and fields:
-                msgs[package].append((message_name, fields, template, hashValue))
+                msgs[package].append((message_name, fields, template, hash_value))
 
     return msgs
 
-def getHash(content):
+def get_hash(content):
     # Return two 64-bit unsigned integers that reperesent the upper and lower half of an md5 hash
     md5Hash = hashlib.md5(content.encode()).digest()
     hash1 = int.from_bytes(md5Hash[:8], byteorder='big', signed=False)
     hash2 = int.from_bytes(md5Hash[8:], byteorder='big', signed=False)
     return (hash1, hash2)
-
-def help():
-    print("Usage: rixmsg <function> [args]")
-    print("")
-    print("Functions:")
-    print("  help - Print this help message")
-    print("  show <rixmsg> - Show the definition of a rixmsg")
-    print("  packages - List all packages")
-    print("  package <package name> - Show all messages in a package")
-    print("  create <path> - Create implementation files from rixmsg files")
 
 def show(rixmsg):
     package, msg = rixmsg.split('/')
@@ -114,37 +114,31 @@ def create_headers(path):
     generate_py(ROOT + "/.rix/python/rixmsg/", msgs)
 
 def main(args=None):
-    parser = argparse.ArgumentParser(description='Generate RIX message implementation files from .rixmsg definition files')
-    parser.add_argument('function', type=str, help='Function to call (help, show, packages, package, create)')
-    parser.add_argument('arg1', type=str, nargs='?', help='Argument for the function')
-    parser.add_argument('in_dir', type=str, help='Message definition file', nargs='?')
+    parser = argparse.ArgumentParser(description='rixmsg command line tool', usage=USAGE)
+    parser.add_argument('-v', '--version', action='version', version='rixmsg 1.0')
+    parser.add_argument('function', type=str, help='Function to call (show, packages, package, create)')
+    parser.add_argument('arg', type=str, nargs='?', help='Argument for the function')
     args = parser.parse_args(args)
 
-    if args.function == 'help':
-        help()
-    elif args.function == 'show':
-        if not args.arg1:
-            print("Error: show function requires a rixmsg file as an argument")
-            print("Usage: rixmsg show <rixmsg>")
+    if args.function == 'show':
+        if not args.arg:
+            print("Error: show requires a rixmsg file as an argument. Use -h for help")
             sys.exit(1)
-        show(args.arg1)
+        show(args.arg)
     elif args.function == 'packages':
         list_packages()
     elif args.function == 'package':
-        if not args.arg1:
-            print("Error: package function requires a package name as an argument")
-            print("Usage: rixmsg package <package name>")
+        if not args.arg:
+            print("Error: package requires a package name as an argument. Use -h for help")
             sys.exit(1)
-        show_package(args.arg1)
+        show_package(args.arg)
     elif args.function == 'create':
-        if not args.arg1:
-            print("Error: create function requires a path as an argument")
-            print("Usage: rixmsg create <path>")
+        if not args.arg:
+            print("Error: create requires a path as an argument. Use -h for help")
             sys.exit(1)
-        create_headers(args.arg1)
+        create_headers(args.arg)
     else:
-        print(f'Error: Unknown function {args.function}')
-        help()
+        print(f'Error: Unknown function {args.function}. Use -h for help')
         sys.exit(1)
 
 if __name__ == "__main__":

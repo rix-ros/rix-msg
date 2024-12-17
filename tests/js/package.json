@@ -9,7 +9,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "rix-msg": "^1.0.0"
+        "rixmsg": "^1.0.0"
     },
     "type": "module"
 }

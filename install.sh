@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # Install the required packages
-# pip install pyinstaller
+pip install -r requirements.txt
+
+# Check if Node.js is installed
+if ! [ -x "$(command -v node)" ]; then
+    echo "Error: Node.js is not installed"
+    exit 1
+fi
 
 # Create the executable
 pyinstaller -p=rixmsg/python/ --onedir --strip --noupx -y rixmsg/python/rixmsg.py

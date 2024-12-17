@@ -38,13 +38,13 @@ concept RixMsgType = requires(T t, const uint8_t *data, size_t size) {
 };
 #define ASSERT_RIXMSG_TYPE(TMsg) static_assert(rix::msg::RixMsgType<TMsg>, "TMsg is not a rixmsg type");
 
-inline bool operator==(const component::MessageInfo &lhs, const component::MessageInfo &rhs) {
+}  // namespace msg
+
+inline bool operator==(const rix::msg::component::MessageInfo &lhs, const rix::msg::component::MessageInfo &rhs) {
     return lhs.hash_lower == rhs.hash_lower && lhs.hash_upper == rhs.hash_upper && lhs.length == rhs.length;
 }
 
-inline bool operator!=(const component::MessageInfo &lhs, const component::MessageInfo &rhs) {
+inline bool operator!=(const rix::msg::component::MessageInfo &lhs, const rix::msg::component::MessageInfo &rhs) {
     return !(lhs == rhs);
 }
-
-}  // namespace msg
 }  // namespace rix

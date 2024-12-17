@@ -7,48 +7,23 @@ The `rix-msg` library contains definitions for the base message types used in `r
 To install `rixmsg`, run the following commands:
 
 ```bash
-cd rix-msg
-mkdir build
-cd build
-cmake ..
-sudo make install
+chmod +x install.sh
+./install.sh
 ```
 
-The default installation will generate header files for the message definitions in `include/rix/msg/defs/`. If you do not want these files generated, toggle the `GEN_MSGS` flag off.
-```bash
-cd rix-msg
-mkdir build
-cd build
-cmake -DGEN_MSGS=OFF ..
-sudo make install
-```
-
-If you intend to use the JavaScript message libraries, run the following commands:
-```bash
-cd rix-structjs
-npm install
-npm link
-cd ~/.rix/node_modules/rix-msg/
-npm link rix-structjs
-npm install
-```
-
-This will install the `rixmsg` executable into `/usr/local/bin`. 
+This will install the `rixmsg` executable into `/usr/local/bin` and create the default message serialization files for C++, Python, and JavaScript in `~/.rix/include/rix/msg/`, `~/.rix/python/rixmsg/`, and `~/.rix/node_modules/rixmsg/` respectively. 
 
 ## Usage
 
-`rixmsg` contains five functions: `help`, `packages`,`show`, `package`, and `create`.
-
-* `rixmsg help`: This will print a help message with the `rixmsg` usage.
-* `rixmsg packages`: This will list all of the `rixmsg` packages that you have installed.
-* `rixmsg package <package>`: This will list the names of each message in a package
-* `rixmsg show <package>/<name>`: This will print the `.rixmsg` file of the specified message.
-* `rixmsg create <path>`: This will generate C++ header files from `.rixmsg` files and install them into `/usr/local/include/rix/msgs/<package>/<name>.hpp`. `<path>` should specify a path to a directory containing `.rixmsg` files.
-
+The `rixmsg` executable uses five functions: `packages`,`show`, `package`, and `create`.
+* `rixmsg packages`: List all of the `rixmsg` packages that are installed.
+* `rixmsg package <package>`: List the names of each message in a package.
+* `rixmsg show <package>/<name>`: Print the `.rixmsg` file of the specified message.
+* `rixmsg create <path>`: Generate implementation files from `.rixmsg` files and install them globally. `<path>` should specify a path to a directory containing `.rixmsg` files.
 
 After the default installation, `rixmsg packages` should output:
 ```txt
-navigation
+component
 standard
 sensor
 geometry
@@ -56,32 +31,29 @@ geometry
 
 Additionally `rixmsg package geometry` should output:
 ```txt
-Particle
 TF
+Pose
 Vector3
 Vector3Stamped
 PointStamped
 Twist
 TwistStamped
 QuaternionStamped
-Pose2D
-Particles
 Quaternion
 Transform
-point
-Twist2D
+PoseStamped
+Point
 TransformStamped
 ```
 
 RIX packages are designed to be easy to include in your existing CMake projects. For example:
 ```cmake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
+project(msgs_test)
+set(CMAKE_CXX_STANDARD 20)
+list(APPEND CMAKE_PREFIX_PATH "~/.rix")
 
-project(msg_test)
-
-set(CMAKE_CXX_STANDARD 11)
-
-find_package(rix_msg REQUIRED)
+find_package(rixmsg REQUIRED)
 
 add_executable(test test.cpp)
 ```
@@ -108,7 +80,7 @@ python3 test.py
 JavaScript
 ```bash
 cd tests/js/
-npm link ~/.rix/node_modules/rix-msg/
+npm link ~/.rix/node_modules/rixmsg/
 npm install
 node test.js
 ```
