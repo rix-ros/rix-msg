@@ -3,7 +3,5 @@ package: sensor;
 
 JointStateStamped {
     standard::Header header;
-    double position;
-    double velocity;
-    double effort;
+    sensor::JointState joint_state;
 }
