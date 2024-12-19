@@ -34,6 +34,8 @@ def generate_cpp(dir, msgs):
                         fieldType = fieldType.split("::")[1]
                         if "<" in fieldType:
                             fieldType = fieldType.split("<")[0]
+                        if fieldType == "MessageInfo":
+                            continue
                         include_file = f'{other_package}/{fieldType}'
                         if include_file not in include_set:
                             include_set.add(include_file)

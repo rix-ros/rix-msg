@@ -39,6 +39,8 @@ def generate_py(dir, msgs):
                         if "<" in field_type:
                             include_file = field_type.split("<")[0]
                             field_type = include_file + "Template"
+                        if include_file == "MessageInfo":
+                            continue
                         if include_file not in include_set:
                             include_set.add(include_file)
                             file.write(f'from rixmsg.{other_package}.{include_file} import {field_type}\n')
