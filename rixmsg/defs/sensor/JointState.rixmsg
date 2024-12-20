@@ -1,0 +1,8 @@
+version: 1.0.0;
+package: sensor;
+
+JointState {
+    double position;
+    double velocity;
+    double effort;
+}

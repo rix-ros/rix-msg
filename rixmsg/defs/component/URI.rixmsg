@@ -1,5 +1,5 @@
 version: 1.0.0;
-package: standard;
+package: component;
 
 URI {
     uint16_t port;

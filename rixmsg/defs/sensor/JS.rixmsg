@@ -1,0 +1,7 @@
+version: 1.0.0;
+package: sensor;
+
+template: uint32_t N;
+JS {
+    sensor::JointStateStamped joint_states[N];
+}
