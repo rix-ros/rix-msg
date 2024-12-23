@@ -29,7 +29,7 @@ if [ ! -f "$HOME/.rix/rixmsg/rixmsg/rixmsg" ]; then
 fi
 
 # Create the symbolic link
-ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" /usr/local/bin/rixmsg
+sudo ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" /usr/local/bin/rixmsg
 
 # Verify the symbolic link
 if [ ! -L "/usr/local/bin/rixmsg" ]; then
