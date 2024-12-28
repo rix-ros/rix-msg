@@ -10,7 +10,7 @@ if ! [ -x "$(command -v node)" ]; then
 fi
 
 # Create the executable
-pyinstaller -p=rixmsg/python/ --onedir --strip --noupx -y rixmsg/python/rixmsg.py
+pyinstaller --clean -p=rixmsg/python/ --onedir --strip --noupx -y rixmsg/python/rixmsg.py
 
 # Check if the executable was created
 if [ ! -f "dist/rixmsg/rixmsg" ]; then
@@ -22,20 +22,8 @@ fi
 mkdir -p "$HOME/.rix/rixmsg/"
 cp -r dist/rixmsg "$HOME/.rix/rixmsg/"
 
-# Verify the copied executable
-if [ ! -f "$HOME/.rix/rixmsg/rixmsg/rixmsg" ]; then
-    echo "Error: rixmsg executable not found in $HOME/.rix/rixmsg/rixmsg/"
-    exit 1
-fi
-
-# Create the symbolic link
-sudo ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" /usr/local/bin/rixmsg
-
-# Verify the symbolic link
-if [ ! -L "/usr/local/bin/rixmsg" ]; then
-    echo "Error: symbolic link not created in /usr/local/bin/"
-    exit 1
-fi
+# Create symbolic link to rixmsg
+ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 
 # Clean up
 rm -rf build/ dist/
