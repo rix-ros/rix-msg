@@ -23,6 +23,7 @@ mkdir -p "$HOME/.rix/rixmsg/"
 cp -r dist/rixmsg "$HOME/.rix/rixmsg/"
 
 # Create symbolic link to rixmsg
+mkdir -p "$HOME/.rix/bin/"
 ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 
 # Clean up
