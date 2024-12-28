@@ -47,10 +47,10 @@ cd ../..
 echo "Installation completed successfully"
 echo "Creating default rix message implementation files"
 
-rixmsg create rixmsg/defs/component
-rixmsg create rixmsg/defs/standard
-rixmsg create rixmsg/defs/sensor
-rixmsg create rixmsg/defs/geometry
+"$HOME/.rix/bin/rixmsg" create rixmsg/defs/component
+"$HOME/.rix/bin/rixmsg" create rixmsg/defs/standard
+"$HOME/.rix/bin/rixmsg" create rixmsg/defs/sensor
+"$HOME/.rix/bin/rixmsg" create rixmsg/defs/geometry
 
 echo "Default rix message implementation files created successfully"
 
