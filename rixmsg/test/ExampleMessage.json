@@ -1,0 +1,50 @@
+{
+  "name": "ExampleMessage",
+  "version": "1.0.0",
+  "package": "example",
+  "fields": [
+    {
+      "name": "number",
+      "type": "uint32"
+    },
+    {
+      "name": "word",
+      "type": "string"
+    },
+    {
+      "name": "flag",
+      "type": "bool"
+    },
+    {
+      "name": "object",
+      "type": "OtherMessage",
+      "package": "example"
+    },
+    {
+      "name": "array",
+      "type": "uint32[]"
+    },
+    {
+      "name": "static_array",
+      "type": "uint32[3]"
+    },
+    {
+      "name": "array_of_words",
+      "type": "string[]"
+    },
+    {
+      "name": "static_array_of_words",
+      "type": "string[3]"
+    },
+    {
+      "name": "array_of_objects",
+      "type": "OtherMessage[]",
+      "package": "example"
+    },
+    {
+      "name": "static_array_of_objects",
+      "type": "OtherMessage[3]",
+      "package": "example"
+    }
+  ]
+}

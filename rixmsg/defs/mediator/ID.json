@@ -1,0 +1,16 @@
+{
+    "name": "ID",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "component_id",
+            "type": "uint64"
+        },
+        {
+            "name": "uri",
+            "type": "URI",
+            "package": "mediator"
+        }
+    ]
+}

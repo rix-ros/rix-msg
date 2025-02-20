@@ -1,0 +1,15 @@
+{
+  "name": "OtherMessage",
+  "version": "1.0.0",
+  "package": "example",
+  "fields": [
+    {
+      "name": "number",
+      "type": "int16"
+    },
+    {
+      "name": "flag",
+      "type": "bool"
+    }
+  ]
+}

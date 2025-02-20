@@ -1,5 +1,8 @@
 #!/bin/bash
 
+python3 -m venv venv
+source venv/bin/activate
+
 # Install the required packages
 pip install -r requirements.txt
 
@@ -10,7 +13,8 @@ if ! [ -x "$(command -v node)" ]; then
 fi
 
 # Create the executable
-pyinstaller --clean -p=rixmsg/python/ --onedir --strip --noupx -y rixmsg/python/rixmsg.py
+# python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/python/ --hidden-import jsonschema --onedir --noupx --specpath . --name rixmsg rixmsg/python/main.py
+python3 -m PyInstaller rixmsg.spec
 
 # Check if the executable was created
 if [ ! -f "dist/rixmsg/rixmsg" ]; then
@@ -27,7 +31,7 @@ mkdir -p "$HOME/.rix/bin/"
 ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 
 # Clean up
-rm -rf build/ dist/
+rm -r build/ dist/
 
 # Create node_modules and python directories
 mkdir -p "$HOME/.rix/node_modules/rixmsg"
@@ -71,5 +75,8 @@ npm install
 
 # Return to the original directory
 cd $DIR
+
+deactivate
+rm -r venv
 
 exit 0

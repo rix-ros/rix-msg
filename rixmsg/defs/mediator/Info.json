@@ -1,0 +1,25 @@
+{
+    "name": "Info",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "component_info",
+            "type": "ComponentInfo",
+            "package": "mediator"
+        },
+        {
+            "name": "contact_id",
+            "type": "ID[]",
+            "package": "mediator"
+        },
+        {
+            "name": "opcode",
+            "type": "uint8"
+        },
+        {
+            "name": "error",
+            "type": "uint8"
+        }
+    ]
+}

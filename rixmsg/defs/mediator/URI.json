@@ -1,0 +1,15 @@
+{
+    "name": "URI",
+    "version": "1.0.0",
+    "package": "component",
+    "fields": [
+        {
+            "name": "port",
+            "type": "uint16"
+        },
+        {
+            "name": "address",
+            "type": "string"
+        }
+    ]
+}

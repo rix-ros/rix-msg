@@ -1,0 +1,11 @@
+{
+    "name": "Hash",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "hash",
+            "type": "uint64[2]"
+        }
+    ]
+}
