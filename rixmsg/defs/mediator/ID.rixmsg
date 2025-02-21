@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: component;
-
-ID {
-    uint64_t component_id;
-    component::URI uri;
-}

@@ -1,0 +1,17 @@
+{
+    "name": "PoseStamped",
+    "version": "1.0.0",
+    "package": "geometry",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "standard"
+        },
+        {
+            "name": "pose",
+            "type": "Pose",
+            "package": "geometry"
+        }
+    ]
+}

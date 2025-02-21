@@ -1,0 +1,12 @@
+{
+    "name": "JS",
+    "version": "1.0.0",
+    "package": "sensor",
+    "fields": [
+        {
+            "name": "joint_states",
+            "type": "JointStateStamped[]",
+            "package": "sensor"
+        }
+    ]
+}

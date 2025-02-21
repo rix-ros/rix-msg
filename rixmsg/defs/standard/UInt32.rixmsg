@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-UInt32 {
-    uint32_t data;
-}

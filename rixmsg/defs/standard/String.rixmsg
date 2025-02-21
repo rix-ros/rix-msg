@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-template: uint32_t N;
-String {
-    char data[N];
-}

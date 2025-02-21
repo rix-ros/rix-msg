@@ -1,0 +1,24 @@
+{
+    "name": "DepthImage",
+    "version": "1.0.0",
+    "package": "sensor",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "standard"
+        },
+        {
+            "name": "width",
+            "type": "uint32"
+        },
+        {
+            "name": "height",
+            "type": "uint32"
+        },
+        {
+            "name": "data",
+            "type": "float[]"
+        }
+    ]
+}

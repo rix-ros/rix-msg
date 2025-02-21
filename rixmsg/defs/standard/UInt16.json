@@ -1,0 +1,11 @@
+{
+    "name": "UInt16",
+    "version": "1.0.0",
+    "package": "standard",
+    "fields": [
+        {
+            "name": "data",
+            "type": "uint16"
+        }
+    ]
+}

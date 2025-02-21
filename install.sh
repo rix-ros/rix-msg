@@ -13,8 +13,8 @@ if ! [ -x "$(command -v node)" ]; then
 fi
 
 # Create the executable
-# python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/python/ --hidden-import jsonschema --onedir --noupx --specpath . --name rixmsg rixmsg/python/main.py
-python3 -m PyInstaller rixmsg.spec
+python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/python/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/python/main.py
+# python3 -m PyInstaller rixmsg.spec
 
 # Check if the executable was created
 if [ ! -f "dist/rixmsg/rixmsg" ]; then
@@ -51,7 +51,7 @@ cd ../..
 echo "Installation completed successfully"
 echo "Creating default rix message implementation files"
 
-"$HOME/.rix/bin/rixmsg" create rixmsg/defs/component
+"$HOME/.rix/bin/rixmsg" create rixmsg/defs/mediator
 "$HOME/.rix/bin/rixmsg" create rixmsg/defs/standard
 "$HOME/.rix/bin/rixmsg" create rixmsg/defs/sensor
 "$HOME/.rix/bin/rixmsg" create rixmsg/defs/geometry

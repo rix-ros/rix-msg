@@ -1,0 +1,17 @@
+{
+    "name": "Vector3Stamped",
+    "version": "1.0.0",
+    "package": "geometry",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "standard"
+        },
+        {
+            "name": "vector3",
+            "type": "Vector3",
+            "package": "geometry"
+        }
+    ]
+}

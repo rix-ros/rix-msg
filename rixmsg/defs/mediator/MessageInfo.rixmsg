@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: component;
-
-MessageInfo {
-    uint64_t hash_upper;
-    uint64_t hash_lower;
-    uint32_t length;
-}

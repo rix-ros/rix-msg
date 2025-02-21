@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: sensor;
-
-JointStateStamped {
-    standard::Header header;
-    sensor::JointState joint_state;
-}
