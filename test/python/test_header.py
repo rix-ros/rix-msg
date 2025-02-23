@@ -10,16 +10,19 @@ header = Header()
 header.seq = 0
 header.stamp.sec = 1234
 header.stamp.nsec = 5678
-header.frame_id = "Hello, world!".encode()
+header.frame_id = "Hello, world!"
 
 print("Original:")
 print_header(header)
 
-header_encoded = header.encode()
-print("\nEncoded:")
-print(header_encoded)
+header_serialized = bytearray()
+header.serialize(header_serialized)
+print("\Serialized:")
+print(header_serialized)
 
-header_decoded = Header.decode(header_encoded)
+context = {'offset': 0}
+header_deserialized = Header()
+header_deserialized.deserialize(header_serialized, context)
 
-print("\nDecoded:")
-print_header(header_decoded)
+print("\Deserialized:")
+print_header(header_deserialized)

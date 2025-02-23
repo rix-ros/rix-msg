@@ -1,5 +1,3 @@
-from type_regex import is_static_array, is_dynamic_array, is_base_type, get_static_array_size, get_type
-
 CPP_TYPE_BINDINGS = {
     "char": "char",
     "int8": "int8_t",
@@ -177,19 +175,7 @@ def create_rixmsg_cpp_deserialize_function(fields: list) -> str:
         
     return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
 
-def add_flags_to_fields(fields: list) -> None:
-    for field in fields:
-        field_type = field['type']
-        field['is_static_array'] = is_static_array(field_type)
-        field['is_dynamic_array'] = is_dynamic_array(field_type)
-        field['is_base_type'] = is_base_type(field_type)
-        field['static_array_size'] = get_static_array_size(field_type)
-        field['type_str'] = get_type(field_type)
-
 def create_rixmsg_cpp(msg: dict) -> str:
-    # Precalculate type flags for each field
-    add_flags_to_fields(msg['fields'])
-
     return f"""#pragma once
 
 #include <cstdint>

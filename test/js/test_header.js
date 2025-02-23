@@ -16,11 +16,16 @@ header.frame_id = 'Hello, world!';
 console.log("Original: ");
 print_header(header);
 
-var header_encoded = header.encode();
-console.log("\nEncoded: ");
-console.log(header_encoded);
+let encoded = new ArrayBuffer();
+encoded = header.serialize(encoded);
 
-var decoded_header = Header.decode(header.encode());
+console.log("\nEncoded: ");
+console.log(encoded);
+
+let context = { offset: 0 };
+let decoded = new Header();
+let view = new DataView(encoded);
+decoded.deserialize(view, context);
 
 console.log("\nDecoded: ");
-print_header(decoded_header);
+print_header(decoded);

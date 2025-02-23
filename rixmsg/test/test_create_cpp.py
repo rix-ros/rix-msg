@@ -1,7 +1,8 @@
 import unittest
 import os
 
-os.sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../python")
+os.sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../src")
+from type_regex import add_flags_to_fields
 from create_cpp import *
 
 class TestCreateRixmsgCppInclude(unittest.TestCase):
@@ -770,6 +771,7 @@ class ExampleMessage : public MessageBase {
         ]}
         self.maxDiff = None
         msg['hash'] = "i_am_thirty_two_characters_long!"
+        add_flags_to_fields(msg['fields'])
         self.assertEqual(create_rixmsg_cpp(msg), expected)
 
 if __name__ == "__main__":

@@ -39,3 +39,12 @@ def is_base_type(input_text):
         base_type = match.group(0)
         return base_type in BaseTypes
     return False
+
+def add_flags_to_fields(fields: list) -> None:
+    for field in fields:
+        field_type = field['type']
+        field['is_static_array'] = is_static_array(field_type)
+        field['is_dynamic_array'] = is_dynamic_array(field_type)
+        field['is_base_type'] = is_base_type(field_type)
+        field['static_array_size'] = get_static_array_size(field_type)
+        field['type_str'] = get_type(field_type)

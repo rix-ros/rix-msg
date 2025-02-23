@@ -4,7 +4,10 @@ import glob
 import argparse
 
 from validate_json import validate_json, get_schema, write_to_file, get_hash
+from type_regex import is_static_array, is_dynamic_array, is_base_type, get_static_array_size, get_type, add_flags_to_fields
 from create_cpp import create_rixmsg_cpp
+from create_js import create_rixmsg_js
+from create_py import create_rixmsg_py
 
 ROOT = os.getenv("HOME")
 USAGE = """rixmsg [-h] function [arg]
@@ -47,7 +50,7 @@ def show_package(package):
 
 def create(input_path: str) -> None:
     # Get the schema for validation
-    schema = get_schema(f"{ROOT}/.rix/rixmsg/schema/rixmsg.json")
+    schema = get_schema(f"{ROOT}/.rix/rixmsg/schema.json")
 
     # Get a list of XML elements
     json_elements = []
@@ -68,6 +71,9 @@ def create(input_path: str) -> None:
 
         # Add the hash to the msg
         msg['hash'] = get_hash(msg)
+
+        # Add flags to the fields
+        add_flags_to_fields(msg['fields'])
         
         # Generate the C++ implementation files
         dir_name = f"{ROOT}/.rix/include/rix/msg/{msg['package']}/"
@@ -76,8 +82,24 @@ def create(input_path: str) -> None:
         with open(file_name, "w") as f:
             f.write(create_rixmsg_cpp(msg))
 
-        # Generate the Python implementation files ...
-        # Generate the JavaScript implementation files ...
+        # Generate the JavaScript implementation files
+        dir_name = f"{ROOT}/.rix/js/rixmsg/{msg['package']}/"
+        os.makedirs(dir_name, exist_ok=True)
+        file_name = dir_name + f"{msg['name']}.js"
+        with open(file_name, "w") as f:
+            f.write(create_rixmsg_js(msg))
+
+        # Generate the Python implementation files
+        dir_name = f"{ROOT}/.rix/python/rixmsg/rixmsg/{msg['package']}/"
+        os.makedirs(dir_name, exist_ok=True)
+        # Create the __init__.py file
+        file_name = dir_name + "__init__.py"
+        with open(file_name, "w") as f:
+            f.write("")
+
+        file_name = dir_name + f"{msg['name']}.py"
+        with open(file_name, "w") as f:
+            f.write(create_rixmsg_py(msg))
 
 def main(args):
     if args.function == 'show':

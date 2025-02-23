@@ -1,7 +1,7 @@
 {
     "name": "URI",
     "version": "1.0.0",
-    "package": "component",
+    "package": "mediator",
     "fields": [
         {
             "name": "port",

@@ -13,8 +13,7 @@ if ! [ -x "$(command -v node)" ]; then
 fi
 
 # Create the executable
-python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/python/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/python/main.py
-# python3 -m PyInstaller rixmsg.spec
+python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
 
 # Check if the executable was created
 if [ ! -f "dist/rixmsg/rixmsg" ]; then
@@ -33,17 +32,22 @@ ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 # Clean up
 rm -r build/ dist/
 
-# Create node_modules and python directories
-mkdir -p "$HOME/.rix/node_modules/rixmsg"
-mkdir -p "$HOME/.rix/python/rixmsg"
-
-# Copy include to rixmsg directory
+# Create directories for rixmsg
+mkdir -p "$HOME/.rix/js/rixmsg"
+mkdir -p "$HOME/.rix/python/rixmsg/rixmsg"
 mkdir -p "$HOME/.rix/include/rix/msg/"
-cp -r rixmsg/include/* "$HOME/.rix/include/rix/msg/"
+
+# Copy files to rixmsg directories
+cp -r cpp/include/* "$HOME/.rix/include/rix/msg/"
+cp -r js/* "$HOME/.rix/js/rixmsg/"
+cp python/setup.py "$HOME/.rix/python/rixmsg/"
+touch "$HOME/.rix/python/rixmsg/rixmsg/__init__.py"
+cp python/message_base.py "$HOME/.rix/python/rixmsg/rixmsg/"
+cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
 
 # Run CMake for rixmsg
-mkdir -p rixmsg/build
-cd rixmsg/build
+mkdir -p cpp/build
+cd cpp/build
 cmake ..
 make install
 cd ../..
@@ -51,30 +55,12 @@ cd ../..
 echo "Installation completed successfully"
 echo "Creating default rix message implementation files"
 
-"$HOME/.rix/bin/rixmsg" create rixmsg/defs/mediator
-"$HOME/.rix/bin/rixmsg" create rixmsg/defs/standard
-"$HOME/.rix/bin/rixmsg" create rixmsg/defs/sensor
-"$HOME/.rix/bin/rixmsg" create rixmsg/defs/geometry
+"$HOME/.rix/bin/rixmsg" create defs/mediator
+"$HOME/.rix/bin/rixmsg" create defs/standard
+"$HOME/.rix/bin/rixmsg" create defs/sensor
+"$HOME/.rix/bin/rixmsg" create defs/geometry
 
 echo "Default rix message implementation files created successfully"
-
-echo "Installing Node.JS packages"
-cd cstructjs
-npm install
-echo "Linking cstructjs"
-npm link
-cd ..
-
-# Store the current directory
-DIR=$(pwd)
-
-cd "$HOME/.rix/node_modules/rixmsg/"
-echo "Linking cstructjs to rixmsg"
-npm link cstructjs
-npm install
-
-# Return to the original directory
-cd $DIR
 
 deactivate
 rm -r venv
