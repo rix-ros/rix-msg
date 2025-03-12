@@ -1,0 +1,29 @@
+{
+    "name": "SubInfo",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "id",
+            "type": "uint64"
+        },
+        {
+            "name": "node_id",
+            "type": "uint64"
+        },
+        {
+            "name": "protocol",
+            "type": "uint8"
+        },
+        {
+            "name": "topic_info",
+            "type": "TopicInfo",
+            "package": "mediator"
+        },
+        {
+            "name": "endpoint",
+            "type": "Endpoint",
+            "package": "mediator"
+        }
+    ]
+}

@@ -41,58 +41,58 @@ class MessageBase {
      */
     
     template<typename T>
-    static void serialize_base(const T &val, std::vector<uint8_t> &buffer);
+    static inline void serialize_base(const T &val, std::vector<uint8_t> &buffer);
     template<typename T>
-    static void serialize_base_vec(const std::vector<T> &vec, std::vector<uint8_t> &buffer);
+    static inline void serialize_base_vec(const std::vector<T> &vec, std::vector<uint8_t> &buffer);
     template<typename T, size_t N>
-    static void serialize_base_arr(const std::array<T, N> &arr, std::vector<uint8_t> &buffer);
+    static inline void serialize_base_arr(const std::array<T, N> &arr, std::vector<uint8_t> &buffer);
 
-    static void serialize_custom(const MessageBase &msg, std::vector<uint8_t> &buffer);
+    static inline void serialize_custom(const MessageBase &msg, std::vector<uint8_t> &buffer);
     template<typename TMsg>
-    static void serialize_custom_vec(const std::vector<TMsg> &vec, std::vector<uint8_t> &buffer);
+    static inline void serialize_custom_vec(const std::vector<TMsg> &vec, std::vector<uint8_t> &buffer);
     template<typename TMsg, size_t N>
-    static void serialize_custom_arr(const std::array<TMsg, N> &arr, std::vector<uint8_t> &buffer);
+    static inline void serialize_custom_arr(const std::array<TMsg, N> &arr, std::vector<uint8_t> &buffer);
 
-    static void serialize_string(const std::string &str, std::vector<uint8_t> &buffer);
-    static void serialize_string_vec(const std::vector<std::string> &vec, std::vector<uint8_t> &buffer);
+    static inline void serialize_string(const std::string &str, std::vector<uint8_t> &buffer);
+    static inline void serialize_string_vec(const std::vector<std::string> &vec, std::vector<uint8_t> &buffer);
     template<size_t N>
-    static void serialize_string_arr(const std::array<std::string, N> &arr, std::vector<uint8_t> &buffer);
+    static inline void serialize_string_arr(const std::array<std::string, N> &arr, std::vector<uint8_t> &buffer);
 
     template<typename T>
-    static void deserialize_base(T &val, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_base(T &val, const std::vector<uint8_t> &buffer, size_t &offset);
     template<typename T>
-    static void deserialize_base_vec(std::vector<T> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_base_vec(std::vector<T> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
     template<typename T, size_t N>
-    static void deserialize_base_arr(std::array<T, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_base_arr(std::array<T, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
 
-    static void deserialize_custom(MessageBase &msg, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_custom(MessageBase &msg, const std::vector<uint8_t> &buffer, size_t &offset);
     template<typename TMsg>
-    static void deserialize_custom_vec(std::vector<TMsg> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_custom_vec(std::vector<TMsg> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
     template<typename TMsg, size_t N>
-    static void deserialize_custom_arr(std::array<TMsg, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_custom_arr(std::array<TMsg, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
 
-    static void deserialize_string(std::string &str, const std::vector<uint8_t> &buffer, size_t &offset);
-    static void deserialize_string_vec(std::vector<std::string> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_string(std::string &str, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_string_vec(std::vector<std::string> &vec, const std::vector<uint8_t> &buffer, size_t &offset);
     template<size_t N>
-    static void deserialize_string_arr(std::array<std::string, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
+    static inline void deserialize_string_arr(std::array<std::string, N> &arr, const std::vector<uint8_t> &buffer, size_t &offset);
 
     template<typename T>
-    static size_t size_base(const T &val);
+    static inline size_t size_base(const T &val);
     template<typename T>
-    static size_t size_base_vec(const std::vector<T> &vec);
+    static inline size_t size_base_vec(const std::vector<T> &vec);
     template<typename T, size_t N>
-    static size_t size_base_arr(const std::array<T, N> &arr);
+    static inline size_t size_base_arr(const std::array<T, N> &arr);
 
-    static size_t size_custom(const MessageBase &msg);
+    static inline size_t size_custom(const MessageBase &msg);
     template<typename TMsg>
-    static size_t size_custom_vec(const std::vector<TMsg> &vec);
+    static inline size_t size_custom_vec(const std::vector<TMsg> &vec);
     template<typename TMsg, size_t N>
-    static size_t size_custom_arr(const std::array<TMsg, N> &vec);
+    static inline size_t size_custom_arr(const std::array<TMsg, N> &vec);
 
-    static size_t size_string(const std::string &str);
-    static size_t size_string_vec(const std::vector<std::string> &vec);
+    static inline size_t size_string(const std::string &str);
+    static inline size_t size_string_vec(const std::vector<std::string> &vec);
     template<size_t N>
-    static size_t size_string_arr(const std::array<std::string, N> &arr);
+    static inline size_t size_string_arr(const std::array<std::string, N> &arr);
 
     /**
      * These methods are meant to be overridden by derived classes. They are 

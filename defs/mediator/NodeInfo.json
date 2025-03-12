@@ -1,19 +1,14 @@
 {
-    "name": "ComponentInfo",
+    "name": "NodeInfo",
     "version": "1.0.0",
     "package": "mediator",
     "fields": [
         {
-            "name": "msg_hash",
-            "type": "Hash[3]",
-            "package": "mediator"
+            "name": "name",
+            "type": "string"
         },
         {
-            "name": "node_id",
-            "type": "uint64"
-        },
-        {
-            "name": "component_id",
+            "name": "id",
             "type": "uint64"
         },
         {
@@ -25,8 +20,9 @@
             "type": "uint8"
         },
         {
-            "name": "topic",
-            "type": "string"
+            "name": "endpoint",
+            "type": "Endpoint",
+            "package": "mediator"
         }
     ]
 }

@@ -1,15 +1,15 @@
 {
-    "name": "ID",
+    "name": "ActResponse",
     "version": "1.0.0",
     "package": "mediator",
     "fields": [
         {
-            "name": "component_id",
-            "type": "uint64"
+            "name": "error",
+            "type": "uint8"
         },
         {
-            "name": "uri",
-            "type": "URI",
+            "name": "act_info",
+            "type": "ActInfo",
             "package": "mediator"
         }
     ]

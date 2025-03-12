@@ -5,8 +5,7 @@
     "fields": [
         {
             "name": "data",
-            "type": "char",
-            "array": "N"
+            "type": "string"
         }
     ]
 }

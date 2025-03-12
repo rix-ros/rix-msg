@@ -1,0 +1,16 @@
+{
+    "name": "TopicInfo",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "message_hash",
+            "type": "Hash",
+            "package": "mediator"
+        }
+    ]
+}
