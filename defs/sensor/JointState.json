@@ -4,6 +4,10 @@
     "package": "sensor",
     "fields": [
         {
+            "name": "name",
+            "type": "string"
+        },
+        {
             "name": "position",
             "type": "double"
         },

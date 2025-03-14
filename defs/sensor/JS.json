@@ -4,8 +4,13 @@
     "package": "sensor",
     "fields": [
         {
+            "name": "stamp",
+            "type": "Time",
+            "package": "standard"
+        },
+        {
             "name": "joint_states",
-            "type": "JointStateStamped[]",
+            "type": "JointState[]",
             "package": "sensor"
         }
     ]
