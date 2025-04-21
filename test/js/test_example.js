@@ -3,7 +3,7 @@ import { ExampleMessage } from "rixmsg/example/ExampleMessage.js";
 
 function print_other(msg) {
     console.log('number:', msg.number);
-    console.log('word:', msg.word);
+    console.log('flag:', msg.flag);
 }
 
 function print_example(msg) {
@@ -21,7 +21,7 @@ function print_example(msg) {
 }
 
 var other = new OtherMessage();
-other.number = 1234;
+other.number = 12.34;
 other.flag = true;
 
 var example = new ExampleMessage();
@@ -29,12 +29,12 @@ example.number = 1234;
 example.word = 'Hello, world!';
 example.flag = true;
 example.object = other;
-example.array.push(1);
-example.array.push(2);
-example.array.push(3);
-example.static_array[0] = 4;
-example.static_array[1] = 5;
-example.static_array[2] = 6;
+example.array.push(1.2);
+example.array.push(2.3);
+example.array.push(3.4);
+example.static_array[0] = 4.5;
+example.static_array[1] = 5.6;
+example.static_array[2] = 6.7;
 example.array_of_words.push('one');
 example.array_of_words.push('two');
 example.array_of_words.push('three');
@@ -44,11 +44,11 @@ example.static_array_of_words[2] = 'six';
 example.array_of_objects.push(other);
 example.array_of_objects.push(other);
 example.array_of_objects.push(other);
-example.static_array_of_objects[0].number = 7;
+example.static_array_of_objects[0].number = 7.8;
 example.static_array_of_objects[0].flag = false;
-example.static_array_of_objects[1].number = 8;
+example.static_array_of_objects[1].number = 8.9;
 example.static_array_of_objects[1].flag = true;
-example.static_array_of_objects[2].number = 9;
+example.static_array_of_objects[2].number = 9.0;
 example.static_array_of_objects[2].flag = false;
 
 console.log("Original: ");

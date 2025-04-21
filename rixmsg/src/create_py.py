@@ -119,26 +119,26 @@ def create_rixmsg_py_serialize_function(fields: list) -> str:
 
         if field_type_str == "string":
             if is_dynamic_arr:
-                serialize_str += f"MessageBase._serialize_vector(self.{field['name']}, buffer, MessageBase._serialize_string)\n"
+                serialize_str += f"MessageBase._serialize_string(self.{field['name']}, buffer, len(self.{field['name']}), False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                serialize_str += f"MessageBase._serialize_fixed_array(self.{field['name']}, buffer, MessageBase._serialize_string, {arr_size})\n"
+                serialize_str += f"MessageBase._serialize_string(self.{field['name']}, buffer, {arr_size}, True)\n"
             else:
                 serialize_str += f"MessageBase._serialize_string(self.{field['name']}, buffer)\n"
         elif is_base:
             if is_dynamic_arr:
-                serialize_str += f"MessageBase._serialize_vector(self.{field['name']}, buffer, MessageBase._serialize_{field_type_str})\n"
+                serialize_str += f"MessageBase._serialize_{field_type_str}(self.{field['name']}, buffer, len(self.{field['name']}), False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                serialize_str += f"MessageBase._serialize_fixed_array(self.{field['name']}, buffer, MessageBase._serialize_{field_type_str}, {arr_size})\n"
+                serialize_str += f"MessageBase._serialize_{field_type_str}(self.{field['name']}, buffer, {arr_size}, True)\n"
             else:
                 serialize_str += f"MessageBase._serialize_{field_type_str}(self.{field['name']}, buffer)\n"
         elif 'package' in field:
             if is_dynamic_arr:
-                serialize_str += f"MessageBase._serialize_vector(self.{field['name']}, buffer, MessageBase._serialize_custom)\n"
+                serialize_str += f"MessageBase._serialize_custom(self.{field['name']}, buffer, len(self.{field['name']}), False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                serialize_str += f"MessageBase._serialize_fixed_array(self.{field['name']}, buffer, MessageBase._serialize_custom, {arr_size})\n"
+                serialize_str += f"MessageBase._serialize_custom(self.{field['name']}, buffer, {arr_size}, True)\n"
             else:
                 serialize_str += f"MessageBase._serialize_custom(self.{field['name']}, buffer)\n"
         else:
@@ -156,26 +156,26 @@ def create_rixmsg_py_deserialize_function(fields: list) -> str:
 
         if field_type_str == "string":
             if is_dynamic_arr:
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_string)\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_string(buffer, context, False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_string, {arr_size})\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_string(buffer, context, True, {arr_size})\n"
             else:
                 deserialize_str += f"self.{field['name']} = MessageBase._deserialize_string(buffer, context)\n"
         elif is_base:
             if is_dynamic_arr:
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_{field_type_str})\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_{field_type_str}(buffer, context, False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_{field_type_str}, {arr_size})\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_{field_type_str}(buffer, context, True, {arr_size})\n"
             else:
                 deserialize_str += f"self.{field['name']} = MessageBase._deserialize_{field_type_str}(buffer, context)\n"
         elif 'package' in field:
             if is_dynamic_arr:
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_custom, {field_type_str})\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_custom(buffer, context, {field_type_str}, False)\n"
             elif is_static_arr:
                 arr_size = field['static_array_size']
-                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_custom, {arr_size}, {field_type_str})\n"
+                deserialize_str += f"self.{field['name']} = MessageBase._deserialize_custom(buffer, context, {field_type_str}, True, {arr_size})\n"
             else:
                 deserialize_str += f"self.{field['name']} = MessageBase._deserialize_custom(buffer, context, {field_type_str})\n"
         else:

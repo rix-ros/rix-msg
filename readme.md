@@ -7,8 +7,7 @@ The `rix-msg` library contains definitions for the base message types used in `r
 To install `rixmsg`, run the following commands:
 
 ```bash
-chmod +x install.sh
-./install.sh
+sh install.sh
 ```
 
 This will install the `rixmsg` executable into `/usr/local/bin` and create the default message serialization files for C++, Python, and JavaScript in `~/.rix/include/rix/msg/`, `~/.rix/python/rixmsg/`, and `~/.rix/node_modules/rixmsg/` respectively. 

@@ -1,17 +1,17 @@
 {
-    "name": "JS",
-    "version": "1.0.0",
-    "package": "sensor",
-    "fields": [
-        {
-            "name": "stamp",
-            "type": "Time",
-            "package": "standard"
-        },
-        {
-            "name": "joint_states",
-            "type": "JointState[]",
-            "package": "sensor"
-        }
-    ]
+  "name": "JS",
+  "version": "1.0.0",
+  "package": "sensor",
+  "fields": [
+    {
+      "name": "stamp",
+      "type": "Time",
+      "package": "standard"
+    },
+    {
+      "name": "joint_states",
+      "type": "JointState[]",
+      "package": "sensor"
+    }
+  ]
 }

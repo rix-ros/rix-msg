@@ -22,11 +22,11 @@
     },
     {
       "name": "array",
-      "type": "uint32[]"
+      "type": "float[]"
     },
     {
       "name": "static_array",
-      "type": "uint32[3]"
+      "type": "float[3]"
     },
     {
       "name": "array_of_words",

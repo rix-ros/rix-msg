@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "rix/msg/message_base.hpp"
-#include "rix/msg/serializer.hpp"
 
 namespace rix {
 namespace msg {
@@ -14,32 +13,34 @@ namespace example {
 
 class OtherMessage : public MessageBase {
   public:
-    int16_t number;
+    double number;
     bool flag;
 
     OtherMessage() = default;
     OtherMessage(const OtherMessage &other) = default;
     ~OtherMessage() = default;
 
-  private:
     size_t size() const override {
+        using namespace detail;
         size_t size = 0;
         size += size_base(number);
         size += size_base(flag);
         return size;
     }
 
-    rix::msg::Hash hash() const override {
-        return {0x3ca3b57c64691de0ULL, 0x33fa64726faff850ULL};
+    std::array<uint64_t, 2> hash() const override {
+        return {0x309c08666f8285b7ULL, 0xe5ca3cc56cb0fbecULL};
     }
 
     void serialize(std::vector<uint8_t> &buffer) const override {
+        using namespace detail;
         buffer.reserve(buffer.size() + this->size());
         serialize_base(number, buffer);
         serialize_base(flag, buffer);
     }
 
     void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {
+        using namespace detail;
         deserialize_base(number, buffer, offset);
         deserialize_base(flag, buffer, offset);
     }

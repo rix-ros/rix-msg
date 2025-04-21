@@ -79,14 +79,14 @@ export class MessageBase {
         return MessageBase.#append_to_buffer(buffer, data);
     }
 
-    static _serialize_float32(value, buffer) {
+    static _serialize_float(value, buffer) {
         const data = new ArrayBuffer(4);
         const view = new DataView(data);
         view.setFloat32(0, value, true);
         return MessageBase.#append_to_buffer(buffer, data);
     }
 
-    static _serialize_float64(value, buffer) {
+    static _serialize_double(value, buffer) {
         const data = new ArrayBuffer(8);
         const view = new DataView(data);
         view.setFloat64(0, value, true);
@@ -195,13 +195,13 @@ export class MessageBase {
         return val;
     }
 
-    static _deserialize_float32(view, context) {
+    static _deserialize_float(view, context) {
         let val = view.getFloat32(context.offset, true);
         context.offset += 4;
         return val;
     }
 
-    static _deserialize_float64(view, context) {
+    static _deserialize_double(view, context) {
         let val = view.getFloat64(context.offset, true);
         context.offset += 8;
         return val;
@@ -263,8 +263,8 @@ export class MessageBase {
     static _size_uint8() { return 1; }
     static _size_char() { return 1; }
     static _size_bool() { return 1; }
-    static _size_float32() { return 4; }
-    static _size_float64() { return 8; }
+    static _size_float() { return 4; }
+    static _size_double() { return 8; }
     static _size_int64() { return 8; }
     static _size_uint64() { return 8; }
 

@@ -180,11 +180,11 @@ def create_rixmsg_cpp(msg: dict) -> str:
 
 #include <cstdint>
 #include <vector>
+#include <array>
 #include <string>
 #include <cstring>
 
 #include "rix/msg/message_base.hpp"
-#include "rix/msg/serializer.hpp"
 {create_rixmsg_cpp_include(msg['fields'])}
 namespace rix {{
 namespace msg {{
@@ -198,23 +198,25 @@ class {msg['name']} : public MessageBase {{
     {msg['name']}(const {msg['name']} &other) = default;
     ~{msg['name']}() = default;
 
-  private:
     size_t size() const override {{
+        using namespace detail;
         size_t size = 0;
         {create_rixmsg_cpp_size_function(msg['fields']).replace('\n', '\n        ')}
         return size;
     }}
 
-    rix::msg::Hash hash() const override {{
+    std::array<uint64_t, 2> hash() const override {{
         return {create_rixmsg_cpp_hash(msg['hash'])};
     }}
 
     void serialize(std::vector<uint8_t> &buffer) const override {{
+        using namespace detail;
         buffer.reserve(buffer.size() + this->size());
         {create_rixmsg_cpp_serialize_function(msg['fields']).replace('\n', '\n        ')}
     }}
 
     void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {{
+        using namespace detail;
         {create_rixmsg_cpp_deserialize_function(msg['fields']).replace('\n', '\n        ')}
     }}
 }};

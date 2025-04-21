@@ -677,11 +677,11 @@ class TestCreateRixmsgCppFullTest(unittest.TestCase):
 
 #include <cstdint>
 #include <vector>
+#include <array>
 #include <string>
 #include <cstring>
 
 #include "rix/msg/message_base.hpp"
-#include "rix/msg/serializer.hpp"
 #include "rix/msg/example/OtherMessage.hpp"
 
 namespace rix {
@@ -705,8 +705,8 @@ class ExampleMessage : public MessageBase {
     ExampleMessage(const ExampleMessage &other) = default;
     ~ExampleMessage() = default;
 
-  private:
     size_t size() const override {
+        using namespace detail;
         size_t size = 0;
         size += size_base(number);
         size += size_string(word);
@@ -721,11 +721,12 @@ class ExampleMessage : public MessageBase {
         return size;
     }
 
-    rix::msg::Hash hash() const override {
+    std::array<uint64_t, 2> hash() const override {
         return {0xi_am_thirty_two_ULL, 0xcharacters_long!ULL};
     }
 
     void serialize(std::vector<uint8_t> &buffer) const override {
+        using namespace detail;
         buffer.reserve(buffer.size() + this->size());
         serialize_base(number, buffer);
         serialize_string(word, buffer);
@@ -740,6 +741,7 @@ class ExampleMessage : public MessageBase {
     }
 
     void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {
+        using namespace detail;
         deserialize_base(number, buffer, offset);
         deserialize_string(word, buffer, offset);
         deserialize_base(flag, buffer, offset);

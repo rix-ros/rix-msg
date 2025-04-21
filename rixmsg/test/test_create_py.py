@@ -399,8 +399,8 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'int16[24]'}]
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
-            "MessageBase._serialize_vector(self.field2, buffer, MessageBase._serialize_float)\n"
-            "MessageBase._serialize_fixed_array(self.field3, buffer, MessageBase._serialize_int16, 24)"
+            "MessageBase._serialize_float(self.field2, buffer, len(self.field2), False)\n"
+            "MessageBase._serialize_int16(self.field3, buffer, 24, True)"
         )
         add_flags_to_fields(fields)
         self.maxDiff = None
@@ -413,7 +413,7 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
             "MessageBase._serialize_string(self.field2, buffer)\n"
-            "MessageBase._serialize_vector(self.field3, buffer, MessageBase._serialize_float)"
+            "MessageBase._serialize_float(self.field3, buffer, len(self.field3), False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_serialize_function(fields), expected)
@@ -424,8 +424,8 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
-            "MessageBase._serialize_vector(self.field2, buffer, MessageBase._serialize_string)\n"
-            "MessageBase._serialize_vector(self.field3, buffer, MessageBase._serialize_float)"
+            "MessageBase._serialize_string(self.field2, buffer, len(self.field2), False)\n"
+            "MessageBase._serialize_float(self.field3, buffer, len(self.field3), False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_serialize_function(fields), expected)
@@ -436,8 +436,8 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
-            "MessageBase._serialize_fixed_array(self.field2, buffer, MessageBase._serialize_string, 128)\n"
-            "MessageBase._serialize_vector(self.field3, buffer, MessageBase._serialize_float)"
+            "MessageBase._serialize_string(self.field2, buffer, 128, True)\n"
+            "MessageBase._serialize_float(self.field3, buffer, len(self.field3), False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_serialize_function(fields), expected)
@@ -459,7 +459,7 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
             "MessageBase._serialize_custom(self.field2, buffer)\n"
-            "MessageBase._serialize_vector(self.field3, buffer, MessageBase._serialize_custom)"
+            "MessageBase._serialize_custom(self.field3, buffer, len(self.field3), False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_serialize_function(fields), expected)
@@ -471,7 +471,7 @@ class TestCreateRixmsgPySerialize(unittest.TestCase):
         expected = (
             "MessageBase._serialize_int32(self.field1, buffer)\n"
             "MessageBase._serialize_custom(self.field2, buffer)\n"
-            "MessageBase._serialize_fixed_array(self.field3, buffer, MessageBase._serialize_custom, 10)"
+            "MessageBase._serialize_custom(self.field3, buffer, 10, True)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_serialize_function(fields), expected)
@@ -543,8 +543,8 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'int16[24]'}]
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
-            "self.field2 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_float)\n"
-            "self.field3 = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_int16, 24)"
+            "self.field2 = MessageBase._deserialize_float(buffer, context, False)\n"
+            "self.field3 = MessageBase._deserialize_int16(buffer, context, True, 24)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -556,7 +556,7 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
             "self.field2 = MessageBase._deserialize_string(buffer, context)\n"
-            "self.field3 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_float)"
+            "self.field3 = MessageBase._deserialize_float(buffer, context, False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -567,8 +567,8 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
-            "self.field2 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_string)\n"
-            "self.field3 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_float)"
+            "self.field2 = MessageBase._deserialize_string(buffer, context, False)\n"
+            "self.field3 = MessageBase._deserialize_float(buffer, context, False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -579,8 +579,8 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
-            "self.field2 = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_string, 128)\n"
-            "self.field3 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_float)"
+            "self.field2 = MessageBase._deserialize_string(buffer, context, True, 128)\n"
+            "self.field3 = MessageBase._deserialize_float(buffer, context, False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -602,7 +602,7 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
             "self.field2 = MessageBase._deserialize_custom(buffer, context, MyType)\n"
-            "self.field3 = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_custom, MyType)"
+            "self.field3 = MessageBase._deserialize_custom(buffer, context, MyType, False)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -614,7 +614,7 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
         expected = (
             "self.field1 = MessageBase._deserialize_int32(buffer, context)\n"
             "self.field2 = MessageBase._deserialize_custom(buffer, context, MyType)\n"
-            "self.field3 = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_custom, 10, MyType)"
+            "self.field3 = MessageBase._deserialize_custom(buffer, context, MyType, True, 10)"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_py_deserialize_function(fields), expected)
@@ -716,24 +716,24 @@ class ExampleMessage(MessageBase):
         MessageBase._serialize_string(self.word, buffer)
         MessageBase._serialize_bool(self.flag, buffer)
         MessageBase._serialize_custom(self.object, buffer)
-        MessageBase._serialize_vector(self.array, buffer, MessageBase._serialize_uint32)
-        MessageBase._serialize_fixed_array(self.static_array, buffer, MessageBase._serialize_uint32, 3)
-        MessageBase._serialize_vector(self.array_of_words, buffer, MessageBase._serialize_string)
-        MessageBase._serialize_fixed_array(self.static_array_of_words, buffer, MessageBase._serialize_string, 3)
-        MessageBase._serialize_vector(self.array_of_objects, buffer, MessageBase._serialize_custom)
-        MessageBase._serialize_fixed_array(self.static_array_of_objects, buffer, MessageBase._serialize_custom, 3)
+        MessageBase._serialize_uint32(self.array, buffer, len(self.array), False)
+        MessageBase._serialize_uint32(self.static_array, buffer, 3, True)
+        MessageBase._serialize_string(self.array_of_words, buffer, len(self.array_of_words), False)
+        MessageBase._serialize_string(self.static_array_of_words, buffer, 3, True)
+        MessageBase._serialize_custom(self.array_of_objects, buffer, len(self.array_of_objects), False)
+        MessageBase._serialize_custom(self.static_array_of_objects, buffer, 3, True)
 
     def deserialize(self, buffer: bytearray, context: dict) -> None:
         self.number = MessageBase._deserialize_uint32(buffer, context)
         self.word = MessageBase._deserialize_string(buffer, context)
         self.flag = MessageBase._deserialize_bool(buffer, context)
         self.object = MessageBase._deserialize_custom(buffer, context, OtherMessage)
-        self.array = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_uint32)
-        self.static_array = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_uint32, 3)
-        self.array_of_words = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_string)
-        self.static_array_of_words = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_string, 3)
-        self.array_of_objects = MessageBase._deserialize_vector(buffer, context, MessageBase._deserialize_custom, OtherMessage)
-        self.static_array_of_objects = MessageBase._deserialize_fixed_array(buffer, context, MessageBase._deserialize_custom, 3, OtherMessage)
+        self.array = MessageBase._deserialize_uint32(buffer, context, False)
+        self.static_array = MessageBase._deserialize_uint32(buffer, context, True, 3)
+        self.array_of_words = MessageBase._deserialize_string(buffer, context, False)
+        self.static_array_of_words = MessageBase._deserialize_string(buffer, context, True, 3)
+        self.array_of_objects = MessageBase._deserialize_custom(buffer, context, OtherMessage, False)
+        self.static_array_of_objects = MessageBase._deserialize_custom(buffer, context, OtherMessage, True, 3)
 
     def hash(self) -> int:
         return [0xi_am_thirty_two_, 0xcharacters_long!]"""

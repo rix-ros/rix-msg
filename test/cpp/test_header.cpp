@@ -1,6 +1,6 @@
-#include <iostream>
 #include <iomanip>
-#include "rix/msg/serializer.hpp"
+#include <iostream>
+
 #include "rix/msg/standard/Header.hpp"
 
 using Header = rix::msg::standard::Header;
@@ -31,15 +31,15 @@ int main() {
     print_header(header);
 
     std::vector<uint8_t> encoded;
-    rix::msg::Serializer<Header>::serialize(header, encoded);
+    header.serialize(encoded);
 
     std::cout << "Encoded:\n";
     print_encoded(encoded);
 
     Header header_decoded;
     size_t offset = 0;
-    rix::msg::Serializer<Header>::deserialize(header_decoded, encoded, offset);
-    
+    header_decoded.deserialize(encoded, offset);
+
     std::cout << "\nDecoded:\n";
     print_header(header_decoded);
 }

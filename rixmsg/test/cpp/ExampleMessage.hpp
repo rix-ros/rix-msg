@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "rix/msg/message_base.hpp"
-#include "rix/msg/serializer.hpp"
 #include "rix/msg/example/OtherMessage.hpp"
 
 namespace rix {
@@ -19,8 +18,8 @@ class ExampleMessage : public MessageBase {
     std::string word;
     bool flag;
     example::OtherMessage object;
-    std::vector<uint32_t> array;
-    std::array<uint32_t, 3> static_array;
+    std::vector<float> array;
+    std::array<float, 3> static_array;
     std::vector<std::string> array_of_words;
     std::array<std::string, 3> static_array_of_words;
     std::vector<example::OtherMessage> array_of_objects;
@@ -30,8 +29,8 @@ class ExampleMessage : public MessageBase {
     ExampleMessage(const ExampleMessage &other) = default;
     ~ExampleMessage() = default;
 
-  private:
     size_t size() const override {
+        using namespace detail;
         size_t size = 0;
         size += size_base(number);
         size += size_string(word);
@@ -46,11 +45,12 @@ class ExampleMessage : public MessageBase {
         return size;
     }
 
-    rix::msg::Hash hash() const override {
-        return {0x0e63fe00552e3b79ULL, 0x788cc5abcae0282bULL};
+    std::array<uint64_t, 2> hash() const override {
+        return {0xd3b5843a81f422d9ULL, 0x316fab08fd66c0d5ULL};
     }
 
     void serialize(std::vector<uint8_t> &buffer) const override {
+        using namespace detail;
         buffer.reserve(buffer.size() + this->size());
         serialize_base(number, buffer);
         serialize_string(word, buffer);
@@ -65,6 +65,7 @@ class ExampleMessage : public MessageBase {
     }
 
     void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {
+        using namespace detail;
         deserialize_base(number, buffer, offset);
         deserialize_string(word, buffer, offset);
         deserialize_base(flag, buffer, offset);

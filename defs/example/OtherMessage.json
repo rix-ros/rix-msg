@@ -5,7 +5,7 @@
   "fields": [
     {
       "name": "number",
-      "type": "int16"
+      "type": "double"
     },
     {
       "name": "flag",

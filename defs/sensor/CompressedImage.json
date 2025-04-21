@@ -1,20 +1,16 @@
 {
-    "name": "CompressedImage",
-    "version": "1.0.0",
-    "package": "sensor",
-    "fields": [
-        {
-            "name": "header",
-            "type": "Header",
-            "package": "standard"
-        },
-        {
-            "name": "num_bytes",
-            "type": "uint32"
-        },
-        {
-            "name": "data",
-            "type": "uint8[]"
-        }
-    ]
+  "name": "CompressedImage",
+  "version": "1.0.0",
+  "package": "sensor",
+  "fields": [
+    {
+      "name": "header",
+      "type": "Header",
+      "package": "standard"
+    },
+    {
+      "name": "data",
+      "type": "uint8[]"
+    }
+  ]
 }

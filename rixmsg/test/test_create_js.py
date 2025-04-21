@@ -20,7 +20,7 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -30,7 +30,7 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -40,7 +40,7 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -50,7 +50,7 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -61,8 +61,8 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "import { MyNewType } from \"rixmsg/package/MyNewType.js\";\n"
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { MyNewType } from \"../package/MyNewType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -75,9 +75,9 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType[256]', 'package': 'new_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "import { AnotherNewType } from \"rixmsg/new_package/AnotherNewType.js\";\n"
-            "import { MyNewType } from \"rixmsg/package/MyNewType.js\";\n"
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { AnotherNewType } from \"../new_package/AnotherNewType.js\";\n"
+            "import { MyNewType } from \"../package/MyNewType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
@@ -93,10 +93,10 @@ class TestCreateRixmsgJSImports(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "import { AnotherNewType } from \"rixmsg/diff_package/AnotherNewType.js\";\n"
-            "import { AnotherNewType } from \"rixmsg/new_package/AnotherNewType.js\";\n"
-            "import { MyNewType } from \"rixmsg/package/MyNewType.js\";\n"
-            "import { MyType } from \"rixmsg/package/MyType.js\";\n"
+            "import { AnotherNewType } from \"../diff_package/AnotherNewType.js\";\n"
+            "import { AnotherNewType } from \"../new_package/AnotherNewType.js\";\n"
+            "import { MyNewType } from \"../package/MyNewType.js\";\n"
+            "import { MyType } from \"../package/MyType.js\";\n"
         )
         add_flags_to_fields(fields)
         self.assertEqual(create_rixmsg_js_imports(fields), expected)
