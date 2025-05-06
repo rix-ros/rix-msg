@@ -1,0 +1,17 @@
+{
+    "name": "MotorVelocity",
+    "version": "1.0.0",
+    "package": "sensor",
+    "fields": [
+      {
+        "name": "header",
+        "type": "Header",
+        "package": "standard"
+      },
+      {
+        "name": "velocity",
+        "type": "float[]"
+      }
+    ]
+  }
+  

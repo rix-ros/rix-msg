@@ -1,15 +1,15 @@
 {
-  "name": "TopicInfo",
+  "name": "ChannelFloat",
   "version": "1.0.0",
-  "package": "mediator",
+  "package": "sensor",
   "fields": [
     {
       "name": "name",
       "type": "string"
     },
     {
-      "name": "message_hash",
-      "type": "uint64[2]"
+      "name": "data",
+      "type": "float[]"
     }
   ]
 }

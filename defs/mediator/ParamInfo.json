@@ -1,5 +1,5 @@
 {
-  "name": "TopicInfo",
+  "name": "ParamInfo",
   "version": "1.0.0",
   "package": "mediator",
   "fields": [
@@ -10,6 +10,10 @@
     {
       "name": "message_hash",
       "type": "uint64[2]"
+    },
+    {
+      "name": "len",
+      "type": "uint32"
     }
   ]
 }
