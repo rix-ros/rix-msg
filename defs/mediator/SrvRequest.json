@@ -21,13 +21,11 @@
         },
         {
             "name": "request_hash",
-            "type": "Hash",
-            "package": "mediator"
+            "type": "uint64[2]"
         },
         {
             "name": "response_hash",
-            "type": "Hash",
-            "package": "mediator"
+            "type": "uint64[2]"
         }
     ]
 }

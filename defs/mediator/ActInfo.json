@@ -26,18 +26,15 @@
         },
         {
             "name": "goal_hash",
-            "type": "Hash",
-            "package": "mediator"
+            "type": "uint64[2]"
         },
         {
             "name": "feedback_hash",
-            "type": "Hash",
-            "package": "mediator"
+            "type": "uint64[2]"
         },
         {
             "name": "result_hash",
-            "type": "Hash",
-            "package": "mediator"
+            "type": "uint64[2]"
         }
     ]
 }

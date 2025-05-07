@@ -1,0 +1,32 @@
+{
+    "name": "LedgerInfo",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "nodes",
+            "type": "NodeInfo[]",
+            "package": "mediator"
+        },
+        {
+            "name": "publishers",
+            "type": "PubInfo[]",
+            "package": "mediator"
+        },
+        {
+            "name": "subscribers",
+            "type": "SubInfo[]",
+            "package": "mediator"
+        },
+        {
+            "name": "services",
+            "type": "SrvInfo[]",
+            "package": "mediator"
+        },
+        {
+            "name": "actions",
+            "type": "ActInfo[]",
+            "package": "mediator"
+        }
+    ]
+}
