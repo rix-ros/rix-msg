@@ -185,30 +185,31 @@ def create_rixmsg_js_deserialize_function(fields: list) -> str:
     return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
 
 def create_rixmsg_js(msg: dict) -> str:
+    n = '\n'
     return f"""import {{ MessageBase }} from "../message_base.js";
 {create_rixmsg_js_imports(msg['fields'])}
 export class {msg['name']} extends MessageBase {{
     constructor() {{
         super();
-        {create_rixmsg_js_constructor(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_js_constructor(msg['fields']).replace(n, n + '        ')}
     }}
 
     size() {{
         let size = 0;
-        {create_rixmsg_js_size_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_js_size_function(msg['fields']).replace(n, n + '        ')}
         return size;
     }}
 
     hash() {{
-        return {create_rixmsg_js_hash(msg['hash']).replace('\n', '\n        ')};
+        return {create_rixmsg_js_hash(msg['hash']).replace(n, n + '        ')};
     }}
 
     serialize(buffer) {{
-        {create_rixmsg_js_serialize_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_js_serialize_function(msg['fields']).replace(n, n + '        ')}
         return buffer;
     }}
 
     deserialize(buffer, context) {{
-        {create_rixmsg_js_deserialize_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_js_deserialize_function(msg['fields']).replace(n, n + '        ')}
     }}
 }}"""

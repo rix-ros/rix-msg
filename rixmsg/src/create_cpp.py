@@ -176,6 +176,7 @@ def create_rixmsg_cpp_deserialize_function(fields: list) -> str:
     return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
 
 def create_rixmsg_cpp(msg: dict) -> str:
+    n = '\n'
     return f"""#pragma once
 
 #include <cstdint>
@@ -192,7 +193,7 @@ namespace {msg['package']} {{
 
 class {msg['name']} : public MessageBase {{
   public:
-    {create_rixmsg_cpp_fields(msg['fields']).replace('\n', '\n    ')}
+    {create_rixmsg_cpp_fields(msg['fields']).replace(n, n + '    ')}
 
     {msg['name']}() = default;
     {msg['name']}(const {msg['name']} &other) = default;
@@ -201,7 +202,7 @@ class {msg['name']} : public MessageBase {{
     size_t size() const override {{
         using namespace detail;
         size_t size = 0;
-        {create_rixmsg_cpp_size_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_cpp_size_function(msg['fields']).replace(n, n + '        ')}
         return size;
     }}
 
@@ -212,12 +213,12 @@ class {msg['name']} : public MessageBase {{
     void serialize(std::vector<uint8_t> &buffer) const override {{
         using namespace detail;
         buffer.reserve(buffer.size() + this->size());
-        {create_rixmsg_cpp_serialize_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_cpp_serialize_function(msg['fields']).replace(n, n + '        ')}
     }}
 
     void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {{
         using namespace detail;
-        {create_rixmsg_cpp_deserialize_function(msg['fields']).replace('\n', '\n        ')}
+        {create_rixmsg_cpp_deserialize_function(msg['fields']).replace(n, n + '        ')}
     }}
 }};
 

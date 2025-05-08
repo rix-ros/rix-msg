@@ -21,6 +21,8 @@ if [ ! -f "dist/rixmsg/rixmsg" ]; then
     exit 1
 fi
 
+echo $HOME
+
 # Copy the required files
 mkdir -p "$HOME/.rix/rixmsg/"
 cp -r dist/rixmsg "$HOME/.rix/rixmsg/"
