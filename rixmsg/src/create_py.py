@@ -183,6 +183,51 @@ def create_rixmsg_py_deserialize_function(fields: list) -> str:
         
     return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
 
+# def create_rixmsg_py_from_pb(fields: list) -> str:
+#     from_pb_str = ""
+#     for field in fields:
+#         if field['is_base_type']:
+#             from_pb_str += f"self.{field['name']} = pbuff.{field['name']}\n"
+#         else:
+#             from_pb_str += f"self.{field['name']}.from_pb(pbuff.{field['name']})\n"
+#     return from_pb_str[:-1] if from_pb_str[-1] == "\n" else from_pb_str
+
+# def create_rixmsg_py_to_pb(fields: list) -> str:
+#     to_pb_str = ""
+#     for field in fields:
+#         to_pb_str += f"pbuff.{field['name']} = self.{field['name']}\n"
+#     return to_pb_str[:-1] if to_pb_str[-1] == "\n" else to_pb_str
+
+# def create_rixmsg_py(msg: dict) -> str:
+#     return f"""from rixmsg.message_base import MessageBase
+# import rixmsg.protobuf.{msg['package']}.{msg['name']}_pb2 as pb
+# {create_rixmsg_py_imports(msg['fields'])}
+# class {msg['name']}(MessageBase):
+#     def __init__(self):
+#         {create_rixmsg_py_constructor(msg['fields']).replace('\n', '\n        ')}
+
+#     def size(self) -> int:
+#         size = 0
+#         {create_rixmsg_py_size_function(msg['fields']).replace('\n', '\n        ')}
+#         return size
+    
+#     def serialize(self, buffer: bytearray) -> None:
+#         {create_rixmsg_py_serialize_function(msg['fields']).replace('\n', '\n        ')}
+
+#     def deserialize(self, buffer: bytearray, context: dict) -> None:
+#         {create_rixmsg_py_deserialize_function(msg['fields']).replace('\n', '\n        ')}
+
+#     def hash(self) -> int:
+#         return {create_rixmsg_py_hash(msg['hash'])}
+
+#     def from_pb(self, pbuff) -> None:
+#         {create_rixmsg_py_from_pb(msg['fields']).replace('\n', '\n        ')}
+
+#     def to_pb(self) -> None:
+#         pbuff = pb.{msg['name']}()
+#         {create_rixmsg_py_to_pb(msg['fields']).replace('\n', '\n        ')}
+#         return pbuff"""
+
 def create_rixmsg_py(msg: dict) -> str:
     return f"""from rixmsg.message_base import MessageBase
 {create_rixmsg_py_imports(msg['fields'])}
