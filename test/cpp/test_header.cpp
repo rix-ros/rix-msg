@@ -31,14 +31,20 @@ int main() {
     print_header(header);
 
     std::vector<uint8_t> encoded;
-    header.serialize(encoded);
+    if (!header.serialize(encoded)) {
+        std::cerr << "Serialization failed!" << std::endl;
+        return 1;
+    }
 
     std::cout << "Encoded:\n";
     print_encoded(encoded);
 
     Header header_decoded;
     size_t offset = 0;
-    header_decoded.deserialize(encoded, offset);
+    if (!header_decoded.deserialize(encoded, offset)) {
+        std::cerr << "Deserialization failed!" << std::endl;
+        return 1;
+    }
 
     std::cout << "\nDecoded:\n";
     print_header(header_decoded);

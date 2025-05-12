@@ -151,25 +151,25 @@ def create_rixmsg_cpp_deserialize_function(fields: list) -> str:
 
         if field_type_str == "string":
             if is_dynamic_arr:
-                deserialize_str += f"deserialize_string_vec({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_string_vec({field['name']}, buffer, offset)) {{ return false; }};\n"
             elif is_static_arr:
-                deserialize_str += f"deserialize_string_arr({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_string_arr({field['name']}, buffer, offset)) {{ return false; }};\n"
             else:
-                deserialize_str += f"deserialize_string({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_string({field['name']}, buffer, offset)) {{ return false; }};\n"
         elif is_base:
             if is_dynamic_arr:
-                deserialize_str += f"deserialize_base_vec({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_base_vec({field['name']}, buffer, offset)) {{ return false; }};\n"
             elif is_static_arr:
-                deserialize_str += f"deserialize_base_arr({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_base_arr({field['name']}, buffer, offset)) {{ return false; }};\n"
             else:
-                deserialize_str += f"deserialize_base({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_base({field['name']}, buffer, offset)) {{ return false; }};\n"
         elif 'package' in field:
             if is_dynamic_arr:
-                deserialize_str += f"deserialize_custom_vec({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_custom_vec({field['name']}, buffer, offset)) {{ return false; }};\n"
             elif is_static_arr:
-                deserialize_str += f"deserialize_custom_arr({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_custom_arr({field['name']}, buffer, offset)) {{ return false; }};\n"
             else:
-                deserialize_str += f"deserialize_custom({field['name']}, buffer, offset);\n"
+                deserialize_str += f"if (!deserialize_custom({field['name']}, buffer, offset)) {{ return false; }};\n"
         else:
             raise ValueError(f"Error: No package specified for type {field['type']}")
         
@@ -210,15 +210,20 @@ class {msg['name']} : public MessageBase {{
         return {create_rixmsg_cpp_hash(msg['hash'])};
     }}
 
-    void serialize(std::vector<uint8_t> &buffer) const override {{
+    bool serialize(std::vector<uint8_t> &buffer) const override {{
         using namespace detail;
+        if (buffer.size() + this->size() > buffer.max_size()) {{
+            return false;
+        }}
         buffer.reserve(buffer.size() + this->size());
         {create_rixmsg_cpp_serialize_function(msg['fields']).replace(n, n + '        ')}
+        return true;
     }}
 
-    void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {{
+    bool deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override {{
         using namespace detail;
         {create_rixmsg_cpp_deserialize_function(msg['fields']).replace(n, n + '        ')}
+        return true;
     }}
 }};
 

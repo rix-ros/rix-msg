@@ -488,9 +488,9 @@ class MessageBaseTest : public rix::msg::MessageBase {
 
     std::array<uint64_t, 2> hash() const override { return {0}; }
 
-    void serialize(std::vector<uint8_t> &buffer) const override { return; }
+    bool serialize(std::vector<uint8_t> &buffer) const override { return true; }
 
-    void deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override { return; }
+    bool deserialize(const std::vector<uint8_t> &buffer, size_t &offset) override { return true; }
 };
 
 void test_other_message() {
