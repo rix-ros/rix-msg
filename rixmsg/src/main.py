@@ -11,11 +11,6 @@ from validate_json import (
     get_dict_from_json,
 )
 from type_regex import (
-    is_static_array,
-    is_dynamic_array,
-    is_base_type,
-    get_static_array_size,
-    get_type,
     add_flags_to_fields,
 )
 from create_cpp import create_rixmsg_cpp
@@ -33,6 +28,7 @@ Functions:
   create <path>          - Create implementation files from RIX message 
                            definition files
   index                  - Index the RIX message definitions
+  validate <path>        - Validate a RIX message JSON file against the RIX message schema
 """
 
 
@@ -90,6 +86,15 @@ def show_package(package):
     for msg in msgs:
         print(msg.split(".")[0])
 
+def validate(input_path: str) -> None:
+    schema = get_schema(f"{ROOT}/.rix/rixmsg/schema.json")
+    if os.path.isfile(input_path):
+        if validate_json(input_path, schema) is not None:
+            print(f"{input_path} is a valid RIX message.")
+        else:
+            print(f"{input_path} is invalid.")
+    else: 
+        print(f"{input_path} is not a file.")
 
 def create(input_path: str) -> None:
     # Get the schema for validation
@@ -198,6 +203,8 @@ def main(args):
         create(args.arg)
     elif args.function == "index":
         index()
+    elif args.function == "validate":
+        validate(args.arg)
     else:
         print(f"Error: Unknown function {args.function}. Use -h for help")
         sys.exit(1)

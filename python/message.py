@@ -2,7 +2,7 @@ import struct
 import abc
 
 
-class MessageBase(abc.ABC):
+class Message(abc.ABC):
     @abc.abstractmethod
     def serialize(self, buffer: bytearray) -> None:
         pass
@@ -29,7 +29,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}b", *value))
         else:
             buffer.extend(struct.pack("b", value))
@@ -44,7 +44,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}B", *value))
         else:
             buffer.extend(struct.pack("B", value))
@@ -56,13 +56,14 @@ class MessageBase(abc.ABC):
         size: int | None = None,
         fixed: bool = False,
     ) -> None:
-
-        if size is not None:
-            if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
-            buffer.extend(struct.pack(f"{size}c", *value))
-        else:
-            buffer.extend(struct.pack("c", value))
+        # if size is not None:
+        #     if not fixed:
+        #         Message._serialize_uint32(size, buffer)
+        #     buffer.extend(struct.pack(f"{size}c", *value))
+        # else:
+        #     buffer.extend(struct.pack("c", value))
+        # Serialize char as int8 (problem with struct.pack with char array represented as a number array)
+        return Message._serialize_int8(value, buffer, size, fixed)
 
     @staticmethod
     def _serialize_bool(
@@ -74,7 +75,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}?", *value))
         else:
             buffer.extend(struct.pack("?", value))
@@ -89,7 +90,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}h", *value))
         else:
             buffer.extend(struct.pack("h", value))
@@ -104,7 +105,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}H", *value))
         else:
             buffer.extend(struct.pack("H", value))
@@ -119,7 +120,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}i", *value))
         else:
             buffer.extend(struct.pack("i", value))
@@ -134,7 +135,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}I", *value))
         else:
             buffer.extend(struct.pack("I", value))
@@ -149,7 +150,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}q", *value))
         else:
             buffer.extend(struct.pack("q", value))
@@ -164,7 +165,7 @@ class MessageBase(abc.ABC):
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}Q", *value))
         else:
             buffer.extend(struct.pack("Q", value))
@@ -173,13 +174,13 @@ class MessageBase(abc.ABC):
     def _serialize_float(
         value: float | list[float],
         buffer: bytearray,
-        size: int | None,
+        size: int | None = None,
         fixed: bool = False,
     ) -> None:
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}f", *value))
         else:
             buffer.extend(struct.pack("f", value))
@@ -188,13 +189,13 @@ class MessageBase(abc.ABC):
     def _serialize_double(
         value: float | list[float],
         buffer: bytearray,
-        size: int | None,
+        size: int | None = None,
         fixed: bool = False,
     ) -> None:
 
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}d", *value))
         else:
             buffer.extend(struct.pack("d", value))
@@ -209,17 +210,17 @@ class MessageBase(abc.ABC):
         if size is not None:
             if not fixed:
                 # print("vec size:" + str(size))
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             for item in value:
-                MessageBase._serialize_string(item, buffer)
+                Message._serialize_string(item, buffer)
         else:
             size = len(value)
             # print("string size:" + str(size))
-            MessageBase._serialize_uint32(size, buffer)
+            Message._serialize_uint32(size, buffer)
             buffer.extend(struct.pack(f"{size}s", value.encode()))
 
     @staticmethod
-    def _serialize_custom(
+    def _serialize_message(
         value: object | list[object],
         buffer: bytearray,
         size: int | None = None,
@@ -227,11 +228,18 @@ class MessageBase(abc.ABC):
     ) -> None:
         if size is not None:
             if not fixed:
-                MessageBase._serialize_uint32(size, buffer)
+                Message._serialize_uint32(size, buffer)
             for item in value:
                 item.serialize(buffer)
         else:
             value.serialize(buffer)
+
+    @staticmethod
+    def _serialize_map(
+        value: dict, buffer: bytearray, key_func: callable, value_func: callable
+    ) -> None:
+        key_func(list(value.keys()), buffer, len(value), False)
+        value_func(list(value.values()), buffer, len(value), False)
 
     @staticmethod
     def _deserialize_int8(
@@ -246,10 +254,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_int8(
-                    buffer, context, fixed=True, size=size
-                )
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_int8(buffer, context, fixed=True, size=size)
             else:
                 return 0
         else:
@@ -270,8 +276,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_uint8(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_uint8(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -294,10 +300,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_char(
-                    buffer, context, fixed=True, size=size
-                )
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_char(buffer, context, fixed=True, size=size)
             else:
                 return 0
         else:
@@ -318,10 +322,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_bool(
-                    buffer, context, fixed=True, size=size
-                )
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_bool(buffer, context, fixed=True, size=size)
             else:
                 return 0
         else:
@@ -342,8 +344,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 2 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_int16(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_int16(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -366,8 +368,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 2 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_uint16(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_uint16(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -390,8 +392,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 4 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_int32(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_int32(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -414,8 +416,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 4 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_uint32(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_uint32(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -438,8 +440,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 8 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_int64(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_int64(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -462,8 +464,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 8 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_uint64(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_uint64(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -486,8 +488,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 4 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_float(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_float(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -510,8 +512,8 @@ class MessageBase(abc.ABC):
                 context["offset"] += 8 * size
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_double(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_double(
                     buffer, context, fixed=True, size=size
                 )
             else:
@@ -533,25 +535,25 @@ class MessageBase(abc.ABC):
                 value = []
                 # print("fixed arr size: " + str(size))
                 for _ in range(size):
-                    value.append(MessageBase._deserialize_string(buffer, context))
+                    value.append(Message._deserialize_string(buffer, context))
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
+                size = Message._deserialize_uint32(buffer, context)
                 # print("vec size:" + str(size))
-                return MessageBase._deserialize_string(
+                return Message._deserialize_string(
                     buffer, context, fixed=True, size=size
                 )
             else:
                 return 0
         else:
-            size = MessageBase._deserialize_uint32(buffer, context)
+            size = Message._deserialize_uint32(buffer, context)
             # print("string size:" + str(size))
             value = struct.unpack_from(f"{size}s", buffer, context["offset"])[0]
             context["offset"] += size
             return value.decode()
 
     @staticmethod
-    def _deserialize_custom(
+    def _deserialize_message(
         buffer: bytearray,
         context: dict,
         obj_type: type,
@@ -563,12 +565,12 @@ class MessageBase(abc.ABC):
                 value = []
                 for _ in range(size):
                     value.append(
-                        MessageBase._deserialize_custom(buffer, context, obj_type)
+                        Message._deserialize_message(buffer, context, obj_type)
                     )
                 return list(value)
             elif fixed is False and size is None:
-                size = MessageBase._deserialize_uint32(buffer, context)
-                return MessageBase._deserialize_custom(
+                size = Message._deserialize_uint32(buffer, context)
+                return Message._deserialize_message(
                     buffer, context, obj_type, fixed=True, size=size
                 )
             else:
@@ -577,6 +579,21 @@ class MessageBase(abc.ABC):
             obj = obj_type()
             obj.deserialize(buffer, context)
             return obj
+
+    @staticmethod
+    def _deserialize_map(
+        buffer: bytearray,
+        context: dict,
+        key_func: callable,
+        value_func: callable,
+        obj_type: type | None = None,
+    ) -> dict:
+        keys = key_func(buffer, context, False, None)
+        if obj_type is None:
+            values = value_func(buffer, context, False, None)
+        else:
+            values = value_func(buffer, context, obj_type, False, None)
+        return dict(zip(keys, values))
 
     @staticmethod
     def _size_int8() -> int:
@@ -631,11 +648,11 @@ class MessageBase(abc.ABC):
         return 4 + len(value)
 
     @staticmethod
-    def _size_custom(value: object) -> int:
+    def _size_message(value: object) -> int:
         return value.size()
 
     @staticmethod
-    def _size_vector_base(value: list, size: int) -> int:
+    def _size_vector_number(value: list, size: int) -> int:
         return 4 + len(value) * size
 
     @staticmethod
@@ -643,18 +660,58 @@ class MessageBase(abc.ABC):
         return 4 + sum(len(item) for item in value)
 
     @staticmethod
-    def _size_vector_custom(value: list) -> int:
+    def _size_vector_message(value: list) -> int:
         return 4 + sum(item.size() for item in value)
 
     @staticmethod
-    def _size_fixed_array_base(value: list, size: int) -> int:
+    def _size_array_number(value: list, size: int) -> int:
         return len(value) * size
 
     @staticmethod
-    def _size_fixed_array_string(value: list, size: int) -> int:
+    def _size_array_string(value: list, size: int) -> int:
         # return sum(len(item) for item in value)
-        return sum(MessageBase._size_string(item) for item in value[:size])
+        return sum(Message._size_string(item) for item in value[:size])
 
     @staticmethod
-    def _size_fixed_array_custom(value: list, size: int) -> int:
-        return sum(MessageBase._size_custom(item) for item in value[:size])
+    def _size_array_message(value: list, size: int) -> int:
+        return sum(Message._size_message(item) for item in value[:size])
+
+    @staticmethod
+    def _size_map_number_to_number(value: dict, key_size: int, value_size: int) -> int:
+        return 8 + len(value) * (key_size + value_size)
+
+    @staticmethod
+    def _size_map_number_to_string(value: dict, key_size: int) -> int:
+        return (
+            8
+            + len(value) * key_size
+            + sum(Message._size_string(item) for item in value.values)
+        )
+
+    @staticmethod
+    def _size_map_number_to_message(value: dict, key_size: int) -> int:
+        return (
+            8
+            + len(value) * key_size
+            + sum(Message._size_message(item) for item in value.values)
+        )
+
+    @staticmethod
+    def _size_map_string_to_number(value: dict, value_size: int) -> int:
+        return (
+            8
+            + sum(Message._size_string(item) for item in value.keys)
+            + len(value) * value_size
+        )
+
+    @staticmethod
+    def _size_map_string_to_string(value: dict) -> int:
+        return 8 + sum(
+            Message._size_string(k) + Message._size_string(v) for k, v in value.items()
+        )
+
+    @staticmethod
+    def _size_map_string_to_message(value: dict) -> int:
+        return 8 + sum(
+            Message._size_string(k) + Message._size_message(v) for k, v in value.items()
+        )

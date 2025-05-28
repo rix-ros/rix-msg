@@ -30,18 +30,16 @@ int main() {
     std::cout << "Original:\n";
     print_header(header);
 
-    std::vector<uint8_t> encoded;
-    if (!header.serialize(encoded)) {
-        std::cerr << "Serialization failed!" << std::endl;
-        return 1;
-    }
+    std::vector<uint8_t> encoded(header.size());
+    size_t offset = 0;
+    header.serialize(encoded.data(), offset);
 
     std::cout << "Encoded:\n";
     print_encoded(encoded);
 
     Header header_decoded;
-    size_t offset = 0;
-    if (!header_decoded.deserialize(encoded, offset)) {
+    offset = 0;
+    if (!header_decoded.deserialize(encoded.data(), encoded.size(), offset)) {
         std::cerr << "Deserialization failed!" << std::endl;
         return 1;
     }

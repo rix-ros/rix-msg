@@ -44,7 +44,7 @@ cp -r cpp/include/* "$HOME/.rix/include/rix/msg/"
 cp -r js/* "$HOME/.rix/js/rixmsg/"
 cp python/setup.py "$HOME/.rix/python/rixmsg/"
 touch "$HOME/.rix/python/rixmsg/rixmsg/__init__.py"
-cp python/message_base.py "$HOME/.rix/python/rixmsg/rixmsg/"
+cp python/message.py "$HOME/.rix/python/rixmsg/rixmsg/"
 cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
 
 # Run CMake for rixmsg

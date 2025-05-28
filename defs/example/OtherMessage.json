@@ -4,7 +4,7 @@
   "package": "example",
   "fields": [
     {
-      "name": "number",
+      "name": "num",
       "type": "double"
     },
     {

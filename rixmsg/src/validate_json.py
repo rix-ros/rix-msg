@@ -1,4 +1,4 @@
-from jsonschema import validate
+from jsonschema import validate, ValidationError
 import json
 from hashlib import md5
 
@@ -18,11 +18,16 @@ def write_to_file(filepath: str, data: dict) -> None:
         f.write(json.dumps(data, indent=2))
 
 
-def validate_json(json_file: str, schema: dict) -> dict:
+def validate_json(json_file: str, schema: dict) -> dict | None:
     with open(json_file, "r") as f:
-        data = json.load(f)
-        validate(data, schema)
-        return data
+        try:
+            data = json.load(f)
+            validate(data, schema)
+            return data
+        except ValidationError as e:
+            print(e.message)
+            return None
+    return None
 
 def get_dict_from_json(json_file: str) -> dict:
     with open(json_file, "r") as f:

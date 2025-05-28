@@ -2,54 +2,78 @@ import { OtherMessage } from "rixmsg/example/OtherMessage.js";
 import { ExampleMessage } from "rixmsg/example/ExampleMessage.js";
 
 function print_other(msg) {
-    console.log('number:', msg.number);
+    console.log('num:', msg.num);
     console.log('flag:', msg.flag);
 }
 
 function print_example(msg) {
-    console.log('number:', msg.number);
-    console.log('word:', msg.word);
+    console.log('num:', msg.num);
+    console.log('str:', msg.str);
     console.log('flag:', msg.flag);
-    console.log('object:');
-    print_other(msg.object);
-    console.log('array:', msg.array);
-    console.log('static_array:', msg.static_array);
-    console.log('array_of_words:', msg.array_of_words);
-    console.log('static_array_of_words:', msg.static_array_of_words);
-    console.log('array_of_objects:', msg.array_of_objects);
-    console.log('static_array_of_objects:', msg.static_array_of_objects);
+    console.log('msg:');
+    print_other(msg.msg);
+    console.log('num_vec:', msg.num_vec);
+    console.log('num_arr:', msg.num_arr);
+    console.log('str_vec:', msg.str_vec);
+    console.log('str_arr:', msg.str_arr);
+    console.log('msg_vec:', msg.msg_vec);
+    console.log('msg_arr:', msg.msg_arr);
+    console.log("num_to_num_map:", msg.num_to_num_map);
+    console.log("str_to_num_map:", msg.str_to_num_map);
+    console.log("num_to_msg_map:", msg.num_to_msg_map);
+    console.log("num_to_str_map:", msg.num_to_str_map);
+    console.log("str_to_str_map:", msg.str_to_str_map);
+    console.log("str_to_msg_map:", msg.str_to_msg_map);
 }
 
 var other = new OtherMessage();
-other.number = 12.34;
+other.num = 12.34;
 other.flag = true;
 
 var example = new ExampleMessage();
-example.number = 1234;
-example.word = 'Hello, world!';
+example.num = 1234;
+example.str = 'Hello, world!';
 example.flag = true;
-example.object = other;
-example.array.push(1.2);
-example.array.push(2.3);
-example.array.push(3.4);
-example.static_array[0] = 4.5;
-example.static_array[1] = 5.6;
-example.static_array[2] = 6.7;
-example.array_of_words.push('one');
-example.array_of_words.push('two');
-example.array_of_words.push('three');
-example.static_array_of_words[0] = 'four';
-example.static_array_of_words[1] = 'five';
-example.static_array_of_words[2] = 'six';
-example.array_of_objects.push(other);
-example.array_of_objects.push(other);
-example.array_of_objects.push(other);
-example.static_array_of_objects[0].number = 7.8;
-example.static_array_of_objects[0].flag = false;
-example.static_array_of_objects[1].number = 8.9;
-example.static_array_of_objects[1].flag = true;
-example.static_array_of_objects[2].number = 9.0;
-example.static_array_of_objects[2].flag = false;
+example.msg = other;
+example.num_vec.push(1.2);
+example.num_vec.push(2.3);
+example.num_vec.push(3.4);
+example.num_arr[0] = 4.5;
+example.num_arr[1] = 5.6;
+example.num_arr[2] = 6.7;
+example.str_vec.push('one');
+example.str_vec.push('two');
+example.str_vec.push('three');
+example.str_arr[0] = 'four';
+example.str_arr[1] = 'five';
+example.str_arr[2] = 'six';
+example.msg_vec.push(other);
+example.msg_vec.push(other);
+example.msg_vec.push(other);
+example.msg_arr[0].num = 7.8;
+example.msg_arr[0].flag = false;
+example.msg_arr[1].num = 8.9;
+example.msg_arr[1].flag = true;
+example.msg_arr[2].num = 9.0;
+example.msg_arr[2].flag = false;
+example.num_to_num_map[0] = 1
+example.num_to_num_map[1] = 2
+example.num_to_num_map[2] = 3
+example.str_to_num_map["str0"] = 1
+example.str_to_num_map["str1"] = 2
+example.str_to_num_map["str2"] = 3
+example.num_to_msg_map[0] = other
+example.num_to_msg_map[1] = other
+example.num_to_msg_map[2] = other
+example.num_to_str_map[0] = "str0"
+example.num_to_str_map[1] = "str1"
+example.num_to_str_map[2] = "str2"
+example.str_to_str_map["str0"] = "str1"
+example.str_to_str_map["str1"] = "str2"
+example.str_to_str_map["str2"] = "str3"
+example.str_to_msg_map["str0"] = other
+example.str_to_msg_map["str1"] = other
+example.str_to_msg_map["str2"] = other
 
 console.log("Original: ");
 print_example(example);
