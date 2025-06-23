@@ -1,0 +1,19 @@
+{
+    "name": "Twist2D",
+    "version": "1.0.0",
+    "package": "geometry",
+    "fields" : [
+        {
+            "name": "vx",
+            "type": "float"
+        },
+        {
+            "name": "vy",
+            "type": "float"
+        },
+        {
+            "name": "wz",
+            "type": "float"
+        }
+    ]
+}

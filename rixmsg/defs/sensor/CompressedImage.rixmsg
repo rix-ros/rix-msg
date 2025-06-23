@@ -1,9 +1,0 @@
-version: 1.0.0;
-package: sensor;
-
-template: uint32_t N;
-CompressedImage {
-    standard::Header header;
-    uint32_t    num_bytes;
-    uint8_t     data[N];
-}

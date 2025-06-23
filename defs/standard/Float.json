@@ -1,0 +1,11 @@
+{
+    "name": "Float",
+    "version": "1.0.0",
+    "package": "standard",
+    "fields": [
+        {
+            "name": "data",
+            "type": "float"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "name": "rixmsg",
+    "version": "1.0.0",
+    "description": "Message definitions for RIX",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "cstructjs": "^1.0.0"
+    },
+    "type": "module"
+}

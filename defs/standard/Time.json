@@ -1,0 +1,15 @@
+{
+    "name": "Time",
+    "version": "1.0.0",
+    "package": "standard",
+    "fields": [
+        {
+            "name": "sec",
+            "type": "int32"
+        },
+        {
+            "name": "nsec",
+            "type": "int32"
+        }
+    ]
+}

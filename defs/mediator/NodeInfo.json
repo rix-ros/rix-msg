@@ -1,0 +1,28 @@
+{
+    "name": "NodeInfo",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "id",
+            "type": "uint64"
+        },
+        {
+            "name": "machine_id",
+            "type": "uint64"
+        },
+        {
+            "name": "protocol",
+            "type": "uint8"
+        },
+        {
+            "name": "endpoint",
+            "type": "Endpoint",
+            "package": "mediator"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "name": "QuaternionStamped",
+    "version": "1.0.0",
+    "package": "geometry",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "standard"
+        },
+        {
+            "name": "quaternion",
+            "type": "Quaternion",
+            "package": "geometry"
+        }
+    ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "SrvInfo",
+  "version": "1.0.0",
+  "package": "mediator",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "id",
+      "type": "uint64"
+    },
+    {
+      "name": "node_id",
+      "type": "uint64"
+    },
+    {
+      "name": "protocol",
+      "type": "uint8"
+    },
+    {
+      "name": "endpoint",
+      "type": "Endpoint",
+      "package": "mediator"
+    },
+    {
+      "name": "request_hash",
+      "type": "uint64[2]"
+    },
+    {
+      "name": "response_hash",
+      "type": "uint64[2]"
+    }
+  ]
+}

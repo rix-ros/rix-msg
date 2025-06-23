@@ -1,7 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-PointStamped {
-    standard::Header header;
-    geometry::Point point;
-}

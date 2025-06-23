@@ -1,0 +1,15 @@
+{
+  "name": "ChannelFloat",
+  "version": "1.0.0",
+  "package": "sensor",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "data",
+      "type": "float[]"
+    }
+  ]
+}

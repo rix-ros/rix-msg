@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-UInt8 {
-    uint8_t data;
-}

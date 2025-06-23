@@ -1,1 +1,0 @@
-export { Structure } from './struct.js';

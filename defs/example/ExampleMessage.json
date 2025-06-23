@@ -1,0 +1,76 @@
+{
+  "name": "ExampleMessage",
+  "version": "1.0.0",
+  "package": "example",
+  "fields": [
+    {
+      "name": "num",
+      "type": "uint32"
+    },
+    {
+      "name": "str",
+      "type": "string"
+    },
+    {
+      "name": "flag",
+      "type": "bool"
+    },
+    {
+      "name": "msg",
+      "type": "OtherMessage",
+      "package": "example"
+    },
+    {
+      "name": "num_vec",
+      "type": "float[]"
+    },
+    {
+      "name": "num_arr",
+      "type": "float[3]"
+    },
+    {
+      "name": "str_vec",
+      "type": "string[]"
+    },
+    {
+      "name": "str_arr",
+      "type": "string[3]"
+    },
+    {
+      "name": "msg_vec",
+      "type": "OtherMessage[]",
+      "package": "example"
+    },
+    {
+      "name": "msg_arr",
+      "type": "OtherMessage[3]",
+      "package": "example"
+    },
+    {
+      "name": "num_to_num_map",
+      "type": "int16[int32]"
+    },
+    {
+      "name": "str_to_num_map",
+      "type": "char[string]"
+    },
+    {
+      "name": "num_to_msg_map",
+      "type": "OtherMessage[uint64]",
+      "package": "example"
+    },
+    {
+      "name": "num_to_str_map",
+      "type": "string[double]"
+    },
+    {
+      "name": "str_to_str_map",
+      "type": "string[string]"
+    },
+    {
+      "name": "str_to_msg_map",
+      "type": "OtherMessage[string]",
+      "package": "example"
+    }
+  ]
+}

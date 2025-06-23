@@ -1,6 +1,0 @@
-version: 1.0.0;
-package: standard;
-
-Int16 {
-    int16_t data;
-}

@@ -7,8 +7,7 @@ The `rix-msg` library contains definitions for the base message types used in `r
 To install `rixmsg`, run the following commands:
 
 ```bash
-chmod +x install.sh
-./install.sh
+bash ./install.sh
 ```
 
 This will install the `rixmsg` executable into `/usr/local/bin` and create the default message serialization files for C++, Python, and JavaScript in `~/.rix/include/rix/msg/`, `~/.rix/python/rixmsg/`, and `~/.rix/node_modules/rixmsg/` respectively. 
@@ -59,30 +58,36 @@ add_executable(test test.cpp)
 ```
 
 ## Tests
-`rix-msg` supports three languages: C++, Python, and JavaScript. There are tests for each of these languages in the `tests` directory.
+`rix-msg` supports three languages: C++, Python, and JavaScript. There are tests for each of these languages in the `tests` directory. These tests require that you create the `example` definitions in `defs/example`. Use the `rixmsg` executable to do so:
+```bash
+~/.rix/bin/rixmsg create defs/example/
+```
 
 C++
 ```bash
-mkdir tests/cpp/build
-cd tests/cpp/build
+mkdir test/cpp/build
+cd test/cpp/build
 cmake ..
 make
-./test
+./test_header
+./test_example
 ```
 Python
 ```bash
-cd tests/python/
+cd test/python/
 python3 -m venv venv
 source venv/bin/activate
 pip install ~/.rix/python/rixmsg/
-python3 test.py
+python3 test_header.py
+python3 test_example.py
 ```
 JavaScript
 ```bash
-cd tests/js/
-npm link ~/.rix/node_modules/rixmsg/
+cd test/js/
+npm link ~/.rix/js/rixmsg/
 npm install
-node test.js
+node test_header.js
+node test_example.js
 ```
 
 ## The `.rixmsg` Format

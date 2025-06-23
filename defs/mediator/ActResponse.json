@@ -1,0 +1,16 @@
+{
+    "name": "ActResponse",
+    "version": "1.0.0",
+    "package": "mediator",
+    "fields": [
+        {
+            "name": "error",
+            "type": "uint8"
+        },
+        {
+            "name": "act_info",
+            "type": "ActInfo",
+            "package": "mediator"
+        }
+    ]
+}

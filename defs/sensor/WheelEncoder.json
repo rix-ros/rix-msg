@@ -1,0 +1,24 @@
+{
+  "name": "WheelEncoder",
+  "version": "1.0.0",
+  "package": "sensor",
+  "fields": [
+    {
+      "name": "header",
+      "type": "Header",
+      "package": "standard"
+    },
+    {
+      "name": "ticks",
+      "type": "int64[]"
+    },
+    {
+      "name": "delta_ticks",
+      "type": "int32[]"
+    },
+    {
+      "name": "delta_time",
+      "type": "int32"
+    }
+  ]
+}

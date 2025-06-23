@@ -1,8 +1,0 @@
-version: 1.0.0;
-package: geometry;
-
-TransformStamped {
-    standard::Header header;
-    char child_frame_id[32];
-    geometry::Transform transform;
-}
