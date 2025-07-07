@@ -1,0 +1,23 @@
+{
+    "name": "Color",
+    "version": "1.0.0",
+    "package": "standard",
+    "fields": [
+        {
+            "name": "r",
+            "type": "float"
+        },
+        {
+            "name": "g",
+            "type": "float"
+        },
+        {
+            "name": "b",
+            "type": "float"
+        },
+        {
+            "name": "a",
+            "type": "float"
+        }
+    ]
+}
