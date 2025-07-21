@@ -1,15 +1,15 @@
 {
-    "name": "Time",
+    "name": "Duration",
     "version": "1.0.0",
     "package": "standard",
     "fields": [
         {
             "name": "sec",
-            "type": "uint32"
+            "type": "int32"
         },
         {
             "name": "nsec",
-            "type": "uint32"
+            "type": "int32"
         }
     ]
 }

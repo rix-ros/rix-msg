@@ -1,7 +1,7 @@
 from jsonschema import validate, ValidationError
 import json
 from hashlib import md5
-
+import re
 
 def get_schema(json_file: str) -> dict:
     with open(json_file, "r") as f:
@@ -10,7 +10,9 @@ def get_schema(json_file: str) -> dict:
 
 def get_hash(pathname: str) -> str:
     with open(pathname, "r") as f:
-        return md5(f.read().encode()).hexdigest()
+        file_str = f.read()
+        file_str = re.sub(r"\s+", "", file_str, flags=re.UNICODE)
+        return md5(file_str.encode()).hexdigest()
 
 
 def write_to_file(filepath: str, data: dict) -> None:
