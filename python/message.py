@@ -45,7 +45,8 @@ class Message(abc.ABC):
         if size is not None:
             if not fixed:
                 Message._serialize_uint32(size, buffer)
-            buffer.extend(struct.pack(f"{size}B", *value))
+            # buffer.extend(struct.pack(f"{size}B", *value))
+            buffer.extend(bytearray(value))
         else:
             buffer.extend(struct.pack("B", value))
 
@@ -272,7 +273,8 @@ class Message(abc.ABC):
     ) -> int | list[int]:
         if fixed is not None:
             if fixed is True and size is not None:
-                value = struct.unpack_from(f"{size}B", buffer, context["offset"])
+                # value = struct.unpack_from(f"{size}B", buffer, context["offset"])
+                value = buffer[context["offset"]:context["offset"]+size]
                 context["offset"] += size
                 return list(value)
             elif fixed is False and size is None:
