@@ -1,5 +1,5 @@
 {
-    "name": "LedgerInfo",
+    "name": "SystemInfo",
     "version": "1.0.0",
     "package": "mediator",
     "fields": [

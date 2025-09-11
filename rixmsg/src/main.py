@@ -16,7 +16,6 @@ from type_regex import (
 from create_cpp import create_rixmsg_cpp
 from create_js import create_rixmsg_js
 from create_py import create_rixmsg_py
-# from create_protobuf import create_rixmsg_protobuf
 
 ROOT = os.getenv("HOME")
 USAGE = """rixmsg [-h] function [arg]
@@ -150,32 +149,6 @@ def create(input_path: str) -> None:
         file_name = dir_name + f"{msg['name']}.py"
         with open(file_name, "w") as f:
             f.write(create_rixmsg_py(msg))
-
-        # # Generate the .proto files
-        # dir_name = f"{ROOT}/.rix/protobuf/rixmsg/protobuf/{msg['package']}/"
-        # os.makedirs(dir_name, exist_ok=True)
-        # file_name = dir_name + f"{msg['name']}.proto"
-        # with open(file_name, "w") as f:
-        #     f.write(create_rixmsg_protobuf(msg))
-
-        # # Create __init__.py file for the protobuf directory
-        # proto_dir_name = f"{ROOT}/.rix/python/rixmsg/rixmsg/protobuf/"
-        # os.makedirs(proto_dir_name, exist_ok=True)
-        # proto_file_name = proto_dir_name + "__init__.py"
-        # with open(proto_file_name, "w") as f:
-        #     f.write("")
-
-        # # Create __init__.py file for the package directory
-        # package_dir_name = f"{ROOT}/.rix/python/rixmsg/rixmsg/protobuf/{msg['package']}/"
-        # os.makedirs(package_dir_name, exist_ok=True)
-        # package_file_name = package_dir_name + "__init__.py"
-        # with open(package_file_name, "w") as f:
-        #     f.write("")
-
-        # # Generate the Protobuf Python implementation files
-        # os.system(
-        #     f"protoc -I={ROOT}/.rix/protobuf --descriptor_set_out={ROOT}/.rix/python/rixmsg/rixmsg/protobuf/{msg['package']}/{msg['package']}.bin --python_out={ROOT}/.rix/python/rixmsg/ {ROOT}/.rix/protobuf/rixmsg/protobuf/{msg['package']}/*.proto"
-        # )
 
     # Re-index the definitions
     index()

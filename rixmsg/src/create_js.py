@@ -11,35 +11,43 @@ JS_TYPE_INITIALIZERS = {
     "float": "0.0",
     "double": "0.0",
     "bool": "false",
-    "string": "''"
+    "string": "''",
 }
+
 
 def create_rixmsg_js_imports(fields: list) -> str:
     includes = set()
     for field in fields:
-        if not field['value_type_is_base']:
-            field_type = field['value_type']
-            if 'package' in field:
-                includes.add(f"import {{ {field_type} }} from \"../{field['package']}/{field_type}.js\";")
+        if not field["value_type_is_base"]:
+            field_type = field["value_type"]
+            if "package" in field:
+                includes.add(
+                    f"import {{ {field_type} }} from \"../{field['package']}/{field_type}.js\";"
+                )
             else:
-                raise ValueError(f"Error: No package specified for type {field['type']}")
-            
+                raise ValueError(
+                    f"Error: No package specified for type {field['type']}"
+                )
+
     return "\n".join(sorted(includes)) + "\n" if len(includes) > 0 else ""
+
 
 def create_rixmsg_js_constructor(fields: list) -> str:
     fields_str = ""
     for field in fields:
         # If we have a base array type
-        value_type = field['value_type']
-        key_type = field['key_type']
-        is_static_arr = field['is_static_array']
-        is_dynamic_arr = field['is_dynamic_array']
-        is_map = field['is_map']
-        value_is_base = field['value_type_is_base']
-        key_is_base = field['key_type_is_base']
+        value_type = field["value_type"]
+        key_type = field["key_type"]
+        is_static_arr = field["is_static_array"]
+        is_dynamic_arr = field["is_dynamic_array"]
+        is_map = field["is_map"]
+        value_is_base = field["value_type_is_base"]
+        key_is_base = field["key_type_is_base"]
 
         if is_map and not key_is_base:
-            raise ValueError(f"Error: Value type for associative container cannot be message type {field['type']}")
+            raise ValueError(
+                f"Error: Value type for associative container cannot be message type {field['type']}"
+            )
 
         # If we have a base type
         if value_is_base:
@@ -48,22 +56,24 @@ def create_rixmsg_js_constructor(fields: list) -> str:
                 fields_str += f"this.{field['name']} = [];\n"
             # If we have a static array of base types
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 fields_str += f"this.{field['name']} = Array.from({{length: {arr_size}}}, () => {JS_TYPE_INITIALIZERS[value_type]});\n"
             # If we have a map:
             elif is_map:
                 fields_str += f"this.{field['name']} = {{}};"
             # If we have a single base type
             else:
-                fields_str += f"this.{field['name']} = {JS_TYPE_INITIALIZERS[value_type]};\n"
+                fields_str += (
+                    f"this.{field['name']} = {JS_TYPE_INITIALIZERS[value_type]};\n"
+                )
         # If we have a message type (package specified)
-        elif 'package' in field:
+        elif "package" in field:
             # If we have a dynamic array of message types
             if is_dynamic_arr:
                 fields_str += f"this.{field['name']} = [];\n"
             # If we have a static array of message types
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 fields_str += f"this.{field['name']} = Array.from({{length: {arr_size}}}, () => new {value_type}());\n"
             # If we have a map:
             elif is_map:
@@ -74,29 +84,34 @@ def create_rixmsg_js_constructor(fields: list) -> str:
         # If the package is not specified for the message type, raise an error
         else:
             raise ValueError(f"Error: No package specified for type {field['type']}")
-        
+
     return fields_str[:-1] if fields_str[-1] == "\n" else fields_str
+
 
 def create_rixmsg_js_size_function(fields: list) -> str:
     size_str = ""
     for field in fields:
-        value_type = field['value_type']
-        key_type = field['key_type']
-        is_static_arr = field['is_static_array']
-        is_dynamic_arr = field['is_dynamic_array']
-        is_map = field['is_map']
-        value_is_base = field['value_type_is_base']
-        key_is_base = field['key_type_is_base']
+        value_type = field["value_type"]
+        key_type = field["key_type"]
+        is_static_arr = field["is_static_array"]
+        is_dynamic_arr = field["is_dynamic_array"]
+        is_map = field["is_map"]
+        value_is_base = field["value_type_is_base"]
+        key_is_base = field["key_type_is_base"]
 
         if is_map and not key_is_base:
-            raise ValueError(f"Error: Value type for associative container cannot be message type {field['type']}")
+            raise ValueError(
+                f"Error: Value type for associative container cannot be message type {field['type']}"
+            )
 
         # If we have a string
         if value_type == "string":
             if is_dynamic_arr:
-                size_str += f"size += Message._size_vector_string(this.{field['name']});\n"
+                size_str += (
+                    f"size += Message._size_vector_string(this.{field['name']});\n"
+                )
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 size_str += f"size += Message._size_array_string(this.{field['name']}, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -111,7 +126,7 @@ def create_rixmsg_js_size_function(fields: list) -> str:
                 size_str += f"size += Message._size_vector_number(this.{field['name']}, Message._size_{value_type}());\n"
             # If we have a static array of base types
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 size_str += f"size += Message._size_array_number(this.{field['name']}, Message._size_{value_type}());\n"
             elif is_map:
                 if key_type == "string":
@@ -121,11 +136,13 @@ def create_rixmsg_js_size_function(fields: list) -> str:
             else:
                 size_str += f"size += Message._size_{value_type}();\n"
         # If we have a message type (package specified)
-        elif 'package' in field:
+        elif "package" in field:
             if is_dynamic_arr:
-                size_str += f"size += Message._size_vector_message(this.{field['name']});\n"
+                size_str += (
+                    f"size += Message._size_vector_message(this.{field['name']});\n"
+                )
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 size_str += f"size += Message._size_array_message(this.{field['name']}, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -137,31 +154,35 @@ def create_rixmsg_js_size_function(fields: list) -> str:
         # If the package is not specified for the message type, raise an error
         else:
             raise ValueError(f"Error: No package specified for type {field['type']}")
-    
+
     return size_str[:-1] if size_str[-1] == "\n" else size_str
+
 
 def create_rixmsg_js_hash(hash: str) -> str:
     return f"[BigInt(0x{hash[0:16]}), BigInt(0x{hash[16:32]})]"
 
+
 def create_rixmsg_js_serialize_function(fields: list) -> str:
     serialize_str = ""
     for field in fields:
-        value_type = field['value_type']
-        key_type = field['key_type']
-        is_static_arr = field['is_static_array']
-        is_dynamic_arr = field['is_dynamic_array']
-        is_map = field['is_map']
-        value_is_base = field['value_type_is_base']
-        key_is_base = field['key_type_is_base']
+        value_type = field["value_type"]
+        key_type = field["key_type"]
+        is_static_arr = field["is_static_array"]
+        is_dynamic_arr = field["is_dynamic_array"]
+        is_map = field["is_map"]
+        value_is_base = field["value_type_is_base"]
+        key_is_base = field["key_type_is_base"]
 
         if is_map and not key_is_base:
-            raise ValueError(f"Error: Value type for associative container cannot be message type {field['type']}")
+            raise ValueError(
+                f"Error: Value type for associative container cannot be message type {field['type']}"
+            )
 
         if value_type == "string":
             if is_dynamic_arr:
                 serialize_str += f"buffer = Message._serialize_vector(this.{field['name']}, buffer, Message._serialize_string);\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 serialize_str += f"buffer = Message._serialize_array(this.{field['name']}, buffer, Message._serialize_string, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -174,7 +195,7 @@ def create_rixmsg_js_serialize_function(fields: list) -> str:
             if is_dynamic_arr:
                 serialize_str += f"buffer = Message._serialize_vector(this.{field['name']}, buffer, Message._serialize_{value_type});\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 serialize_str += f"buffer = Message._serialize_array(this.{field['name']}, buffer, Message._serialize_{value_type}, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -183,11 +204,11 @@ def create_rixmsg_js_serialize_function(fields: list) -> str:
                     serialize_str += f"buffer = Message._serialize_map(this.{field['name']}, buffer, Message._serialize_{key_type}, Message._serialize_{value_type})\n"
             else:
                 serialize_str += f"buffer = Message._serialize_{value_type}(this.{field['name']}, buffer);\n"
-        elif 'package' in field:
+        elif "package" in field:
             if is_dynamic_arr:
                 serialize_str += f"buffer = Message._serialize_vector(this.{field['name']}, buffer, Message._serialize_message);\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 serialize_str += f"buffer = Message._serialize_array(this.{field['name']}, buffer, Message._serialize_message, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -198,28 +219,31 @@ def create_rixmsg_js_serialize_function(fields: list) -> str:
                 serialize_str += f"buffer = Message._serialize_message(this.{field['name']}, buffer);\n"
         else:
             raise ValueError(f"Error: No package specified for type {field['type']}")
-    
+
     return serialize_str[:-1] if serialize_str[-1] == "\n" else serialize_str
-            
+
+
 def create_rixmsg_js_deserialize_function(fields: list) -> str:
     deserialize_str = ""
     for field in fields:
-        value_type = field['value_type']
-        key_type = field['key_type']
-        is_static_arr = field['is_static_array']
-        is_dynamic_arr = field['is_dynamic_array']
-        is_map = field['is_map']
-        value_is_base = field['value_type_is_base']
-        key_is_base = field['key_type_is_base']
+        value_type = field["value_type"]
+        key_type = field["key_type"]
+        is_static_arr = field["is_static_array"]
+        is_dynamic_arr = field["is_dynamic_array"]
+        is_map = field["is_map"]
+        value_is_base = field["value_type_is_base"]
+        key_is_base = field["key_type_is_base"]
 
         if is_map and not key_is_base:
-            raise ValueError(f"Error: Value type for associative container cannot be message type {field['type']}")
+            raise ValueError(
+                f"Error: Value type for associative container cannot be message type {field['type']}"
+            )
 
         if value_type == "string":
             if is_dynamic_arr:
                 deserialize_str += f"this.{field['name']} = Message._deserialize_vector(buffer, context, Message._deserialize_string);\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 deserialize_str += f"this.{field['name']} = Message._deserialize_array(buffer, context, Message._deserialize_string, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -232,7 +256,7 @@ def create_rixmsg_js_deserialize_function(fields: list) -> str:
             if is_dynamic_arr:
                 deserialize_str += f"this.{field['name']} = Message._deserialize_vector(buffer, context, Message._deserialize_{value_type});\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 deserialize_str += f"this.{field['name']} = Message._deserialize_array(buffer, context, Message._deserialize_{value_type}, {arr_size});\n"
             elif is_map:
                 if key_type == "string":
@@ -241,11 +265,11 @@ def create_rixmsg_js_deserialize_function(fields: list) -> str:
                     deserialize_str += f"this.{field['name']} = Message._deserialize_map(buffer, context, Message._deserialize_{key_type}, Message._deserialize_{value_type})\n"
             else:
                 deserialize_str += f"this.{field['name']} = Message._deserialize_{value_type}(buffer, context);\n"
-        elif 'package' in field:
+        elif "package" in field:
             if is_dynamic_arr:
                 deserialize_str += f"this.{field['name']} = Message._deserialize_vector(buffer, context, Message._deserialize_message, {value_type});\n"
             elif is_static_arr:
-                arr_size = field['static_array_size']
+                arr_size = field["static_array_size"]
                 deserialize_str += f"this.{field['name']} = Message._deserialize_array(buffer, context, Message._deserialize_message, {arr_size}, {value_type});\n"
             elif is_map:
                 if key_type == "string":
@@ -256,11 +280,12 @@ def create_rixmsg_js_deserialize_function(fields: list) -> str:
                 deserialize_str += f"this.{field['name']} = Message._deserialize_message(buffer, context, {value_type});\n"
         else:
             raise ValueError(f"Error: No package specified for type {field['type']}")
-        
+
     return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
 
+
 def create_rixmsg_js(msg: dict) -> str:
-    n = '\n'
+    n = "\n"
     return f"""import {{ Message }} from "../message.js";
 {create_rixmsg_js_imports(msg['fields'])}
 export class {msg['name']} extends Message {{

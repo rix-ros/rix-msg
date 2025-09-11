@@ -12,8 +12,8 @@
       "type": "uint64[2]"
     },
     {
-      "name": "len",
-      "type": "uint32"
+      "name": "data",
+      "type": "uint8[]"
     }
   ]
 }

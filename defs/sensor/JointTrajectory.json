@@ -1,0 +1,13 @@
+{
+    "name": "JointTrajectory",
+    "version": "1.0.0",
+    "package": "sensor",
+    "fields": [
+      {
+        "name": "points",
+        "type": "JS[]",
+        "package": "sensor"
+      }
+    ]
+  }
+  
