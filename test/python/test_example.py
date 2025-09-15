@@ -1,5 +1,6 @@
 from rixmsg.example.OtherMessage import OtherMessage
 from rixmsg.example.ExampleMessage import ExampleMessage
+from rixmsg.message import Message
 
 from math import isclose
 
@@ -61,9 +62,9 @@ example.msg_arr[2].flag = False
 example.num_to_num_map[0] = 1
 example.num_to_num_map[1] = 2
 example.num_to_num_map[2] = 3
-example.str_to_num_map["str0"] = 1
-example.str_to_num_map["str1"] = 2
-example.str_to_num_map["str2"] = 3
+example.str_to_num_map["str0"] = '1'
+example.str_to_num_map["str1"] = '2'
+example.str_to_num_map["str2"] = '3'
 example.num_to_msg_map[0] = other
 example.num_to_msg_map[1] = other
 example.num_to_msg_map[2] = other
@@ -83,12 +84,12 @@ print_example(example)
 encoded = bytearray()
 example.serialize(encoded)
 
-print("\nEncoded: ")
+print("\nExpected size:", example.size())
+print(f"\nEncoded ({len(encoded)} bytes): ")
 print(encoded)
 
-context = {"offset": 0}
 decoded = ExampleMessage()
-decoded.deserialize(encoded, context)
+decoded.deserialize(encoded, Message.Offset())
 
 print("\nDecoded: ")
 print_example(decoded)

@@ -2,7 +2,17 @@ import unittest
 import os
 
 os.sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../src")
-from type_regex import is_valid, is_map, is_array, is_static_array, is_dynamic_array, is_base_type, get_static_array_size, get_value_type, get_key_type
+from type_regex import (
+    is_valid,
+    is_map,
+    is_static_array,
+    is_dynamic_array,
+    is_base_type,
+    get_static_array_size,
+    get_value_type,
+    get_key_type,
+)
+
 
 class TestTypeRegex(unittest.TestCase):
 
@@ -26,7 +36,7 @@ class TestTypeRegex(unittest.TestCase):
         self.assertTrue(is_valid("string[]"))
         self.assertFalse(is_valid("string["))
         self.assertFalse(is_valid("str[ing"))
-        self.assertTrue(is_valid("str[ing]")) # is a map
+        self.assertTrue(is_valid("str[ing]"))  # is a map
         self.assertFalse(is_valid("string[10"))
         self.assertTrue(is_valid("string[10]"))
 
@@ -41,7 +51,7 @@ class TestTypeRegex(unittest.TestCase):
         self.assertTrue(is_valid("Custom[Type]"))
         self.assertFalse(is_valid("CustomType[10"))
         self.assertTrue(is_valid("CustomType[10]"))
-        
+
         self.assertTrue(is_valid("CustomType[string]"))
         self.assertFalse(is_valid("CustomType[string"))
         self.assertFalse(is_valid("CustomTypestring]"))
@@ -49,50 +59,6 @@ class TestTypeRegex(unittest.TestCase):
         self.assertTrue(is_valid("string[int64]"))
         self.assertTrue(is_valid("int64[string]"))
         self.assertTrue(is_valid("int64[CustomType]"))
-
-    def test_is_array(self):
-        self.assertFalse(is_array("char"))
-        self.assertTrue(is_array("char[10]"))
-        self.assertTrue(is_array("char[]"))
-        self.assertFalse(is_array("char["))
-        self.assertFalse(is_array("char[10"))
-        self.assertTrue(is_array("char[10]"))
-
-        self.assertFalse(is_array("uint64"))
-        self.assertTrue(is_array("uint64[10]"))
-        self.assertTrue(is_array("uint64[]"))
-        self.assertFalse(is_array("uint64["))
-        self.assertFalse(is_array("uint64[10"))
-        self.assertTrue(is_array("uint64[10]"))
-
-        self.assertFalse(is_array("string"))
-        self.assertTrue(is_array("string[10]"))
-        self.assertTrue(is_array("string[]"))
-        self.assertFalse(is_array("string["))
-        self.assertFalse(is_array("str[ing"))
-        self.assertFalse(is_array("str[ing]"))
-        self.assertFalse(is_array("string[10"))
-        self.assertTrue(is_array("string[10]"))
-
-        self.assertFalse(is_array("123CustomType"))
-        self.assertFalse(is_array("123_Custom_Type"))
-        self.assertFalse(is_array("CustomType"))
-        self.assertFalse(is_array("Custom_Type"))
-        self.assertTrue(is_array("CustomType[10]"))
-        self.assertTrue(is_array("CustomType[]"))
-        self.assertFalse(is_array("CustomType["))
-        self.assertFalse(is_array("Custom[Type"))
-        self.assertFalse(is_array("Custom[Type]"))
-        self.assertFalse(is_array("CustomType[10"))
-        self.assertTrue(is_array("CustomType[10]"))
-
-        self.assertFalse(is_array("CustomType[string]"))
-        self.assertFalse(is_array("CustomType[string"))
-        self.assertFalse(is_array("CustomTypestring]"))
-        self.assertFalse(is_array("CustomType[uint16]"))
-        self.assertFalse(is_array("string[int64]"))
-        self.assertFalse(is_array("int64[string]"))
-        self.assertFalse(is_array("int64[CustomType]"))
 
     def test_is_map(self):
         self.assertFalse(is_map("char"))
@@ -297,7 +263,6 @@ class TestTypeRegex(unittest.TestCase):
         self.assertEqual(get_static_array_size("int64[string]"), None)
         self.assertEqual(get_static_array_size("int64[CustomType]"), None)
 
-
     def test_get_value_type(self):
         self.assertEqual(get_value_type("char[10]"), "char")
         self.assertEqual(get_value_type("uint64[10]"), "uint64")
@@ -351,6 +316,7 @@ class TestTypeRegex(unittest.TestCase):
         self.assertEqual(get_key_type("string[int64]"), "int64")
         self.assertEqual(get_key_type("int64[string]"), "string")
         self.assertEqual(get_key_type("int64[CustomType]"), "CustomType")
+
 
 if __name__ == "__main__":
     unittest.main()
