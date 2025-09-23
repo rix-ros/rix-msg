@@ -89,7 +89,7 @@ def create_rixmsg_py_constructor(fields: list[Field]) -> str:
         else:
             raise ValueError(f"Error: No package specified for type {field.type_str}")
 
-    return fields_str[:-1] if fields_str[-1] == "\n" else fields_str
+    return fields_str[:-1] if len(fields_str) > 0 else fields_str
 
 
 def create_rixmsg_py_size_function(fields: list[Field]) -> str:
@@ -141,7 +141,7 @@ def create_rixmsg_py_size_function(fields: list[Field]) -> str:
         else:
             raise ValueError(f"Error: No package specified for type {field.type_str}")
 
-    return size_str[:-1] if size_str[-1] == "\n" else size_str
+    return size_str[:-1] if len(size_str) > 0 else size_str
 
 
 def create_rixmsg_py_hash(hash: str) -> str:
@@ -198,7 +198,7 @@ def create_rixmsg_py_serialize_function(fields: list[Field]) -> str:
         else:
             raise ValueError(f"Error: No package specified for type {field.type_str}")
 
-    return serialize_str[:-1] if serialize_str[-1] == "\n" else serialize_str
+    return serialize_str[:-1] if len(serialize_str) > 0 else serialize_str
 
 
 def create_rixmsg_py_deserialize_function(fields: list[Field]) -> str:
@@ -247,7 +247,7 @@ def create_rixmsg_py_deserialize_function(fields: list[Field]) -> str:
         else:
             raise ValueError(f"Error: No package specified for type {field.type_str}")
 
-    return deserialize_str[:-1] if deserialize_str[-1] == "\n" else deserialize_str
+    return deserialize_str[:-1] if len(deserialize_str) > 0 else deserialize_str
 
 
 def create_rixmsg_py(msg: Message) -> str:
