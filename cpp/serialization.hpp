@@ -20,7 +20,7 @@ namespace detail {
 template <typename T>
 inline uint32_t size_number(const T &src) {
     static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    return sizeof(T);
+    return sizeof(src);
 }
 inline uint32_t size_string(const std::string &src) { return 4 + src.size(); }
 inline uint32_t size_message(const Message &src) { return src.size(); }
@@ -28,7 +28,7 @@ inline uint32_t size_message(const Message &src) { return src.size(); }
 template <typename T, size_t N>
 inline uint32_t size_number_array(const std::array<T, N> &src) {
     static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    return N * sizeof(T);
+    return N * sizeof(src[0]);
 }
 template <size_t N>
 inline uint32_t size_string_array(const std::array<std::string, N> &src) {

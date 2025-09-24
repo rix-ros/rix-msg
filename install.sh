@@ -6,12 +6,6 @@ source venv/bin/activate
 # Install the required packages
 pip install -r requirements.txt
 
-# Check if Node.js is installed
-if ! [ -x "$(command -v node)" ]; then
-    echo "Error: Node.js is not installed"
-    exit 1
-fi
-
 # Create the executable
 python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
 
@@ -40,19 +34,12 @@ mkdir -p "$HOME/.rix/python/rixmsg/rixmsg"
 mkdir -p "$HOME/.rix/include/rix/msg/"
 
 # Copy files to rixmsg directories
-cp -r cpp/include/* "$HOME/.rix/include/rix/msg/"
+cp -r cpp/* "$HOME/.rix/include/rix/msg/"
 cp -r js/* "$HOME/.rix/js/rixmsg/"
 cp python/setup.py "$HOME/.rix/python/rixmsg/"
 touch "$HOME/.rix/python/rixmsg/rixmsg/__init__.py"
 cp python/message.py "$HOME/.rix/python/rixmsg/rixmsg/"
 cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
-
-# Run CMake for rixmsg
-mkdir -p cpp/build
-cd cpp/build
-cmake ..
-make install
-cd ../..
 
 echo "Installation completed successfully"
 echo "Creating default rix message implementation files"

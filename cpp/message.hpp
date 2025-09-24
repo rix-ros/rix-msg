@@ -11,6 +11,9 @@ namespace msg {
 
 class Message {
    public:
+   Message() = default;
+   virtual ~Message() = default;
+
     virtual size_t size() const = 0;
     virtual std::array<uint64_t, 2> hash() const = 0;
     virtual void serialize(uint8_t *dst, size_t &offset) const = 0;

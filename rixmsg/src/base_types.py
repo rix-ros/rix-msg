@@ -1,4 +1,29 @@
-BaseTypes = {"char", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float", "double", "bool", "string" }
-
-
-BaseTypesSizes = {"char": 1, "int8": 1, "int16": 2, "int32": 4, "int64": 8, "uint8": 1, "uint16": 2, "uint32": 4, "uint64": 8, "float": 4, "double": 8, "bool": 1 }
+BaseTypes = {
+    "char",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "float",
+    "double",
+    "bool",
+    "string",
+}
+BaseTypesSizes = {
+    "char": 1,
+    "int8": 1,
+    "int16": 2,
+    "int32": 4,
+    "int64": 8,
+    "uint8": 1,
+    "uint16": 2,
+    "uint32": 4,
+    "uint64": 8,
+    "float": 4,
+    "double": 8,
+    "bool": 1,
+}

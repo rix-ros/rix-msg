@@ -2,16 +2,37 @@ import re
 from base_types import BaseTypes
 
 
-def is_valid(input_text):
+def is_valid(input_text: str | None) -> bool:
+    """
+    Check if the input text is a valid type.
+    A valid type is one of the following:
+        - A base type (e.g. int32, string, etc.)
+        - A custom type (e.g. MyMessage)
+        - A static array (e.g. int32[10], MyMessage[5], etc.)
+        - A dynamic array (e.g. int32[], MyMessage[], etc.)
+        - A map (e.g. int32[string], MyMessage[int32], etc.)
+    """
     if input_text is None:
-        return None
+        return False
     pattern = re.compile(
         r"^([a-zA-Z_][a-zA-Z0-9_]*\[([0-9]*|[a-zA-Z_][a-zA-Z0-9_]*)\]|[a-zA-Z_][a-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]+)$"
     )
     return pattern.match(input_text) is not None
 
 
-def get_value_type(input_text):
+def get_value_type(input_text: str | None) -> str | None:
+    """
+    Get the value type from the input text.
+    For example:
+        - int32[10] -> int32
+        - MyMessage[5] -> MyMessage
+        - int32[] -> int32
+        - MyMessage[] -> MyMessage
+        - int32[string] -> int32
+        - MyMessage[int32] -> MyMessage
+        - int32 -> int32
+        - MyMessage -> MyMessage
+    """
     if input_text is None:
         return None
     pattern = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)(?:\[[a-zA-Z0-9_]*\])?$")
@@ -21,39 +42,57 @@ def get_value_type(input_text):
     return None
 
 
-def get_key_type(input_text):
+def get_key_type(input_text: str | None) -> str | None:
+    """
+    Get the key type for a map from the input text.
+    For example:
+        - int32[string] -> string
+        - MyMessage[int32] -> int32
+        - int32 -> None
+        - MyMessage -> None
+        - int32[10] -> None
+    """
     if input_text is None:
         return None
-    pattern = re.compile(r"^(?:[a-zA-Z_][a-zA-Z0-9_]*)(?:\[)([a-zA-Z_][a-zA-Z0-9_]*)(?:\])$")
+    pattern = re.compile(
+        r"^(?:[a-zA-Z_][a-zA-Z0-9_]*)(?:\[)([a-zA-Z_][a-zA-Z0-9_]*)(?:\])$"
+    )
     match = pattern.search(input_text)
     if match:
         return match.group(1)
     return None
 
 
-def is_map(input_text):
+def is_map(input_text: str | None) -> bool:
+    """
+    Check if the input text is a map type.
+    """
     if input_text is None:
-        return None
+        return False
     pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_][a-zA-Z0-9_]*\]$")
     return pattern.match(input_text) is not None
 
 
-def is_array(input_text):
+def is_static_array(input_text: str | None) -> bool:
+    """
+    Check if the input text is a static array type.
+    """
     if input_text is None:
-        return None
-    # return is_static_array(input_text) or is_dynamic_array(input_text)
-    pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*\[[0-9]*\]$")
-    return pattern.match(input_text) is not None
-
-
-def is_static_array(input_text):
-    if input_text is None:
-        return None
+        return False
     pattern = re.compile(r"^[A-Za-z0-9]+\[[0-9]+\]$")
     return pattern.match(input_text) is not None
 
 
-def get_static_array_size(input_text):
+def get_static_array_size(input_text: str | None) -> int | None:
+    """
+    Get the size of a static array from the input text.
+    For example:
+        - int32[10] -> 10
+        - MyMessage[5] -> 5
+        - int32[] -> None
+        - MyMessage[] -> None
+        - int32[string] -> None
+    """
     if input_text is None:
         return None
     pattern = re.compile(r"\[([0-9]+)\]$")
@@ -63,32 +102,39 @@ def get_static_array_size(input_text):
     return None
 
 
-def is_dynamic_array(input_text):
+def is_dynamic_array(input_text: str | None) -> bool:
+    """
+    Check if the input text is a dynamic array type.
+    """
     if input_text is None:
-        return None
+        return False
     pattern = re.compile(r"^[A-Za-z0-9]+\[\]$")
     return pattern.match(input_text) is not None
 
 
-def is_base_type(input_text):
+def is_base_type(input_text: str | None) -> bool:
+    """
+    Check if the input text is a base type.
+    A base type is one of the following:
+        - char
+        - int8
+        - int16
+        - int32
+        - int64
+        - uint8
+        - uint16
+        - uint32
+        - uint64
+        - float
+        - double
+        - bool
+        - string
+    """
     if input_text is None:
-        return None
+        return False
     pattern = re.compile(r"^[A-Za-z0-9]+")
     match = pattern.match(input_text)
     if match:
         base_type = match.group(0)
         return base_type in BaseTypes
     return False
-
-
-def add_flags_to_fields(fields: list) -> None:
-    for field in fields:
-        field_type = field["type"]
-        field["is_static_array"] = is_static_array(field_type)
-        field["is_dynamic_array"] = is_dynamic_array(field_type)
-        field["is_map"] = is_map(field_type)
-        field["value_type"] = get_value_type(field_type)
-        field["key_type"] = get_key_type(field_type)
-        field["value_type_is_base"] = is_base_type(field["value_type"])
-        field["key_type_is_base"] = is_base_type(field["key_type"])
-        field["static_array_size"] = get_static_array_size(field_type)
