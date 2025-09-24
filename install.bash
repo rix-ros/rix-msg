@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 python3 -m venv venv
 source venv/bin/activate
 
@@ -14,8 +16,6 @@ if [ ! -f "dist/rixmsg/rixmsg" ]; then
     echo "Error: rixmsg executable not found in dist/rixmsg/"
     exit 1
 fi
-
-echo $HOME
 
 # Copy the required files
 mkdir -p "$HOME/.rix/rixmsg/"
@@ -41,15 +41,15 @@ touch "$HOME/.rix/python/rixmsg/rixmsg/__init__.py"
 cp python/message.py "$HOME/.rix/python/rixmsg/rixmsg/"
 cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
 
-echo "Installation completed successfully"
-echo "Creating default rix message implementation files"
+echo "Installation completed successfully."
+echo "Creating default rix message implementation files."
 
 "$HOME/.rix/bin/rixmsg" create defs/mediator
 "$HOME/.rix/bin/rixmsg" create defs/standard
 "$HOME/.rix/bin/rixmsg" create defs/sensor
 "$HOME/.rix/bin/rixmsg" create defs/geometry
 
-echo "Default rix message implementation files created successfully"
+echo "Default rix message implementation files created successfully."
 
 deactivate
 rm -r venv
