@@ -6,12 +6,6 @@ source venv/bin/activate
 # Install the required packages
 pip install -r requirements.txt
 
-# Check if Node.js is installed
-if ! [ -x "$(command -v node)" ]; then
-    echo "Error: Node.js is not installed"
-    exit 1
-fi
-
 # Create the executable
 python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
 
