@@ -4,10 +4,6 @@ project(msgs_test)
 
 set(CMAKE_CXX_STANDARD 20)
 
-list(APPEND CMAKE_PREFIX_PATH "~/.rix")
-
-find_package(rixmsg REQUIRED)
-
 add_executable(test_header test_header.cpp)
 target_include_directories(test_header PRIVATE "~/.rix/include")
 

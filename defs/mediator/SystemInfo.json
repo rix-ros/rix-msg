@@ -27,6 +27,11 @@
             "name": "actions",
             "type": "ActInfo[]",
             "package": "mediator"
+        },
+        {
+            "name": "topics",
+            "type": "TopicInfo[]",
+            "package": "mediator"
         }
     ]
 }
