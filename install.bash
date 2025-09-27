@@ -18,12 +18,11 @@ if [ ! -f "dist/rixmsg/rixmsg" ]; then
 fi
 
 # Copy the required files
-mkdir -p "$HOME/.rix/rixmsg/"
-cp -r dist/rixmsg "$HOME/.rix/rixmsg/"
+cp -r dist/rixmsg "$HOME/.rix/"
 
 # Create symbolic link to rixmsg
 mkdir -p "$HOME/.rix/bin/"
-ln -sf "$HOME/.rix/rixmsg/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
+ln -sf "$HOME/.rix/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 
 # Clean up
 rm -r build/ dist/
