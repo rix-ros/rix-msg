@@ -166,7 +166,9 @@ def create(input_path: str) -> None:
         def_file_path = package_dir + f"{msg_json['name']}.json"
         write_to_file(def_file_path, msg_json)
 
-        msg = Message(msg_json["name"], msg_json["package"], msg_json["hash"], msg_json["fields"])
+        msg = Message(
+            msg_json["name"], msg_json["package"], msg_json["hash"], msg_json["fields"]
+        )
 
         # Generate the C++ implementation files
         dir_name = f"{ROOT}/.rix/include/rix/msg/{msg.package}/"
@@ -183,15 +185,20 @@ def create(input_path: str) -> None:
             f.write(create_rixmsg_js(msg))
 
         # Generate the Python implementation files
-        dir_name = f"{ROOT}/.rix/python/rixmsg/rixmsg/{msg.package}/"
+        dir_name = f"{ROOT}/.rix/python/rix/rix/msg/{msg.package}/"
         os.makedirs(dir_name, exist_ok=True)
-        # Create the __init__.py file
-        file_name = dir_name + "__init__.py"
-        with open(file_name, "w") as f:
-            f.write("")
         file_name = dir_name + f"{msg.name}.py"
         with open(file_name, "w") as f:
             f.write(create_rixmsg_py(msg))
+
+        # Create the __init__.py file
+        file_name = dir_name + "__init__.py"
+        with open(file_name, "w") as f:
+            # For each message in the package, import it
+            for msg_in_pkg in os.listdir(package_dir):
+                if msg_in_pkg.endswith(".json"):
+                    message_name = msg_in_pkg[:-5]  # Remove '.json'
+                    f.write(f"from .{message_name} import {message_name}\n")
 
     # Re-index the definitions
     index()
