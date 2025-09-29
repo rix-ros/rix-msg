@@ -20,7 +20,7 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -30,7 +30,7 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -40,7 +40,7 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -50,7 +50,7 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -61,8 +61,8 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "from rixmsg.package.MyNewType import MyNewType\n"
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.package.MyNewType import MyNewType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -75,9 +75,9 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType[256]', 'package': 'new_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "from rixmsg.new_package.AnotherNewType import AnotherNewType\n"
-            "from rixmsg.package.MyNewType import MyNewType\n"
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.new_package.AnotherNewType import AnotherNewType\n"
+            "from rix.msg.package.MyNewType import MyNewType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -93,10 +93,10 @@ class TestCreateRixmsgPyImports(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "from rixmsg.diff_package.AnotherNewType import AnotherNewType\n"
-            "from rixmsg.new_package.AnotherNewType import AnotherNewType\n"
-            "from rixmsg.package.MyNewType import MyNewType\n"
-            "from rixmsg.package.MyType import MyType\n"
+            "from rix.msg.diff_package.AnotherNewType import AnotherNewType\n"
+            "from rix.msg.new_package.AnotherNewType import AnotherNewType\n"
+            "from rix.msg.package.MyNewType import MyNewType\n"
+            "from rix.msg.package.MyType import MyType\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_py_imports(message.fields), expected)
@@ -681,8 +681,8 @@ class TestCreateRixmsgPyDeserialize(unittest.TestCase):
 
 class TestCreateRixmsgPyFullTest(unittest.TestCase):
     def test_create_rixmsg_py_full(self):
-        expected ="""from rixmsg.message import Message
-from rixmsg.example.OtherMessage import OtherMessage
+        expected ="""from rix.msg.message import Message
+from rix.msg.example.OtherMessage import OtherMessage
 
 class ExampleMessage(Message):
     def __init__(self):
