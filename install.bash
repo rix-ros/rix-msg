@@ -18,6 +18,7 @@ if [ ! -f "dist/rixmsg/rixmsg" ]; then
 fi
 
 # Copy the required files
+mkdir -p "$HOME/.rix/"
 cp -r dist/rixmsg "$HOME/.rix/"
 
 # Create symbolic link to rixmsg
@@ -27,18 +28,19 @@ ln -sf "$HOME/.rix/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
 # Clean up
 rm -r build/ dist/
 
-# Create directories for rixmsg
+# Create directories for rixmsg libraries
 mkdir -p "$HOME/.rix/js/rixmsg"
-mkdir -p "$HOME/.rix/python/rixmsg/rixmsg"
+mkdir -p "$HOME/.rix/python/rix/rix/msg"
 mkdir -p "$HOME/.rix/include/rix/msg/"
 
-# Copy files to rixmsg directories
+# Copy schema to rixmsg directory
+cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
+
+# Copy rixmsg setup files
 cp -r cpp/* "$HOME/.rix/include/rix/msg/"
 cp -r js/* "$HOME/.rix/js/rixmsg/"
-cp python/setup.py "$HOME/.rix/python/rixmsg/"
-touch "$HOME/.rix/python/rixmsg/rixmsg/__init__.py"
-cp python/message.py "$HOME/.rix/python/rixmsg/rixmsg/"
-cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
+touch "$HOME/.rix/python/rix/rix/msg/__init__.py"
+cp python/message.py "$HOME/.rix/python/rix/rix/msg/"
 
 echo "Installation completed successfully."
 echo "Creating default rix message implementation files."

@@ -41,7 +41,7 @@ def create_rixmsg_py_imports(fields: list[Field]) -> str:
             field_type = field.value_type
             if field.package is not None:
                 includes.add(
-                    f"from rixmsg.{field.package}.{field_type} import {field_type}"
+                    f"from rix.msg.{field.package}.{field_type} import {field_type}"
                 )
             else:
                 raise ValueError(
@@ -53,12 +53,16 @@ def create_rixmsg_py_imports(fields: list[Field]) -> str:
 
 def create_rixmsg_py_constructor(fields: list[Field]) -> str:
     fields_str = ""
+    if len(fields) == 0:
+        return "pass"
     for field in fields:
         # If we have a base type
         if field.value_is_base:
             # If we have a dynamic array of base types
             if field.is_dynamic_array:
-                fields_str += f"self.{field.name}: list[{PY_TYPE_HINTS[field.value_type]}] = []\n"
+                fields_str += (
+                    f"self.{field.name}: list[{PY_TYPE_HINTS[field.value_type]}] = []\n"
+                )
             # If we have a static array of base types
             elif field.is_static_array:
                 arr_size = field.static_array_size
@@ -68,23 +72,23 @@ def create_rixmsg_py_constructor(fields: list[Field]) -> str:
                 fields_str += f"self.{field.name}: dict[{PY_TYPE_HINTS[field.key_type]}, {PY_TYPE_HINTS[field.value_type]}] = {{}}\n"
             # If we have a single base type
             else:
-                fields_str += (
-                    f"self.{field.name}: {PY_TYPE_HINTS[field.value_type]} = {PY_TYPE_INITIALIZERS[field.value_type]}\n"
-                )
+                fields_str += f"self.{field.name}: {PY_TYPE_HINTS[field.value_type]} = {PY_TYPE_INITIALIZERS[field.value_type]}\n"
         # If we have a message type (package specified)
         elif field.package is not None:
             # If we have a dynamic array of message types
             if field.is_dynamic_array:
-                fields_str += f"self.{field.name}: list[\"{field.value_type}\"] = []\n"
+                fields_str += f'self.{field.name}: list["{field.value_type}"] = []\n'
             # If we have a static array of message types
             elif field.is_static_array:
                 arr_size = field.static_array_size
-                fields_str += f"self.{field.name}: list[\"{field.value_type}\"] = [{field.value_type}() for _ in range({arr_size})]\n"
+                fields_str += f'self.{field.name}: list["{field.value_type}"] = [{field.value_type}() for _ in range({arr_size})]\n'
             elif field.is_map:
-                fields_str += f"self.{field.name}: dict[{PY_TYPE_HINTS[field.key_type]}, \"{field.value_type}\"] = {{}}\n"
+                fields_str += f'self.{field.name}: dict[{PY_TYPE_HINTS[field.key_type]}, "{field.value_type}"] = {{}}\n'
             # If we have a single message type
             else:
-                fields_str += f"self.{field.name}: \"{field.value_type}\" = {field.value_type}()\n"
+                fields_str += (
+                    f'self.{field.name}: "{field.value_type}" = {field.value_type}()\n'
+                )
         # If the package is not specified for the message type, raise an error
         else:
             raise ValueError(f"Error: No package specified for type {field.type_str}")
@@ -150,6 +154,10 @@ def create_rixmsg_py_hash(hash: str) -> str:
 
 def create_rixmsg_py_serialize_function(fields: list[Field]) -> str:
     serialize_str = ""
+
+    if len(fields) == 0:
+        return "pass"
+
     for field in fields:
         if field.value_type == "string":
             if field.is_dynamic_array:
@@ -203,6 +211,8 @@ def create_rixmsg_py_serialize_function(fields: list[Field]) -> str:
 
 def create_rixmsg_py_deserialize_function(fields: list[Field]) -> str:
     deserialize_str = ""
+    if len(fields) == 0:
+        return "pass"
     for field in fields:
         if field.value_type == "string":
             if field.is_dynamic_array:
@@ -252,7 +262,7 @@ def create_rixmsg_py_deserialize_function(fields: list[Field]) -> str:
 
 def create_rixmsg_py(msg: Message) -> str:
     n = "\n"
-    return f"""from rixmsg.message import Message
+    return f"""from rix.msg.message import Message
 {create_rixmsg_py_imports(msg.fields)}
 class {msg.name}(Message):
     def __init__(self):
