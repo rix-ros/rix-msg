@@ -72,6 +72,12 @@ def create_rixmsg_cpp_fields(fields: list[Field]) -> str:
 
     return fields_str[:-1] if len(fields_str) > 0 else fields_str
 
+def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
+    equal_str = ""
+    for field in fields:
+        equal_str += f"if ({field.name} != other.{field.name}) {{ return false; }}\n"
+    equal_str += "return true;"
+    return equal_str
 
 def create_rixmsg_cpp_size_function(fields: list[Field]) -> str:
     size_str = ""
@@ -262,6 +268,14 @@ class {msg.name} : public Message {{
     {msg.name}() = default;
     {msg.name}(const {msg.name} &other) = default;
     ~{msg.name}() = default;
+
+    bool operator==(const {msg.name} &other) const {{
+        {create_rixmsg_cpp_equal_to(msg.fields).replace(n, n + '        ')}
+    }}
+
+    bool operator!=(const {msg.name} &other) const {{
+        return !(*this == other);
+    }}
 
     size_t size() const override {{
         using namespace detail;
