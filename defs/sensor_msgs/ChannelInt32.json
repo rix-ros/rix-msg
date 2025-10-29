@@ -1,0 +1,15 @@
+{
+    "name": "ChannelInt32",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "data",
+            "type": "int32[]"
+        }
+    ]
+}

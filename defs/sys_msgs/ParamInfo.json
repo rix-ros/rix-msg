@@ -1,0 +1,23 @@
+{
+    "name": "ParamInfo",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "id",
+            "type": "uint64"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "message_hash",
+            "type": "uint64[2]"
+        },
+        {
+            "name": "data",
+            "type": "uint8[]"
+        }
+    ]
+}

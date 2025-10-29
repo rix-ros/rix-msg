@@ -1,0 +1,22 @@
+{
+    "name": "PointCloud",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "points",
+            "type": "Point[]",
+            "package": "geometry_msgs"
+        },
+        {
+            "name": "channels",
+            "type": "ChannelFloat[]",
+            "package": "sensor_msgs"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "name": "Transform",
+    "version": "1.0.0",
+    "package": "geometry_msgs",
+    "fields": [
+        {
+            "name": "translation",
+            "type": "Vector3",
+            "package": "geometry_msgs"
+        },
+        {
+            "name": "rotation",
+            "type": "Quaternion",
+            "package": "geometry_msgs"
+        }
+    ]
+}

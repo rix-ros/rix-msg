@@ -1,428 +1,416 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
-#include <cstring>
-#include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
-#include "rix/msg/message.hpp"
+#include "message.hpp"
 
 namespace rix {
-namespace msg {
 namespace detail {
-/**
- * Size functions return the number of bytes that `src` will occupy in the
- * serialized buffer.
- */
+// Helper for static_assert(false) with dependent types
+template <typename T> struct always_false : std::false_type {};
 
+// ===== GET_SEGMENT_COUNT HELPERS =====
+
+// Overload for Message types
+inline size_t get_segment_count(const Message &msg) {
+  return msg.get_segment_count();
+}
+
+// Overload for vectors of Message types
 template <typename T>
-inline uint32_t size_number(const T &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    return sizeof(src);
+typename std::enable_if<std::is_base_of<Message, T>::value, size_t>::type
+get_segment_count(const std::vector<T> &vec) {
+  size_t total_count = 0;
+  for (const auto &item : vec) {
+    total_count += item.get_segment_count();
+  }
+  return total_count;
 }
-inline uint32_t size_string(const std::string &src) { return 4 + src.size(); }
-inline uint32_t size_message(const Message &src) { return src.size(); }
 
+// Overload for arrays of Message types
 template <typename T, size_t N>
-inline uint32_t size_number_array(const std::array<T, N> &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    return N * sizeof(src[0]);
+typename std::enable_if<std::is_base_of<Message, T>::value, size_t>::type
+get_segment_count(const std::array<T, N> &arr) {
+  size_t total_count = 0;
+  for (const auto &item : arr) {
+    total_count += item.get_segment_count();
+  }
+  return total_count;
 }
+
+// Overload for std::vector<std::string>
+inline size_t get_segment_count(const std::vector<std::string> &vec) {
+  return vec.size();
+}
+
+// Overload for std::array<std::string, N>
 template <size_t N>
-inline uint32_t size_string_array(const std::array<std::string, N> &src) {
-    uint32_t size = 0;
-    for (const auto &s : src) size += size_string(s);
-    return size;
+inline size_t get_segment_count(const std::array<std::string, N> &arr) {
+  return N;
 }
+
+// ===== NON-CONST GET_SEGMENT HELPERS =====
+
+// Primary template for arithmetic types (integers, floats, bool, etc.)
+template <typename T>
+typename std::enable_if<std::is_arithmetic<T>::value, void>::type
+get_segments(T &obj, MessageSegment *segments, size_t &offset) {
+  segments[offset++] =
+      MessageSegment(reinterpret_cast<uint8_t *>(&obj), sizeof(T));
+}
+
+// Overload for std::string
+inline void get_segments(std::string &str, MessageSegment *segments,
+                         size_t &offset) {
+  segments[offset++] =
+      MessageSegment(reinterpret_cast<uint8_t *>(str.data()), str.size());
+}
+
+// Overload for Message types
+inline void get_segments(Message &msg, MessageSegment *segments,
+                         size_t &offset) {
+  size_t len = msg.get_segment_count() +
+               offset; // Forge length (segment length is checked beforehand)
+  msg.get_segments(segments, len, offset);
+}
+
+// Overload for vectors
+template <typename T>
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+get_segments(std::vector<T> &vec, MessageSegment *segments, size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    segments[offset++] = MessageSegment(reinterpret_cast<uint8_t *>(vec.data()),
+                                        vec.size() * sizeof(T));
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    for (auto &item : vec) {
+      size_t len =
+          item.get_segment_count() +
+          offset; // Forge length (segment length is checked beforehand)
+      item.get_segments(segments, len, offset);
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported vector element type");
+  }
+}
+
+// Overload for arrays
 template <typename T, size_t N>
-inline uint32_t size_message_array(const std::array<T, N> &src) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    uint32_t size = 0;
-    for (const auto &m : src) size += size_message(m);
-    return size;
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+get_segments(std::array<T, N> &arr, MessageSegment *segments, size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    segments[offset++] = MessageSegment(reinterpret_cast<uint8_t *>(arr.data()),
+                                        arr.size() * sizeof(T));
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    for (auto &item : arr) {
+      size_t len =
+          item.get_segment_count() +
+          offset; // Forge length (segment length is checked beforehand)
+      item.get_segments(segments, len, offset);
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported array element type");
+  }
 }
 
+// Overload for vector of strings
+inline void get_segments(std::vector<std::string> &vec,
+                         MessageSegment *segments, size_t &offset) {
+  for (auto &str : vec) {
+    segments[offset++] =
+        MessageSegment(reinterpret_cast<uint8_t *>(str.data()), str.size());
+  }
+}
+
+// Overload for array of strings
+template <size_t N>
+inline void get_segments(std::array<std::string, N> &arr,
+                         MessageSegment *segments, size_t &offset) {
+  for (auto &str : arr) {
+    segments[offset++] =
+        MessageSegment(reinterpret_cast<uint8_t *>(str.data()), str.size());
+  }
+}
+
+// ===== CONST GET_SEGMENT HELPERS =====
+
+// Primary template for arithmetic types (integers, floats, bool, etc.)
 template <typename T>
-inline uint32_t size_number_vector(const std::vector<T> &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    return 4 + src.size() * sizeof(T);
+typename std::enable_if<std::is_arithmetic<T>::value, void>::type
+get_segments(const T &obj, ConstMessageSegment *segments, size_t &offset) {
+  segments[offset++] =
+      ConstMessageSegment(reinterpret_cast<const uint8_t *>(&obj), sizeof(T));
 }
-inline uint32_t size_string_vector(const std::vector<std::string> &src) {
-    uint32_t size = 4;
-    for (const auto &s : src) size += size_string(s);
-    return size;
+
+// Overload for std::string
+inline void get_segments(const std::string &str, ConstMessageSegment *segments,
+                         size_t &offset) {
+  segments[offset++] = ConstMessageSegment(
+      reinterpret_cast<const uint8_t *>(str.data()), str.size());
 }
+
+// Overload for const Message types
+inline void get_segments(const Message &msg, ConstMessageSegment *segments,
+                         size_t &offset) {
+  size_t len = msg.get_segment_count() +
+               offset; // Forge length (segment length is checked beforehand)
+  msg.get_segments(segments, len, offset);
+}
+
+// Overload for const vectors
 template <typename T>
-inline uint32_t size_message_vector(const std::vector<T> &src) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    uint32_t size = 4;
-    for (const auto &m : src) size += size_message(m);
-    return size;
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+get_segments(const std::vector<T> &vec, ConstMessageSegment *segments,
+             size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    segments[offset++] = ConstMessageSegment(
+        reinterpret_cast<const uint8_t *>(vec.data()), vec.size() * sizeof(T));
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    for (const auto &item : vec) {
+      size_t len =
+          item.get_segment_count() +
+          offset; // Forge length (segment length is checked beforehand)
+      item.get_segments(segments, len, offset);
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported vector element type");
+  }
 }
 
-template <typename K, typename V>
-inline uint32_t size_number_to_number_map(const std::map<K, V> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_arithmetic<V>::value, "V must be an arithmetic type");
-    return 8 + src.size() * (sizeof(K) + sizeof(V));
-}
-template <typename K>
-inline uint32_t size_number_to_string_map(const std::map<K, std::string> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    size_t size = 8 + src.size() * sizeof(K);
-    for (const auto &s : src) size += size_string(s.second);
-    return size;
-}
-template <typename K, typename V>
-inline uint32_t size_number_to_message_map(const std::map<K, V> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    size_t size = 8 + src.size() * sizeof(K);
-    for (const auto &s : src) size += size_message(s.second);
-    return size;
-}
-template <typename V>
-inline uint32_t size_string_to_number_map(const std::map<std::string, V> &src) {
-    static_assert(std::is_arithmetic<V>::value, "V must be an arithmetic type");
-    size_t size = 8 + src.size() * sizeof(V);
-    for (const auto &s : src) size += size_string(s.first);
-    return size;
-}
-inline uint32_t size_string_to_string_map(const std::map<std::string, std::string> &src) {
-    size_t size = 8;
-    for (const auto &s : src) size += size_string(s.first) + size_string(s.second);
-    return size;
-}
-template <typename V>
-inline uint32_t size_string_to_message_map(const std::map<std::string, V> &src) {
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    size_t size = 8;
-    for (const auto &s : src) size += size_string(s.first) + size_message(s.second);
-    return size;
+// Overload for const arrays
+template <typename T, size_t N>
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+get_segments(const std::array<T, N> &arr, ConstMessageSegment *segments,
+             size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    segments[offset++] = ConstMessageSegment(
+        reinterpret_cast<const uint8_t *>(arr.data()), arr.size() * sizeof(T));
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    for (const auto &item : arr) {
+      size_t len =
+          item.get_segment_count() +
+          offset; // Forge length (segment length is checked beforehand)
+      item.get_segments(segments, len, offset);
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported array element type");
+  }
 }
 
-/**
- * Serialize functions convert the Message into a string of bytes and stores it
- * into the specified destination byte array. The size of the byte array can
- * be calculate beforehand using `Message::size()`. The size of the `dst` array
- * must be at least this many bytes.
- */
+// Overload for const vector of strings
+inline void get_segments(const std::vector<std::string> &vec,
+                         ConstMessageSegment *segments, size_t &offset) {
+  for (const auto &str : vec) {
+    segments[offset++] = ConstMessageSegment(
+        reinterpret_cast<const uint8_t *>(str.data()), str.size());
+  }
+}
 
+// Overload for const array of strings
+template <size_t N>
+inline void get_segments(const std::array<std::string, N> &arr,
+                         ConstMessageSegment *segments, size_t &offset) {
+  for (const auto &str : arr) {
+    segments[offset++] = ConstMessageSegment(
+        reinterpret_cast<const uint8_t *>(str.data()), str.size());
+  }
+}
+
+// ===== GET_PREFIX_LEN HELPERS =====
+
+// Overload for std::string
+inline uint32_t get_prefix_len(const std::string &str) {
+  return 4; // uint32_t for size
+}
+
+// Overload for Message types
+inline uint32_t get_prefix_len(const Message &msg) {
+  return msg.get_prefix_len();
+}
+
+// Overload for vectors
 template <typename T>
-inline void serialize_number(uint8_t *dst, size_t &offset, const T &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    std::memcpy(dst + offset, &src, sizeof(T));
-    offset += sizeof(T);
+typename std::enable_if<!std::is_same<T, std::string>::value, uint32_t>::type
+get_prefix_len(const std::vector<T> &vec) {
+  uint32_t total_len = 4; // uint32_t for count
+  if constexpr (std::is_arithmetic_v<T>) {
+    // No additional prefix lengths for arithmetic types
+    return total_len;
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    for (const auto &item : vec) {
+      total_len += item.get_prefix_len();
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported vector element type");
+  }
+  return total_len;
 }
-inline void serialize_string(uint8_t *dst, size_t &offset, const std::string &src) {
-    uint32_t size = src.size();
-    std::memcpy(dst + offset, &size, 4);
+
+// Overload for array of Message types
+template <typename T, size_t N>
+typename std::enable_if<std::is_base_of<Message, T>::value, uint32_t>::type
+get_prefix_len(const std::array<T, N> &arr) {
+  uint32_t total_len = 0;
+  for (const auto &item : arr) {
+    total_len += item.get_prefix_len();
+  }
+  return total_len;
+}
+
+// Overload for vector of strings
+inline uint32_t get_prefix_len(const std::vector<std::string> &vec) {
+  uint32_t total_len =
+      4 +
+      4 * static_cast<uint32_t>(
+              vec.size()); // uint32_t for count + uint32_t for each string size
+  return total_len;
+}
+
+// Overload for array of strings
+template <size_t N>
+inline uint32_t get_prefix_len(const std::array<std::string, N> &arr) {
+  uint32_t total_len =
+      4 * static_cast<uint32_t>(N); // uint32_t for each string size
+  return total_len;
+}
+
+// ===== GET_PREFIX HELPERS =====
+
+// Overload for strings
+inline void get_prefix(const std::string &str, uint8_t *sizes, size_t &offset) {
+  *reinterpret_cast<uint32_t *>(sizes + offset) =
+      static_cast<uint32_t>(str.size());
+  offset += 4;
+}
+
+// Overload for Message types
+inline void get_prefix(const Message &msg, uint8_t *sizes, size_t &offset) {
+  msg.get_prefix(sizes, offset);
+}
+
+// Overload for vectors
+template <typename T>
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+get_prefix(const std::vector<T> &vec, uint8_t *sizes, size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    *reinterpret_cast<uint32_t *>(sizes + offset) =
+        static_cast<uint32_t>(vec.size());
     offset += 4;
-    std::memcpy(dst + offset, src.data(), size);
-    offset += size;
-}
-inline void serialize_message(uint8_t *dst, size_t &offset, const Message &src) { src.serialize(dst, offset); }
-template <typename T, size_t N>
-inline void serialize_number_array(uint8_t *dst, size_t &offset, const std::array<T, N> &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    uint32_t size = N * sizeof(T);
-    std::memcpy(dst + offset, src.data(), size);
-    offset += size;
-}
-template <size_t N>
-inline void serialize_string_array(uint8_t *dst, size_t &offset, const std::array<std::string, N> &src) {
-    for (const auto &s : src) serialize_string(dst, offset, s);
-}
-template <typename T, size_t N>
-inline void serialize_message_array(uint8_t *dst, size_t &offset, const std::array<T, N> &src) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    for (const auto &m : src) serialize_message(dst, offset, m);
-}
-template <typename T>
-inline void serialize_number_vector(uint8_t *dst, size_t &offset, const std::vector<T> &src) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    uint32_t size = src.size();
-    serialize_number(dst, offset, size);
-    size *= sizeof(T);
-    std::memcpy(dst + offset, src.data(), size);
-    offset += size;
-}
-inline void serialize_string_vector(uint8_t *dst, size_t &offset, const std::vector<std::string> &src) {
-    uint32_t size = src.size();
-    serialize_number(dst, offset, size);
-    for (const auto &s : src) serialize_string(dst, offset, s);
-}
-template <typename T>
-inline void serialize_message_vector(uint8_t *dst, size_t &offset, const std::vector<T> &src) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    uint32_t size = src.size();
-    serialize_number(dst, offset, size);
-    for (const auto &m : src) serialize_message(dst, offset, m);
-}
-template <typename K, typename V>
-inline void serialize_number_to_number_map(uint8_t *dst, size_t &offset, const std::map<K, V> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_arithmetic<V>::value, "V must be an arithmetic type");
-    uint32_t size = src.size();
-    std::vector<K> k;
-    std::vector<V> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    *reinterpret_cast<uint32_t *>(sizes + offset) =
+        static_cast<uint32_t>(vec.size());
+    offset += 4;
+    for (const auto &item : vec) {
+      item.get_prefix(sizes, offset);
     }
-    serialize_number_vector(dst, offset, k);
-    serialize_number_vector(dst, offset, v);
-}
-template <typename K>
-inline void serialize_number_to_string_map(uint8_t *dst, size_t &offset, const std::map<K, std::string> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    uint32_t size = src.size();
-    std::vector<K> k;
-    std::vector<std::string> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
-    }
-    serialize_number_vector(dst, offset, k);
-    serialize_string_vector(dst, offset, v);
-}
-template <typename K, typename V>
-inline void serialize_number_to_message_map(uint8_t *dst, size_t &offset, const std::map<K, V> &src) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    uint32_t size = src.size();
-    std::vector<K> k;
-    std::vector<V> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
-    }
-    serialize_number_vector(dst, offset, k);
-    serialize_message_vector(dst, offset, v);
-}
-template <typename V>
-inline void serialize_string_to_number_map(uint8_t *dst, size_t &offset, const std::map<std::string, V> &src) {
-    static_assert(std::is_arithmetic<V>::value, "V must be an arithmetic type");
-    uint32_t size = src.size();
-    std::vector<std::string> k;
-    std::vector<V> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
-    }
-    serialize_string_vector(dst, offset, k);
-    serialize_number_vector(dst, offset, v);
-}
-inline void serialize_string_to_string_map(uint8_t *dst, size_t &offset,
-                                           const std::map<std::string, std::string> &src) {
-    uint32_t size = src.size();
-    std::vector<std::string> k;
-    std::vector<std::string> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
-    }
-    serialize_string_vector(dst, offset, k);
-    serialize_string_vector(dst, offset, v);
-}
-template <typename V>
-inline void serialize_string_to_message_map(uint8_t *dst, size_t &offset, const std::map<std::string, V> &src) {
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    uint32_t size = src.size();
-    std::vector<std::string> k;
-    std::vector<V> v;
-    k.reserve(size);
-    v.reserve(size);
-    for (const auto &p : src) {
-        k.push_back(p.first);
-        v.push_back(p.second);
-    }
-    serialize_string_vector(dst, offset, k);
-    serialize_message_vector(dst, offset, v);
+  } else {
+    static_assert(always_false<T>::value, "Unsupported vector element type");
+  }
 }
 
-/**
- * The deserialize functions convert a byte array into a Message. Because
- * Messages support dynamically sized arrays, we cannot determine beforehand if
- * deserialization will be successful without parsing the bytes. These functions
- * return false if there are not enough bytes in the `src` array to completely
- * deserialize.
- */
-template <typename T>
-inline bool deserialize_number(T &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    if (offset + sizeof(T) > size) return false;
-    dst = *reinterpret_cast<const T *>(src + offset);
-    offset += sizeof(T);
-    return true;
-}
-inline bool deserialize_string(std::string &dst, const uint8_t *src, size_t size, size_t &offset) {
-    uint32_t str_size;
-    if (!deserialize_number(str_size, src, size, offset)) return false;
-    if (offset + str_size > size) return false;
-    dst.resize(str_size);
-    std::memcpy(dst.data(), src + offset, str_size);
-    offset += str_size;
-    return true;
-}
-inline bool deserialize_message(Message &dst, const uint8_t *src, size_t size, size_t &offset) {
-    return dst.deserialize(src, size, offset);
-}
+// Overload for array of Message types
 template <typename T, size_t N>
-inline bool deserialize_number_array(std::array<T, N> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    uint32_t arr_size = N * sizeof(T);
-    if (offset + arr_size > size) return false;
-    std::memcpy(dst.data(), src + offset, arr_size);
-    offset += arr_size;
-    return true;
+typename std::enable_if<std::is_base_of<Message, T>::value, void>::type
+get_prefix(const std::array<T, N> &arr, uint8_t *sizes, size_t &offset) {
+  for (const auto &item : arr) {
+    item.get_prefix(sizes, offset);
+  }
 }
+
+// Overload for vector of strings
+inline void get_prefix(const std::vector<std::string> &vec, uint8_t *sizes,
+                       size_t &offset) {
+  *reinterpret_cast<uint32_t *>(sizes + offset) =
+      static_cast<uint32_t>(vec.size());
+  offset += 4;
+  for (const auto &str : vec) {
+    *reinterpret_cast<uint32_t *>(sizes + offset) =
+        static_cast<uint32_t>(str.size());
+    offset += 4;
+  }
+}
+
+// Overload for array of strings
 template <size_t N>
-inline bool deserialize_string_array(std::array<std::string, N> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    for (auto &s : dst) {
-        if (!deserialize_string(s, src, size, offset)) return false;
-    }
-    return true;
+inline void get_prefix(const std::array<std::string, N> &arr, uint8_t *sizes,
+                       size_t &offset) {
+  for (const auto &str : arr) {
+    *reinterpret_cast<uint32_t *>(sizes + offset) =
+        static_cast<uint32_t>(str.size());
+    offset += 4;
+  }
 }
+
+// ===== RESIZE HELPERS =====
+
+// Overload for strings
+inline void resize(std::string &str, const uint8_t *sizes, size_t &offset) {
+  str.resize(*reinterpret_cast<const uint32_t *>(sizes + offset));
+  offset += 4;
+}
+
+// Overload for Message types
+inline void resize(Message &msg, const uint8_t *sizes, size_t &offset) {
+  size_t len = msg.get_prefix_len() +
+               offset; // Forge length (prefix length is checked beforehand)
+  msg.resize(sizes, len, offset);
+}
+
+// Overload for vectors
+template <typename T>
+typename std::enable_if<!std::is_same<T, std::string>::value, void>::type
+resize(std::vector<T> &vec, const uint8_t *sizes, size_t &offset) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    uint32_t count = *reinterpret_cast<const uint32_t *>(sizes + offset);
+    offset += 4;
+    vec.resize(count);
+  } else if constexpr (std::is_base_of_v<Message, T>) {
+    uint32_t count = *reinterpret_cast<const uint32_t *>(sizes + offset);
+    offset += 4;
+    vec.resize(count);
+    for (auto &item : vec) {
+      size_t len = item.get_prefix_len() +
+                   offset; // Forge length (prefix length is checked beforehand)
+      item.resize(sizes, len, offset);
+    }
+  } else {
+    static_assert(always_false<T>::value, "Unsupported vector element type");
+  }
+}
+
+// Overload for array of Message types
 template <typename T, size_t N>
-inline bool deserialize_message_array(std::array<T, N> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    for (auto &m : dst) {
-        if (!deserialize_message(m, src, size, offset)) return false;
-    }
-    return true;
+typename std::enable_if<std::is_base_of<Message, T>::value, void>::type
+resize(std::array<T, N> &arr, const uint8_t *sizes, size_t &offset) {
+  for (auto &item : arr) {
+    size_t len = item.get_prefix_len() +
+                 offset; // Forge length (prefix length is checked beforehand)
+    item.resize(sizes, len, offset);
+  }
 }
-template <typename T>
-inline bool deserialize_number_vector(std::vector<T> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_arithmetic<T>::value, "T must be an arithmetic type");
-    uint32_t vec_size;
-    if (!deserialize_number(vec_size, src, size, offset)) return false;
-    if (offset + vec_size > size) return false;
-    dst.resize(vec_size);
-    size_t size_bytes = vec_size * sizeof(T);
-    std::memcpy(dst.data(), src + offset, size_bytes);
-    offset += size_bytes;
-    return true;
+
+// Overload for vector of strings
+inline void resize(std::vector<std::string> &vec, const uint8_t *sizes,
+                   size_t &offset) {
+  uint32_t count = *reinterpret_cast<const uint32_t *>(sizes + offset);
+  offset += 4;
+  vec.resize(count);
+  for (auto &str : vec) {
+    str.resize(*reinterpret_cast<const uint32_t *>(sizes + offset));
+    offset += 4;
+  }
 }
-inline bool deserialize_string_vector(std::vector<std::string> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    uint32_t vec_size;
-    if (!deserialize_number(vec_size, src, size, offset)) return false;
-    dst.resize(vec_size);
-    for (auto &s : dst) {
-        if (!deserialize_string(s, src, size, offset)) return false;
-    }
-    return true;
+
+// Overload for array of strings
+template <size_t N>
+inline void resize(std::array<std::string, N> &arr, const uint8_t *sizes,
+                   size_t &offset) {
+  for (auto &str : arr) {
+    str.resize(*reinterpret_cast<const uint32_t *>(sizes + offset));
+    offset += 4;
+  }
 }
-template <typename T>
-inline bool deserialize_message_vector(std::vector<T> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_base_of<Message, T>::value, "T must derive from Message");
-    uint32_t vec_size;
-    if (!deserialize_number(vec_size, src, size, offset)) return false;
-    dst.resize(vec_size);
-    for (auto &m : dst) {
-        if (!deserialize_message(m, src, size, offset)) return false;
-    }
-    return true;
-}
-template <typename K, typename V>
-inline bool deserialize_number_to_number_map(std::map<K, V> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_arithmetic<V>::value, "V must be an arithmetic type");
-    std::vector<K> k;
-    std::vector<V> v;
-    if (!deserialize_number_vector(k, src, size, offset)) return false;
-    if (!deserialize_number_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-template <typename K>
-inline bool deserialize_number_to_string_map(std::map<K, std::string> &dst, const uint8_t *src, size_t size,
-                                             size_t &offset) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    std::vector<K> k;
-    std::vector<std::string> v;
-    if (!deserialize_number_vector(k, src, size, offset)) return false;
-    if (!deserialize_string_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-template <typename K, typename V>
-inline bool deserialize_number_to_message_map(std::map<K, V> &dst, const uint8_t *src, size_t size, size_t &offset) {
-    static_assert(std::is_arithmetic<K>::value, "K must be an arithmetic type");
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    std::vector<K> k;
-    std::vector<V> v;
-    if (!deserialize_number_vector(k, src, size, offset)) return false;
-    if (!deserialize_message_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-template <typename V>
-inline bool deserialize_string_to_number_map(std::map<std::string, V> &dst, const uint8_t *src, size_t size,
-                                             size_t &offset) {
-    std::vector<std::string> k;
-    std::vector<V> v;
-    if (!deserialize_string_vector(k, src, size, offset)) return false;
-    if (!deserialize_number_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-inline bool deserialize_string_to_string_map(std::map<std::string, std::string> &dst, const uint8_t *src, size_t size,
-                                             size_t &offset) {
-    std::vector<std::string> k;
-    std::vector<std::string> v;
-    if (!deserialize_string_vector(k, src, size, offset)) return false;
-    if (!deserialize_string_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-template <typename V>
-inline bool deserialize_string_to_message_map(std::map<std::string, V> &dst, const uint8_t *src, size_t size,
-                                              size_t &offset) {
-    static_assert(std::is_base_of<Message, V>::value, "V must derive from Message");
-    std::vector<std::string> k;
-    std::vector<V> v;
-    if (!deserialize_string_vector(k, src, size, offset)) return false;
-    if (!deserialize_message_vector(v, src, size, offset)) return false;
-    const size_t n = k.size();
-    if (n != v.size()) return false;
-    for (size_t i = 0; i < n; i++) {
-        dst.insert({k[i], v[i]});
-    }
-    return true;
-}
-}  // namespace detail
-}  // namespace msg
-}  // namespace rix
+} // namespace detail
+} // namespace rix

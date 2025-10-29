@@ -85,11 +85,11 @@ Example (`standard/Header.json`):
 ```json
 {
   "version": "1.0.0",
-  "package": "standard",
+  "package": "std_msgs",
   "name": "Header",
   "fields": [
     { "name": "seq", "type": "uint32" },
-    { "name": "stamp", "type": "Time", "package": "standard" },
+    { "name": "stamp", "type": "Time", "package": "std_msgs" },
     { "name": "frame_id", "type": "string" }
   ]
 }

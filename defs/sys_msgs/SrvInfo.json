@@ -1,0 +1,36 @@
+{
+    "name": "SrvInfo",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "id",
+            "type": "uint64"
+        },
+        {
+            "name": "node_id",
+            "type": "uint64"
+        },
+        {
+            "name": "protocol",
+            "type": "uint8"
+        },
+        {
+            "name": "endpoint",
+            "type": "Endpoint",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "request_hash",
+            "type": "uint64[2]"
+        },
+        {
+            "name": "response_hash",
+            "type": "uint64[2]"
+        }
+    ]
+}

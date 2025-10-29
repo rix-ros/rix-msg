@@ -1,0 +1,11 @@
+{
+    "name": "UInt8Array",
+    "version": "1.0.0",
+    "package": "std_msgs",
+    "fields": [
+        {
+            "name": "data",
+            "type": "uint8[]"
+        }
+    ]
+}

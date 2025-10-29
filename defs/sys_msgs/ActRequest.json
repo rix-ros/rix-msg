@@ -1,0 +1,31 @@
+{
+    "name": "ActRequest",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "node_id",
+            "type": "uint64"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "protocol",
+            "type": "uint8"
+        },
+        {
+            "name": "goal_hash",
+            "type": "uint64[2]"
+        },
+        {
+            "name": "feedback_hash",
+            "type": "uint64[2]"
+        },
+        {
+            "name": "result_hash",
+            "type": "uint64[2]"
+        }
+    ]
+}

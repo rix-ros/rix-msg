@@ -1,0 +1,50 @@
+{
+    "name": "ExampleMessage",
+    "version": "1.0.0",
+    "package": "example_msgs",
+    "fields": [
+        {
+            "name": "num",
+            "type": "uint32"
+        },
+        {
+            "name": "str",
+            "type": "string"
+        },
+        {
+            "name": "flag",
+            "type": "bool"
+        },
+        {
+            "name": "msg",
+            "type": "OtherMessage",
+            "package": "example_msgs"
+        },
+        {
+            "name": "num_vec",
+            "type": "float[]"
+        },
+        {
+            "name": "num_arr",
+            "type": "float[3]"
+        },
+        {
+            "name": "str_vec",
+            "type": "string[]"
+        },
+        {
+            "name": "str_arr",
+            "type": "string[3]"
+        },
+        {
+            "name": "msg_vec",
+            "type": "OtherMessage[]",
+            "package": "example_msgs"
+        },
+        {
+            "name": "msg_arr",
+            "type": "OtherMessage[3]",
+            "package": "example_msgs"
+        }
+    ]
+}

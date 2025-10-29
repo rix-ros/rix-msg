@@ -10,12 +10,11 @@ def is_valid(input_text: str | None) -> bool:
         - A custom type (e.g. MyMessage)
         - A static array (e.g. int32[10], MyMessage[5], etc.)
         - A dynamic array (e.g. int32[], MyMessage[], etc.)
-        - A map (e.g. int32[string], MyMessage[int32], etc.)
     """
     if input_text is None:
         return False
     pattern = re.compile(
-        r"^([a-zA-Z_][a-zA-Z0-9_]*\[([0-9]*|[a-zA-Z_][a-zA-Z0-9_]*)\]|[a-zA-Z_][a-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]+)$"
+        r"^([a-zA-Z][a-zA-Z0-9_]*\[([0-9]*)\]|[a-zA-Z][a-zA-Z0-9_]*)$"
     )
     return pattern.match(input_text) is not None
 
@@ -40,38 +39,6 @@ def get_value_type(input_text: str | None) -> str | None:
     if match:
         return match.group(1)
     return None
-
-
-def get_key_type(input_text: str | None) -> str | None:
-    """
-    Get the key type for a map from the input text.
-    For example:
-        - int32[string] -> string
-        - MyMessage[int32] -> int32
-        - int32 -> None
-        - MyMessage -> None
-        - int32[10] -> None
-    """
-    if input_text is None:
-        return None
-    pattern = re.compile(
-        r"^(?:[a-zA-Z_][a-zA-Z0-9_]*)(?:\[)([a-zA-Z_][a-zA-Z0-9_]*)(?:\])$"
-    )
-    match = pattern.search(input_text)
-    if match:
-        return match.group(1)
-    return None
-
-
-def is_map(input_text: str | None) -> bool:
-    """
-    Check if the input text is a map type.
-    """
-    if input_text is None:
-        return False
-    pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_][a-zA-Z0-9_]*\]$")
-    return pattern.match(input_text) is not None
-
 
 def is_static_array(input_text: str | None) -> bool:
     """

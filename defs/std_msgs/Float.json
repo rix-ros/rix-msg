@@ -1,0 +1,11 @@
+{
+    "name": "Float",
+    "version": "1.0.0",
+    "package": "std_msgs",
+    "fields": [
+        {
+            "name": "data",
+            "type": "float"
+        }
+    ]
+}

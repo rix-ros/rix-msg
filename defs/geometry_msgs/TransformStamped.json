@@ -1,0 +1,21 @@
+{
+    "name": "TransformStamped",
+    "version": "1.0.0",
+    "package": "geometry_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "child_frame_id",
+            "type": "string"
+        },
+        {
+            "name": "transform",
+            "type": "Transform",
+            "package": "geometry_msgs"
+        }
+    ]
+}

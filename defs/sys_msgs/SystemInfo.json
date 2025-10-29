@@ -1,0 +1,37 @@
+{
+    "name": "SystemInfo",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "nodes",
+            "type": "NodeInfo[]",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "publishers",
+            "type": "PubInfo[]",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "subscribers",
+            "type": "SubInfo[]",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "services",
+            "type": "SrvInfo[]",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "actions",
+            "type": "ActInfo[]",
+            "package": "sys_msgs"
+        },
+        {
+            "name": "topics",
+            "type": "TopicInfo[]",
+            "package": "sys_msgs"
+        }
+    ]
+}

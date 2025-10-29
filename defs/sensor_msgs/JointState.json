@@ -1,0 +1,23 @@
+{
+    "name": "JointState",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "position",
+            "type": "double"
+        },
+        {
+            "name": "velocity",
+            "type": "double"
+        },
+        {
+            "name": "effort",
+            "type": "double"
+        }
+    ]
+}

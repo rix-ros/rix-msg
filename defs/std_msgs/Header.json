@@ -1,0 +1,20 @@
+{
+    "name": "Header",
+    "version": "1.0.0",
+    "package": "std_msgs",
+    "fields": [
+        {
+            "name": "seq",
+            "type": "uint32"
+        },
+        {
+            "name": "stamp",
+            "type": "Time",
+            "package": "std_msgs"
+        },
+        {
+            "name": "frame_id",
+            "type": "string"
+        }
+    ]
+}

@@ -3,7 +3,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
     },
     "version": {
       "type": "string",
@@ -11,7 +11,7 @@
     },
     "package": {
       "type": "string",
-      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
     },
     "fields": {
       "type": "array",
@@ -20,15 +20,15 @@
         "properties": {
           "name": {
             "type": "string",
-            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+            "pattern": "^[a-z][a-zA-Z0-9_]*$"
           },
           "type": {
             "type": "string",
-            "pattern": "^([a-zA-Z_][a-zA-Z0-9_]*\\[([0-9]*|[a-zA-Z_][a-zA-Z0-9_]*)\\]|[a-zA-Z_][a-zA-Z0-9_]*|[a-zA-Z_][a-zA-Z0-9_]+)$"
+            "pattern": "^([a-zA-Z][a-zA-Z0-9_]*\\[([0-9]*)\\]|[a-zA-Z][a-zA-Z0-9_]*)$"
           },
           "package": {
             "type": "string",
-            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
           }
         },
         "required": ["name", "type"]

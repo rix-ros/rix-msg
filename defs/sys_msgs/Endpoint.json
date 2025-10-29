@@ -1,0 +1,15 @@
+{
+    "name": "Endpoint",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "port",
+            "type": "uint16"
+        },
+        {
+            "name": "address",
+            "type": "string"
+        }
+    ]
+}

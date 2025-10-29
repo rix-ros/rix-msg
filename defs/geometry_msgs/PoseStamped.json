@@ -1,0 +1,17 @@
+{
+    "name": "PoseStamped",
+    "version": "1.0.0",
+    "package": "geometry_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "pose",
+            "type": "Pose",
+            "package": "geometry_msgs"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "name": "GameController",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "axes",
+            "type": "float[]"
+        },
+        {
+            "name": "buttons",
+            "type": "int32[]"
+        }
+    ]
+}
