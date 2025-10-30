@@ -2,10 +2,10 @@
 
 ## Fast, Modular Message Serialization for Robotics
 
-**RIX-MSG** is a high-performance, cross-language message definition and serialization library for robotics and distributed systems. It provides a robust foundation for defining, generating, and serializing messages in C++, Python, and JavaScript—empowering you to build scalable, reliable robot software architectures.
+**RIX-MSG** is a high-performance, cross-language message definition and serialization library for robotics and distributed systems. It provides a robust foundation for defining, generating, and serializing messages in C++ and Python—empowering you to build scalable, reliable robot software architectures.
 
-- 🌐 **Multi-Language:** Automatically generates C++, Python, and JavaScript implementations from a single message definition.
-- 🧩 **Flexible Schema:** Supports arrays, nested messages, and maps for complex data structures.
+- 🌐 **Multi-Language:** Automatically generates C++ and Python implementations from a single message definition.
+- 🧩 **Flexible Schema:** Supports arithmetic types, strings, arrays, vectors, and nested messages for complex data structures.
 - 🔒 **Type-Safe:** Enforces strict type checking and schema validation across all supported languages.
 - 📝 **Human-Readable Definitions:** Message formats are defined in clear, versioned JSON files.
 
@@ -25,10 +25,9 @@ bash install.sh
 
 This will:
 - Build and install the `rixmsg` CLI tool to `$HOME/.rix/bin/rixmsg`
-- Generate default message serialization files for C++, Python, and JavaScript in:
+- Generate default message serialization files for C++ and Python in:
   - `$HOME/.rix/include/rix/msg/`
   - `$HOME/.rix/python/rixmsg/`
-  - `$HOME/.rix/js/rixmsg/`
 
 ---
 
@@ -78,7 +77,6 @@ Message definitions use a simple JSON schema. Supported types include:
 - Base types: `char`, `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float`, `double`, `bool`, `string`
 - Arrays: `type[]` (dynamic), `type[N]` (fixed-size)
 - Nested messages: `{ "type": "<name>", "package": "<package>" }`
-- Maps: `{ "type": "<value_type>[<key_type>]" }` (key type cannot be a custom message)
 
 Example (`standard/Header.json`):
 
@@ -109,7 +107,6 @@ Generated files will be placed in:
 
 - C++: `~/.rix/include/rix/msg/<package>/<Message>.hpp`
 - Python: `~/.rix/python/rixmsg/rixmsg/<package>/<Message>.py`
-- JavaScript: `~/.rix/js/rixmsg/<package>/<Message>.js`
 
 ---
 
@@ -165,32 +162,9 @@ python3 test_example.py
 
 ---
 
-## JavaScript Example
-
-Import generated message classes in JavaScript:
-
-```js
-import { Header } from "rixmsg/standard/Header.js";
-
-const msg = new Header();
-msg.seq = 42;
-msg.frame_id = "robot_1";
-```
-
-Install and run tests:
-
-```bash
-cd test/js/
-npm link ~/.rix/js/rixmsg/
-npm install
-node test_example.js
-```
-
----
-
 ## Tests
 
-RIX-MSG includes tests for C++, Python, and JavaScript. See the `test/` directory for examples.
+RIX-MSG includes tests for C++ and Python. See the `test/` directory for examples.
 
 ---
 
