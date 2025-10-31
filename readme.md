@@ -5,6 +5,7 @@
 **RIX-MSG** is a high-performance, cross-language message definition and serialization library for robotics and distributed systems. It provides a robust foundation for defining, generating, and serializing messages in C++ and Python—empowering you to build scalable, reliable robot software architectures.
 
 - 🌐 **Multi-Language:** Automatically generates C++ and Python implementations from a single message definition.
+- ⚡ **Zero-Copy Serialization:** Optimized for low-latency communication with vectored I/O support.
 - 🧩 **Flexible Schema:** Supports arithmetic types, strings, arrays, vectors, and nested messages for complex data structures.
 - 🔒 **Type-Safe:** Enforces strict type checking and schema validation across all supported languages.
 - 📝 **Human-Readable Definitions:** Message formats are defined in clear, versioned JSON files.
@@ -63,9 +64,9 @@ Example usage:
 ```bash
 rixmsg packages
 rixmsg package geometry
-rixmsg show standard/Header
-rixmsg create defs/example/
-rixmsg validate defs/geometry/Point.json
+rixmsg show std_msgs/Header
+rixmsg create defs/example_msgs/
+rixmsg validate defs/geometry_msgs/Point.json
 ```
 
 ---
@@ -78,7 +79,7 @@ Message definitions use a simple JSON schema. Supported types include:
 - Arrays: `type[]` (dynamic), `type[N]` (fixed-size)
 - Nested messages: `{ "type": "<name>", "package": "<package>" }`
 
-Example (`standard/Header.json`):
+Example (`std_msgs/Header.json`):
 
 ```json
 {
@@ -115,9 +116,9 @@ Generated files will be placed in:
 Include generated message headers in your C++ project:
 
 ```cpp
-#include "rix/msg/standard/Header.hpp"
+#include "rix/std_msgs/Header.hpp"
 
-using rix::msg::standard::Header;
+using rix::std_msgs::Header;
 
 Header msg;
 msg.seq = 42;
@@ -143,28 +144,12 @@ target_include_directories(main PRIVATE "$ENV{HOME}/.rix/include")
 Import generated message classes in Python:
 
 ```python
-from rixmsg.standard.Header import Header
+from rix.std_msgs import Header
 
 msg = Header()
 msg.seq = 42
 msg.frame_id = "robot_1"
 ```
-
-Install and run tests:
-
-```bash
-cd test/python/
-python3 -m venv venv
-source venv/bin/activate
-pip install ~/.rix/python/rixmsg/
-python3 test_example.py
-```
-
----
-
-## Tests
-
-RIX-MSG includes tests for C++ and Python. See the `test/` directory for examples.
 
 ---
 
