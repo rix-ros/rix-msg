@@ -138,7 +138,7 @@ def create_rixmsg_cpp_get_prefix(fields: list[Field]) -> str:
     return get_prefix_str[:-1] if len(get_prefix_str) > 0 else get_prefix_str
 
 
-def create_rixmsg_cpp_resize_function(fields: list[Field]) -> str:
+def create_rixmsg_cpp_resize(fields: list[Field]) -> str:
     resize_str = ""
     for field in fields:
         is_dynamic = (
@@ -226,7 +226,7 @@ class {msg.name} : public Message {{
         if (len < offset + get_prefix_len()) {{
             return false;
         }}
-        {create_rixmsg_cpp_resize_function(msg.fields).replace(n, n + '        ')}
+        {create_rixmsg_cpp_resize(msg.fields).replace(n, n + '        ')}
         return true;
     }}
 }};

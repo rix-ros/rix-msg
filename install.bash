@@ -39,16 +39,15 @@ cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
 # Copy rixmsg setup files
 cp -r cpp/* "$HOME/.rix/include/rix/msg/"
 cp -r js/* "$HOME/.rix/js/rixmsg/"
-touch "$HOME/.rix/python/rix/rix/msg/__init__.py"
-cp python/message.py "$HOME/.rix/python/rix/rix/msg/"
+cp python/* "$HOME/.rix/python/rix/rix/msg/"
 
 echo "Installation completed successfully."
 echo "Creating default rix message implementation files."
 
-"$HOME/.rix/bin/rixmsg" create defs/mediator
-"$HOME/.rix/bin/rixmsg" create defs/standard
-"$HOME/.rix/bin/rixmsg" create defs/sensor
-"$HOME/.rix/bin/rixmsg" create defs/geometry
+"$HOME/.rix/bin/rixmsg" create defs/sys_msgs
+"$HOME/.rix/bin/rixmsg" create defs/std_msgs
+"$HOME/.rix/bin/rixmsg" create defs/sensor_msgs
+"$HOME/.rix/bin/rixmsg" create defs/geometry_msgs
 
 echo "Default rix message implementation files created successfully."
 

@@ -1,9 +1,10 @@
 import ctypes
 import struct
 from typing import List, Tuple, Any
-from message_base import Message, Serializable
 
-type_mapping = {
+from rix.msg import Serializable
+
+py_to_ctypes = {
     bytes: [ctypes.c_char],
     bool: [ctypes.c_bool],
     int: [
@@ -17,6 +18,21 @@ type_mapping = {
         ctypes.c_int64,
     ],
     float: [ctypes.c_float, ctypes.c_double],
+}
+
+ctypes_to_py = {
+    ctypes.c_char: bytes,
+    ctypes.c_bool: bool,
+    ctypes.c_uint8: int,
+    ctypes.c_uint16: int,
+    ctypes.c_uint32: int,
+    ctypes.c_uint64: int,
+    ctypes.c_int8: int,
+    ctypes.c_int16: int,
+    ctypes.c_int32: int,
+    ctypes.c_int64: int,
+    ctypes.c_float: float,
+    ctypes.c_double: float,
 }
 
 
@@ -33,9 +49,9 @@ def validate_python_type(py_value: Any, ctypes_type: type) -> None:
         return
 
     py_type = type(py_value)
-    if py_type not in type_mapping or ctypes_type not in type_mapping[py_type]:
+    if py_type not in py_to_ctypes or ctypes_type not in py_to_ctypes[py_type]:
         raise TypeError(
-            f"Type mismatch: Expected {py_value} for {ctypes_type}, got {py_value}."
+            f"Type mismatch: Expected {ctypes_to_py[ctypes_type]} for {ctypes_type}, got {py_type}."
         )
 
 
@@ -957,218 +973,3 @@ def get_prefix(obj, name, buffer: bytearray, offset: Serializable.Offset) -> Non
 
 def get_segment_count(obj, name) -> int:
     return type(obj).__dict__[name].get_segment_count(obj)
-
-
-# class ExampleB(Message):
-#     def __init__(self):
-#         init_uint32(self, "id")
-#         init_string(self, "description")
-#         init_string_array(self, "tags", 5)
-#         self._property_names = ["id", "description", "tags"]
-
-#         self.id = 0
-#         self.description = ""
-#         self.tags = [""] * 5
-
-#     def hash(self) -> List[int]:
-#         return [0x2, 0x3]
-
-#     def resize(self, buffer: bytes, length: int, offset: Serializable.Offset) -> bool:
-#         if length < offset.value + self.get_prefix_len():
-#             return False
-#         resize(self, "description", buffer, offset)
-#         resize(self, "tags", buffer, offset)
-#         return True
-
-#     def get_prefix_len(self) -> int:
-#         length = 0
-#         length += get_prefix_len(self, "description")
-#         length += get_prefix_len(self, "tags")
-#         return length
-
-#     def get_prefix(self, buffer: bytearray, offset: Serializable.Offset) -> None:
-#         get_prefix(self, "description", buffer, offset)
-
-#     def get_segment_count(self) -> int:
-#         count = 0
-#         count += 4  # for id
-#         count += get_segment_count(self, "description")
-#         count += get_segment_count(self, "tags")
-#         return count
-
-#     def get_segments(self) -> list[Tuple[int, int]]:
-#         # Returns a list of (ptr, length) tuples for each segment
-#         segments = []
-#         for prop_name in self._property_names:
-#             # Access the descriptor from the class, not the instance
-#             prop_descriptor = type(self).__dict__[prop_name]
-#             segments.extend(prop_descriptor.get_segments(self))
-#         return segments
-
-
-# class Example(Message):
-#     def __init__(self):
-#         init_string(self, "name")
-#         init_uint32(self, "age")
-#         init_double_vector(self, "scores")
-#         init_int16_array(self, "data", 10)
-#         init_string_vector(self, "data_strings")
-#         init_message(self, "nested", ExampleB)
-#         init_message_vector(self, "nested_vector", ExampleB)
-#         init_message_array(self, "nested_array", ExampleB, 3)
-#         self._property_names = [
-#             "name",
-#             "age",
-#             "scores",
-#             "data",
-#             "data_strings",
-#             "nested",
-#             "nested_vector",
-#             "nested_array",
-#         ]
-
-#         self.name = ""
-#         self.age = 0
-#         self.scores = []
-#         self.data = [0] * 10
-#         self.data_strings = []
-#         self.nested = ExampleB()
-#         self.nested_vector = []
-#         self.nested_array = [ExampleB() for _ in range(3)]
-
-#     def hash(self) -> List[int]:
-#         return [0x0, 0x1]
-
-#     def resize(self, buffer: bytes, length: int, offset: Serializable.Offset) -> bool:
-#         if length < offset.value + self.get_prefix_len():
-#             return False
-#         resize(self, "name", buffer, offset)
-#         resize(self, "scores", buffer, offset)
-#         resize(self, "data_strings", buffer, offset)
-#         resize(self, "nested", buffer, offset)
-#         resize(self, "nested_vector", buffer, offset)
-#         resize(self, "nested_array", buffer, offset)
-#         return True
-
-#     def get_prefix_len(self) -> int:
-#         length = 0
-#         length += get_prefix_len(self, "name")
-#         length += get_prefix_len(self, "scores")
-#         length += get_prefix_len(self, "data_strings")
-#         length += get_prefix_len(self, "nested")
-#         length += get_prefix_len(self, "nested_vector")
-#         length += get_prefix_len(self, "nested_array")
-#         return length
-
-#     def get_prefix(self, buffer: bytearray, offset: Serializable.Offset) -> None:
-#         get_prefix(self, "name", buffer, offset)
-#         get_prefix(self, "scores", buffer, offset)
-#         get_prefix(self, "data_strings", buffer, offset)
-#         get_prefix(self, "nested", buffer, offset)
-#         get_prefix(self, "nested_vector", buffer, offset)
-#         get_prefix(self, "nested_array", buffer, offset)
-
-#     def get_segment_count(self) -> int:
-#         count = 0
-#         count += 4
-#         count += get_segment_count(self, "data_strings")
-#         count += get_segment_count(self, "nested")
-#         count += get_segment_count(self, "nested_vector")
-#         count += get_segment_count(self, "nested_array")
-#         return count
-
-#     def get_segments(self) -> list[Tuple[int, int]]:
-#         # Returns a list of (ptr, length) tuples for each segment
-#         segments = []
-#         for prop_name in self._property_names:
-#             # Access the descriptor from the class, not the instance
-#             prop_descriptor = type(self).__dict__[prop_name]
-#             segments.extend(prop_descriptor.get_segments(self))
-#         return segments
-
-
-# def test():
-#     example = Example()
-#     example.name = "Alice"
-#     example.age = 30
-#     example.scores = [95.5, 88.0, 76.5]
-#     example.data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-#     example.data_strings = ["one", "two", "three"]
-#     example.nested.id = 1
-#     example.nested.description = "This is a nested message."
-#     example.nested.tags = ["tag1", "tag2", "tag3", "tag4", "tag5"]
-#     example.nested_vector = [ExampleB() for _ in range(3)]
-#     example.nested_array = [ExampleB() for _ in range(3)]
-#     print(f"Name: {example.name}")
-#     print(f"Age: {example.age}")
-#     print(f"Scores: {example.scores}")
-#     print(f"Scores Raw: {example.get_raw('scores')}")
-#     print(f"Data: {example.data}")
-#     print(f"Data Strings: {example.data_strings}")
-#     print(f"Nested ID: {example.nested.id}")
-#     print(f"Nested Description: {example.nested.description}")
-#     print(f"Nested Tags: {example.nested.tags}")
-
-#     # Get segments
-#     segments = example.get_segments()
-#     for i, (ptr, length) in enumerate(segments):
-#         print(f"Segment {i}: ptr=0x{ptr:x}, length={length}")
-
-#     # Reassign properties
-#     example.name = "Nicholas"
-#     example.age = 25
-#     example.scores = [85.0, 90.0, 92.5, 88.0]
-#     example.data = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-#     example.data_strings = ["ten", "nine", "eight", "seven"]
-#     example.nested.id = 2
-#     example.nested.description = "Nested Example"
-#     example.nested.tags = ["newtag1", "newtag2", "newtag3", "newtag4", "newtag5"]
-#     print(f"Updated Name: {example.name}")
-#     print(f"Updated Age: {example.age}")
-#     print(f"Updated Scores: {example.scores}")
-#     print(f"Updated Scores Raw: {example.get_raw('scores')}")
-#     print(f"Updated Data: {example.data}")
-#     print(f"Updated Data Strings: {example.data_strings}")
-#     print(f"Updated Nested ID: {example.nested.id}")
-#     print(f"Updated Nested Description: {example.nested.description}")
-#     print(f"Updated Nested Tags: {example.nested.tags}")
-
-#     # Get segments again
-#     segments = example.get_segments()
-#     for i, (ptr, length) in enumerate(segments):
-#         print(f"Segment {i}: ptr=0x{ptr:x}, length={length}")
-
-#     # Example 2
-#     example2 = Example()
-#     example2.name = "Charlie"
-#     example2.age = 40
-#     example2.scores = [100.0]
-#     example2.data = [0, -1, -2, -3, -4, -5, -6, -7, -8, -9]
-#     example2.data_strings = ["zero", "minus one", "minus two"]
-#     example2.nested.id = 3
-#     example2.nested.description = "Another nested message."
-#     example2.nested.tags = ["tag1", "tag2", "tag3", "tag4", "tag5"]
-#     print(f"Example2 Name: {example2.name}")
-#     print(f"Example2 Age: {example2.age}")
-#     print(f"Example2 Scores: {example2.scores}")
-#     print(f"Example2 Scores Raw: {example2.get_raw('scores')}")
-#     print(f"Example2 Data: {example2.data}")
-#     print(f"Example2 Data Strings: {example2.data_strings}")
-#     print(f"Example2 Nested ID: {example2.nested.id}")
-#     print(f"Example2 Nested Description: {example2.nested.description}")
-#     print(f"Example2 Nested Tags: {example2.nested.tags}")
-
-#     # Get the segments
-#     segments = example2.get_segments()
-
-#     # Print location and length of each segment
-#     for i, (ptr, length) in enumerate(segments):
-#         print(f"Segment {i}: ptr=0x{ptr:x}, length={length}")
-
-#     # Get prefix bytes
-#     prefix_bytes = example.get_prefix_bytes()
-#     print(f"Prefix bytes: {prefix_bytes}")
-
-
-# if __name__ == "__main__":
-#     test()
