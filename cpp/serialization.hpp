@@ -47,6 +47,12 @@ template <size_t N> inline size_t get_segment_count(const std::array<std::string
 // Overload for ptr_t
 inline size_t get_segment_count(const ptr_t& ptr) { return ptr.get() != nullptr && ptr.size() > 0 ? 1 : 0; }
 
+// Overload for std::vector<ptr_t>
+inline size_t get_segment_count(const std::vector<ptr_t>& vec) { return vec.size(); }
+
+// Overload for std::array<ptr_t, N>
+template <size_t N> inline size_t get_segment_count(const std::array<ptr_t, N>& arr) { return N; }
+
 // ===== NON-CONST GET_SEGMENT HELPERS =====
 
 // Primary template for arithmetic types (integers, floats, bool, etc.)
@@ -116,7 +122,19 @@ inline void get_segments(std::array<std::string, N>& arr, MessageSegment* segmen
 
 // Overload for ptr_t
 inline void get_segments(ptr_t& ptr, MessageSegment* segments, size_t& offset) {
-  if (ptr.get() != nullptr && ptr.size() > 0) {
+  segments[offset++] = MessageSegment(reinterpret_cast<uint8_t*>(ptr.get()), ptr.size());
+}
+
+// Overload for std::vector<ptr_t>
+inline void get_segments(std::vector<ptr_t>& vec, MessageSegment* segments, size_t& offset) {
+  for (auto& ptr : vec) {
+    segments[offset++] = MessageSegment(reinterpret_cast<uint8_t*>(ptr.get()), ptr.size());
+  }
+}
+
+// Overload for std::array<ptr_t, N>
+template <size_t N> inline void get_segments(std::array<ptr_t, N>& arr, MessageSegment* segments, size_t& offset) {
+  for (auto& ptr : arr) {
     segments[offset++] = MessageSegment(reinterpret_cast<uint8_t*>(ptr.get()), ptr.size());
   }
 }
@@ -190,7 +208,20 @@ inline void get_segments(const std::array<std::string, N>& arr, ConstMessageSegm
 
 // Overload for const ptr_t
 inline void get_segments(const ptr_t& ptr, ConstMessageSegment* segments, size_t& offset) {
-  if (ptr.get() != nullptr && ptr.size() > 0) {
+  segments[offset++] = ConstMessageSegment(reinterpret_cast<const uint8_t*>(ptr.get()), ptr.size());
+}
+
+// Overload for const std::vector<ptr_t>
+inline void get_segments(const std::vector<ptr_t>& vec, ConstMessageSegment* segments, size_t& offset) {
+  for (const auto& ptr : vec) {
+    segments[offset++] = ConstMessageSegment(reinterpret_cast<const uint8_t*>(ptr.get()), ptr.size());
+  }
+}
+
+// Overload for const std::array<ptr_t, N>
+template <size_t N>
+inline void get_segments(const std::array<ptr_t, N>& arr, ConstMessageSegment* segments, size_t& offset) {
+  for (const auto& ptr : arr) {
     segments[offset++] = ConstMessageSegment(reinterpret_cast<const uint8_t*>(ptr.get()), ptr.size());
   }
 }
@@ -246,6 +277,16 @@ template <size_t N> inline uint32_t get_prefix_len(const std::array<std::string,
 
 // Overload for ptr_t
 inline uint32_t get_prefix_len(const ptr_t& /*ptr*/) { return 4; }
+
+// Overload for std::vector<ptr_t>
+inline uint32_t get_prefix_len(const std::vector<ptr_t>& vec) {
+  return 4 + 4 * static_cast<uint32_t>(vec.size()); // uint32_t for each ptr_t size
+}
+
+// Overload for std::array<ptr_t, N>
+template <size_t N> inline uint32_t get_prefix_len(const std::array<ptr_t, N>& /*arr*/) {
+  return 4 * static_cast<uint32_t>(N); // uint32_t for each ptr_t size
+}
 
 // ===== GET_PREFIX HELPERS =====
 
@@ -307,6 +348,24 @@ template <size_t N> inline void get_prefix(const std::array<std::string, N>& arr
 inline void get_prefix(const ptr_t& ptr, uint8_t* sizes, size_t& offset) {
   *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(ptr.size());
   offset += 4;
+}
+
+// Overload for std::vector<ptr_t>
+inline void get_prefix(const std::vector<ptr_t>& vec, uint8_t* sizes, size_t& offset) {
+  *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(vec.size());
+  offset += 4;
+  for (const auto& ptr : vec) {
+    *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(ptr.size());
+    offset += 4;
+  }
+}
+
+// Overload for std::array<ptr_t, N>
+template <size_t N> inline void get_prefix(const std::array<ptr_t, N>& arr, uint8_t* sizes, size_t& offset) {
+  for (const auto& ptr : arr) {
+    *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(ptr.size());
+    offset += 4;
+  }
 }
 
 // ===== RESIZE HELPERS =====
@@ -378,6 +437,27 @@ inline void resize(ptr_t& ptr, const uint8_t* sizes, size_t& offset) {
   uint32_t size = *reinterpret_cast<const uint32_t*>(sizes + offset);
   offset += 4;
   ptr.resize(size);
+}
+
+// Overload for std::vector<ptr_t>
+inline void resize(std::vector<ptr_t>& vec, const uint8_t* sizes, size_t& offset) {
+  uint32_t count = *reinterpret_cast<const uint32_t*>(sizes + offset);
+  offset += 4;
+  vec.resize(count);
+  for (auto& ptr : vec) {
+    uint32_t size = *reinterpret_cast<const uint32_t*>(sizes + offset);
+    offset += 4;
+    ptr.resize(size);
+  }
+}
+
+// Overload for std::array<ptr_t, N>
+template <size_t N> inline void resize(std::array<ptr_t, N>& arr, const uint8_t* sizes, size_t& offset) {
+  for (auto& ptr : arr) {
+    uint32_t size = *reinterpret_cast<const uint32_t*>(sizes + offset);
+    offset += 4;
+    ptr.resize(size);
+  }
 }
 
 } // namespace detail

@@ -96,9 +96,13 @@ init_message_vector = rix_types.init_message_vector
 init_message_array = rix_types.init_message_array
 
 init_pointer = rix_types.init_pointer
+init_pointer_vector = rix_types.init_pointer_vector
+init_pointer_array = rix_types.init_pointer_array
 
 # Import PointerProperty
 PointerProperty = rix_types.PointerProperty
+PointerVectorProperty = rix_types.PointerVectorProperty
+PointerArrayProperty = rix_types.PointerArrayProperty
 
 # Helper functions
 resize = rix_types.resize
@@ -900,6 +904,565 @@ class TestPointerProperty(unittest.TestCase):
         self.assertEqual(bytes(obj2.data), b"second")
 
 
+class TestPointerVectorProperty(unittest.TestCase):
+    """Test PointerVectorProperty descriptor."""
+
+    def setUp(self):
+        """Create a test object with pointer vector property."""
+
+        class TestObj:
+            pass
+
+        self.obj = TestObj()
+        self.obj.__class__.pointers = rix_types.PointerVectorProperty("pointers")
+
+    def test_default_empty_list(self):
+        """Test default value is empty list."""
+        self.assertEqual(self.obj.pointers, [])
+
+    def test_set_and_get_single(self):
+        """Test setting and getting a single pointer."""
+        data = memoryview(bytearray(b"Hello"))
+        self.obj.pointers = [data]
+        result = self.obj.pointers
+        self.assertEqual(len(result), 1)
+        self.assertEqual(bytes(result[0]), b"Hello")
+
+    def test_set_and_get_multiple(self):
+        """Test setting and getting multiple pointers."""
+        data1 = memoryview(bytearray(b"First"))
+        data2 = memoryview(bytearray(b"Second"))
+        data3 = memoryview(bytearray(b"Third"))
+        self.obj.pointers = [data1, data2, data3]
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(bytes(result[0]), b"First")
+        self.assertEqual(bytes(result[1]), b"Second")
+        self.assertEqual(bytes(result[2]), b"Third")
+
+    def test_empty_list(self):
+        """Test setting empty list."""
+        self.obj.pointers = []
+        self.assertEqual(self.obj.pointers, [])
+
+    def test_set_binary_data(self):
+        """Test setting binary data in vector."""
+        data1 = memoryview(bytearray([0, 1, 2, 255]))
+        data2 = memoryview(bytearray([128, 64, 32, 16]))
+        self.obj.pointers = [data1, data2]
+        
+        result = self.obj.pointers
+        self.assertEqual(bytes(result[0]), bytes([0, 1, 2, 255]))
+        self.assertEqual(bytes(result[1]), bytes([128, 64, 32, 16]))
+
+    def test_type_validation(self):
+        """Test type validation - all elements must be memoryview."""
+        with self.assertRaises(ValueError):
+            self.obj.pointers = [b"bytes"]
+
+        with self.assertRaises(ValueError):
+            self.obj.pointers = ["string"]
+
+        with self.assertRaises(ValueError):
+            self.obj.pointers = [memoryview(bytearray(b"valid")), b"invalid"]
+
+    def test_empty_memoryview_in_vector(self):
+        """Test setting empty memoryview in vector."""
+        empty = memoryview(bytearray())
+        data = memoryview(bytearray(b"data"))
+        self.obj.pointers = [empty, data, empty]
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result[0]), 0)
+        self.assertEqual(bytes(result[1]), b"data")
+        self.assertEqual(len(result[2]), 0)
+
+    def test_resize_vector_larger(self):
+        """Test resizing vector to larger size."""
+        small = [memoryview(bytearray(b"a")), memoryview(bytearray(b"b"))]
+        self.obj.pointers = small
+        
+        large = [
+            memoryview(bytearray(b"first")),
+            memoryview(bytearray(b"second")),
+            memoryview(bytearray(b"third")),
+            memoryview(bytearray(b"fourth"))
+        ]
+        self.obj.pointers = large
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 4)
+        self.assertEqual(bytes(result[0]), b"first")
+        self.assertEqual(bytes(result[1]), b"second")
+        self.assertEqual(bytes(result[2]), b"third")
+        self.assertEqual(bytes(result[3]), b"fourth")
+
+    def test_resize_vector_smaller(self):
+        """Test resizing vector to smaller size - reducing number of pointers."""
+        # Start with larger vector
+        large = [
+            memoryview(bytearray(b"one")),
+            memoryview(bytearray(b"two")),
+            memoryview(bytearray(b"three"))
+        ]
+        self.obj.pointers = large
+        
+        # Verify initial state
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        
+        # Reduce to smaller vector
+        small = [memoryview(bytearray(b"x"))]
+        self.obj.pointers = small
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 1)
+        self.assertEqual(bytes(result[0]), b"x")
+
+    def test_get_segments(self):
+        """Test getting memory segments."""
+        data1 = memoryview(bytearray(b"abc"))
+        data2 = memoryview(bytearray(b"defgh"))
+        self.obj.pointers = [data1, data2]
+        
+        segments = type(self.obj).__dict__["pointers"].get_segments(self.obj)
+        self.assertEqual(len(segments), 2)
+        self.assertEqual(bytes(segments[0]), b"abc")
+        self.assertEqual(bytes(segments[1]), b"defgh")
+
+    def test_get_segments_empty(self):
+        """Test getting segments when empty."""
+        segments = type(self.obj).__dict__["pointers"].get_segments(self.obj)
+        self.assertEqual(len(segments), 1)
+        self.assertEqual(len(segments[0]), 0)
+
+    def test_get_segment_count(self):
+        """Test getting segment count."""
+        data = [
+            memoryview(bytearray(b"a")),
+            memoryview(bytearray(b"b")),
+            memoryview(bytearray(b"c"))
+        ]
+        self.obj.pointers = data
+        count = type(self.obj).__dict__["pointers"].get_segment_count(self.obj)
+        self.assertEqual(count, 3)
+
+    def test_get_segment_count_empty(self):
+        """Test getting segment count when empty."""
+        count = type(self.obj).__dict__["pointers"].get_segment_count(self.obj)
+        self.assertEqual(count, 0)
+
+    def test_get_prefix_len(self):
+        """Test getting prefix length."""
+        data = [
+            memoryview(bytearray(b"hello")),
+            memoryview(bytearray(b"world"))
+        ]
+        self.obj.pointers = data
+        prefix_len = type(self.obj).__dict__["pointers"].get_prefix_len(self.obj)
+        # Should be 4 (vector count) + 2 * 4 (two pointer lengths)
+        self.assertEqual(prefix_len, 12)
+
+    def test_get_prefix_len_empty(self):
+        """Test getting prefix length when empty."""
+        prefix_len = type(self.obj).__dict__["pointers"].get_prefix_len(self.obj)
+        self.assertEqual(prefix_len, 4)  # Just the count
+
+    def test_get_prefix(self):
+        """Test getting prefix data."""
+        data1 = memoryview(bytearray(b"abc"))
+        data2 = memoryview(bytearray(b"defgh"))
+        self.obj.pointers = [data1, data2]
+        
+        buffer = bytearray(12)  # 4 + 4 + 4
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].get_prefix(self.obj, buffer, offset)
+        
+        ptr_count = struct.unpack_from("<I", buffer, 0)[0]
+        ptr1_len = struct.unpack_from("<I", buffer, 4)[0]
+        ptr2_len = struct.unpack_from("<I", buffer, 8)[0]
+        
+        self.assertEqual(ptr_count, 2)
+        self.assertEqual(ptr1_len, 3)
+        self.assertEqual(ptr2_len, 5)
+        self.assertEqual(offset.value, 12)
+
+    def test_get_prefix_empty(self):
+        """Test getting prefix when empty."""
+        buffer = bytearray(4)
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].get_prefix(self.obj, buffer, offset)
+        
+        count = struct.unpack_from("<I", buffer, 0)[0]
+        self.assertEqual(count, 0)
+
+    def test_resize_from_buffer(self):
+        """Test resizing from buffer."""
+        # Create buffer with: count=3, len1=5, len2=10, len3=3
+        buffer = bytearray(16)
+        struct.pack_into("<I", buffer, 0, 3)   # 3 pointers
+        struct.pack_into("<I", buffer, 4, 5)   # first is 5 bytes
+        struct.pack_into("<I", buffer, 8, 10)  # second is 10 bytes
+        struct.pack_into("<I", buffer, 12, 3)  # third is 3 bytes
+        
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].resize(self.obj, buffer, offset)
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result[0]), 5)
+        self.assertEqual(len(result[1]), 10)
+        self.assertEqual(len(result[2]), 3)
+
+    def test_multiple_assignments(self):
+        """Test multiple assignments to same property."""
+        for i in range(10):
+            data = [memoryview(bytearray(f"data{i}".encode()))]
+            self.obj.pointers = data
+            result = self.obj.pointers
+            self.assertEqual(bytes(result[0]), f"data{i}".encode())
+
+    def test_large_vector(self):
+        """Test handling large number of pointers."""
+        large_list = [memoryview(bytearray(f"item{i}".encode())) for i in range(100)]
+        self.obj.pointers = large_list
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 100)
+        self.assertEqual(bytes(result[0]), b"item0")
+        self.assertEqual(bytes(result[99]), b"item99")
+
+    def test_mixed_sizes(self):
+        """Test pointers of different sizes."""
+        small = memoryview(bytearray(b"x"))
+        medium = memoryview(bytearray(b"medium size"))
+        large = memoryview(bytearray(b"x" * 1000))
+        
+        self.obj.pointers = [small, medium, large]
+        result = self.obj.pointers
+        
+        self.assertEqual(len(result[0]), 1)
+        self.assertEqual(len(result[1]), 11)
+        self.assertEqual(len(result[2]), 1000)
+
+    def test_independence_between_instances(self):
+        """Test that different instances have independent data."""
+        class TestObj:
+            pass
+
+        obj1 = TestObj()
+        obj2 = TestObj()
+        obj1.__class__.pointers = rix_types.PointerVectorProperty("pointers")
+        obj2.__class__.pointers = rix_types.PointerVectorProperty("pointers")
+
+        data1 = [memoryview(bytearray(b"first"))]
+        data2 = [memoryview(bytearray(b"second"))]
+
+        obj1.pointers = data1
+        obj2.pointers = data2
+
+        self.assertEqual(bytes(obj1.pointers[0]), b"first")
+        self.assertEqual(bytes(obj2.pointers[0]), b"second")
+
+
+class TestPointerArrayProperty(unittest.TestCase):
+    """Test PointerArrayProperty descriptor."""
+
+    def setUp(self):
+        """Create a test object with pointer array property."""
+
+        class TestObj:
+            pass
+
+        self.obj = TestObj()
+        self.obj.__class__.pointers = rix_types.PointerArrayProperty("pointers", 3)
+
+    def test_default_empty_list(self):
+        """Test default value is empty list."""
+        self.assertEqual(self.obj.pointers, [])
+
+    def test_set_and_get(self):
+        """Test setting and getting pointer array."""
+        data1 = memoryview(bytearray(b"First"))
+        data2 = memoryview(bytearray(b"Second"))
+        data3 = memoryview(bytearray(b"Third"))
+        self.obj.pointers = [data1, data2, data3]
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(bytes(result[0]), b"First")
+        self.assertEqual(bytes(result[1]), b"Second")
+        self.assertEqual(bytes(result[2]), b"Third")
+
+    def test_set_binary_data(self):
+        """Test setting binary data in array."""
+        data1 = memoryview(bytearray([0, 1, 2]))
+        data2 = memoryview(bytearray([255, 254, 253]))
+        data3 = memoryview(bytearray([128, 64, 32]))
+        self.obj.pointers = [data1, data2, data3]
+        
+        result = self.obj.pointers
+        self.assertEqual(bytes(result[0]), bytes([0, 1, 2]))
+        self.assertEqual(bytes(result[1]), bytes([255, 254, 253]))
+        self.assertEqual(bytes(result[2]), bytes([128, 64, 32]))
+
+    def test_wrong_length(self):
+        """Test setting wrong length raises error."""
+        with self.assertRaises(ValueError):
+            self.obj.pointers = [memoryview(bytearray(b"one"))]
+
+        with self.assertRaises(ValueError):
+            data = [memoryview(bytearray(f"item{i}".encode())) for i in range(5)]
+            self.obj.pointers = data
+
+    def test_type_validation(self):
+        """Test type validation."""
+        with self.assertRaises(ValueError):
+            self.obj.pointers = [b"bytes", b"more", b"data"]
+
+        with self.assertRaises(ValueError):
+            self.obj.pointers = ["string", "more", "data"]
+
+        with self.assertRaises(ValueError):
+            self.obj.pointers = [
+                memoryview(bytearray(b"valid")),
+                b"invalid",
+                memoryview(bytearray(b"valid"))
+            ]
+
+        with self.assertRaises(ValueError):
+            self.obj.pointers = "not a list"
+
+    def test_empty_memoryview_in_array(self):
+        """Test setting empty memoryview in array."""
+        empty = memoryview(bytearray())
+        data = memoryview(bytearray(b"data"))
+        self.obj.pointers = [empty, data, empty]
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result[0]), 0)
+        self.assertEqual(bytes(result[1]), b"data")
+        self.assertEqual(len(result[2]), 0)
+
+    def test_resize_individual_pointers_larger(self):
+        """Test resizing individual pointers to larger size."""
+        small = [
+            memoryview(bytearray(b"a")),
+            memoryview(bytearray(b"b")),
+            memoryview(bytearray(b"c"))
+        ]
+        self.obj.pointers = small
+        
+        large = [
+            memoryview(bytearray(b"much longer first")),
+            memoryview(bytearray(b"much longer second")),
+            memoryview(bytearray(b"much longer third"))
+        ]
+        self.obj.pointers = large
+        
+        result = self.obj.pointers
+        self.assertEqual(bytes(result[0]), b"much longer first")
+        self.assertEqual(bytes(result[1]), b"much longer second")
+        self.assertEqual(bytes(result[2]), b"much longer third")
+
+    def test_resize_individual_pointers_smaller(self):
+        """Test resizing individual pointers to smaller size."""
+        large = [
+            memoryview(bytearray(b"long string one")),
+            memoryview(bytearray(b"long string two")),
+            memoryview(bytearray(b"long string three"))
+        ]
+        self.obj.pointers = large
+        
+        small = [
+            memoryview(bytearray(b"x")),
+            memoryview(bytearray(b"y")),
+            memoryview(bytearray(b"z"))
+        ]
+        self.obj.pointers = small
+        
+        result = self.obj.pointers
+        self.assertEqual(bytes(result[0]), b"x")
+        self.assertEqual(bytes(result[1]), b"y")
+        self.assertEqual(bytes(result[2]), b"z")
+
+    def test_get_segments(self):
+        """Test getting memory segments."""
+        data1 = memoryview(bytearray(b"abc"))
+        data2 = memoryview(bytearray(b"defgh"))
+        data3 = memoryview(bytearray(b"ij"))
+        self.obj.pointers = [data1, data2, data3]
+        
+        segments = type(self.obj).__dict__["pointers"].get_segments(self.obj)
+        self.assertEqual(len(segments), 3)
+        self.assertEqual(bytes(segments[0]), b"abc")
+        self.assertEqual(bytes(segments[1]), b"defgh")
+        self.assertEqual(bytes(segments[2]), b"ij")
+
+    def test_get_segments_empty(self):
+        """Test getting segments when empty."""
+        segments = type(self.obj).__dict__["pointers"].get_segments(self.obj)
+        self.assertEqual(len(segments), 1)
+        self.assertEqual(len(segments[0]), 0)
+
+    def test_get_segment_count(self):
+        """Test getting segment count."""
+        data = [
+            memoryview(bytearray(b"a")),
+            memoryview(bytearray(b"b")),
+            memoryview(bytearray(b"c"))
+        ]
+        self.obj.pointers = data
+        count = type(self.obj).__dict__["pointers"].get_segment_count(self.obj)
+        self.assertEqual(count, 3)
+
+    def test_get_segment_count_empty(self):
+        """Test getting segment count when empty."""
+        count = type(self.obj).__dict__["pointers"].get_segment_count(self.obj)
+        self.assertEqual(count, 0)
+
+    def test_get_prefix_len(self):
+        """Test getting prefix length."""
+        data = [
+            memoryview(bytearray(b"hello")),
+            memoryview(bytearray(b"world")),
+            memoryview(bytearray(b"test"))
+        ]
+        self.obj.pointers = data
+        prefix_len = type(self.obj).__dict__["pointers"].get_prefix_len(self.obj)
+        # Should be 3 * 4 (three pointer lengths, no count field for arrays)
+        self.assertEqual(prefix_len, 12)
+
+    def test_get_prefix_len_empty(self):
+        """Test getting prefix length when empty."""
+        prefix_len = type(self.obj).__dict__["pointers"].get_prefix_len(self.obj)
+        self.assertEqual(prefix_len, 0)
+
+    def test_get_prefix(self):
+        """Test getting prefix data."""
+        data1 = memoryview(bytearray(b"abc"))
+        data2 = memoryview(bytearray(b"defgh"))
+        data3 = memoryview(bytearray(b"ij"))
+        self.obj.pointers = [data1, data2, data3]
+        
+        buffer = bytearray(12)  # 3 * 4 bytes
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].get_prefix(self.obj, buffer, offset)
+        
+        ptr1_len = struct.unpack_from("<I", buffer, 0)[0]
+        ptr2_len = struct.unpack_from("<I", buffer, 4)[0]
+        ptr3_len = struct.unpack_from("<I", buffer, 8)[0]
+        
+        self.assertEqual(ptr1_len, 3)
+        self.assertEqual(ptr2_len, 5)
+        self.assertEqual(ptr3_len, 2)
+        self.assertEqual(offset.value, 12)
+
+    def test_get_prefix_empty(self):
+        """Test getting prefix when empty."""
+        buffer = bytearray(12)
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].get_prefix(self.obj, buffer, offset)
+        
+        # Offset should not change when empty
+        self.assertEqual(offset.value, 0)
+
+    def test_resize_from_buffer(self):
+        """Test resizing from buffer."""
+        # Create buffer with: len1=5, len2=10, len3=3
+        buffer = bytearray(12)
+        struct.pack_into("<I", buffer, 0, 5)   # first is 5 bytes
+        struct.pack_into("<I", buffer, 4, 10)  # second is 10 bytes
+        struct.pack_into("<I", buffer, 8, 3)   # third is 3 bytes
+        
+        offset = Serializable.Offset()
+        type(self.obj).__dict__["pointers"].resize(self.obj, buffer, offset)
+        
+        result = self.obj.pointers
+        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result[0]), 5)
+        self.assertEqual(len(result[1]), 10)
+        self.assertEqual(len(result[2]), 3)
+
+    def test_multiple_assignments(self):
+        """Test multiple assignments to same property."""
+        for i in range(10):
+            data = [
+                memoryview(bytearray(f"data{i}a".encode())),
+                memoryview(bytearray(f"data{i}b".encode())),
+                memoryview(bytearray(f"data{i}c".encode()))
+            ]
+            self.obj.pointers = data
+            result = self.obj.pointers
+            self.assertEqual(bytes(result[0]), f"data{i}a".encode())
+            self.assertEqual(bytes(result[2]), f"data{i}c".encode())
+
+    def test_mixed_sizes(self):
+        """Test pointers of different sizes in array."""
+        small = memoryview(bytearray(b"x"))
+        medium = memoryview(bytearray(b"medium size"))
+        large = memoryview(bytearray(b"x" * 1000))
+        
+        self.obj.pointers = [small, medium, large]
+        result = self.obj.pointers
+        
+        self.assertEqual(len(result[0]), 1)
+        self.assertEqual(len(result[1]), 11)
+        self.assertEqual(len(result[2]), 1000)
+
+    def test_independence_between_instances(self):
+        """Test that different instances have independent data."""
+        class TestObj:
+            pass
+
+        obj1 = TestObj()
+        obj2 = TestObj()
+        obj1.__class__.pointers = rix_types.PointerArrayProperty("pointers", 3)
+        obj2.__class__.pointers = rix_types.PointerArrayProperty("pointers", 3)
+
+        data1 = [
+            memoryview(bytearray(b"first1")),
+            memoryview(bytearray(b"first2")),
+            memoryview(bytearray(b"first3"))
+        ]
+        data2 = [
+            memoryview(bytearray(b"second1")),
+            memoryview(bytearray(b"second2")),
+            memoryview(bytearray(b"second3"))
+        ]
+
+        obj1.pointers = data1
+        obj2.pointers = data2
+
+        self.assertEqual(bytes(obj1.pointers[0]), b"first1")
+        self.assertEqual(bytes(obj2.pointers[0]), b"second1")
+
+    def test_different_array_lengths(self):
+        """Test creating arrays with different fixed lengths."""
+        class TestObj:
+            pass
+
+        obj2 = TestObj()
+        obj2.__class__.ptrs = rix_types.PointerArrayProperty("ptrs", 2)
+        
+        data = [
+            memoryview(bytearray(b"one")),
+            memoryview(bytearray(b"two"))
+        ]
+        obj2.ptrs = data
+        self.assertEqual(len(obj2.ptrs), 2)
+
+        obj5 = TestObj()
+        obj5.__class__.ptrs = rix_types.PointerArrayProperty("ptrs", 5)
+        
+        data = [memoryview(bytearray(f"item{i}".encode())) for i in range(5)]
+        obj5.ptrs = data
+        self.assertEqual(len(obj5.ptrs), 5)
+
+
 class TestInitFunctions(unittest.TestCase):
     """Test all init_* functions."""
 
@@ -1085,6 +1648,42 @@ class TestInitFunctions(unittest.TestCase):
         test_data = memoryview(bytearray(b"pointer data"))
         obj.ptr = test_data
         self.assertEqual(bytes(obj.ptr), b"pointer data")
+
+    def test_init_pointer_vector(self):
+        """Test pointer vector type initialization."""
+
+        class TestObj:
+            pass
+
+        obj = TestObj()
+
+        init_pointer_vector(obj, "ptrs")
+        data1 = memoryview(bytearray(b"first"))
+        data2 = memoryview(bytearray(b"second"))
+        obj.ptrs = [data1, data2]
+        self.assertEqual(len(obj.ptrs), 2)
+        self.assertEqual(bytes(obj.ptrs[0]), b"first")
+        self.assertEqual(bytes(obj.ptrs[1]), b"second")
+
+    def test_init_pointer_array(self):
+        """Test pointer array type initialization."""
+
+        class TestObj:
+            pass
+
+        obj = TestObj()
+
+        init_pointer_array(obj, "ptr_arr", 4)
+        data = [
+            memoryview(bytearray(b"one")),
+            memoryview(bytearray(b"two")),
+            memoryview(bytearray(b"three")),
+            memoryview(bytearray(b"four"))
+        ]
+        obj.ptr_arr = data
+        self.assertEqual(len(obj.ptr_arr), 4)
+        self.assertEqual(bytes(obj.ptr_arr[0]), b"one")
+        self.assertEqual(bytes(obj.ptr_arr[3]), b"four")
 
 
 class TestHelperFunctions(unittest.TestCase):

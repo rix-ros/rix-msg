@@ -75,7 +75,7 @@ rixmsg validate defs/geometry_msgs/Point.json
 
 Message definitions use a simple JSON schema. Supported types include:
 
-- Base types: `char`, `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float`, `double`, `bool`, `string`
+- Base types: `char`, `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float`, `double`, `bool`, `string`, `pointer`
 - Arrays: `type[]` (dynamic), `type[N]` (fixed-size)
 - Nested messages: `{ "type": "<name>", "package": "<package>" }`
 
@@ -101,7 +101,7 @@ Example (`std_msgs/Header.json`):
 After defining your messages, generate code for all supported languages:
 
 ```bash
-rixmsg create defs/example/
+rixmsg create defs/example_msgs/
 ```
 
 Generated files will be placed in:
@@ -120,21 +120,12 @@ Include generated message headers in your C++ project:
 
 using rix::std_msgs::Header;
 
-Header msg;
-msg.seq = 42;
-msg.frame_id = "robot_1";
-```
-
-CMake integration:
-
-```cmake
-cmake_minimum_required(VERSION 3.16)
-set(CMAKE_CXX_STANDARD 20)
-
-project(my_cmake_project)
-
-add_executable(main main.cpp)
-target_include_directories(main PRIVATE "$ENV{HOME}/.rix/include")
+int main() {
+    Header msg;
+    msg.seq = 42;
+    msg.frame_id = "robot_1";
+    return 0;
+}
 ```
 
 ---

@@ -163,6 +163,8 @@ class ArithmeticVectorProperty:
             # Resize the buffer
             underlying: bytearray = buffer.obj
             buffer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             buffer = memoryview(underlying)
             setattr(obj, self.name, buffer)
@@ -189,6 +191,8 @@ class ArithmeticVectorProperty:
             # Resize the buffer
             underlying: bytearray = buffer.obj
             buffer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             setattr(obj, self.name, memoryview(underlying))
 
@@ -279,6 +283,8 @@ class StringProperty:
         if new_length > old_length:
             underlying: bytearray = buffer.obj
             buffer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             buffer = memoryview(underlying)
         buffer[:new_length] = encoded
@@ -299,6 +305,8 @@ class StringProperty:
         if new_length > old_length:
             underlying: bytearray = buffer.obj
             buffer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             setattr(obj, self.name, memoryview(underlying))
 
@@ -352,6 +360,8 @@ class StringVectorProperty:
                 if new_length > len(old_buffer):
                     underlying: bytearray = old_buffer.obj
                     old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
                     underlying.extend(bytearray(new_length - len(old_buffer)))
                     buffers[i] = memoryview(underlying)
                 buffers[i][:new_length] = encoded
@@ -359,7 +369,7 @@ class StringVectorProperty:
             else:
                 buffers.append(memoryview(bytearray(encoded)))
                 lengths.append(new_length)
-
+        buffers = buffers[: len(value)]
         setattr(obj, self.name, buffers)
         setattr(obj, self.lengths_name, lengths)
 
@@ -385,6 +395,8 @@ class StringVectorProperty:
                 if str_size > len(old_buffer):
                     underlying: bytearray = old_buffer.obj
                     old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
                     underlying.extend(bytearray(str_size - len(old_buffer)))
                     buffers.append(memoryview(underlying))
                     lengths.append(str_size)
@@ -472,6 +484,8 @@ class StringArrayProperty:
             if new_length > len(old_buffer):
                 underlying: bytearray = old_buffer.obj
                 old_buffer.release()
+                if not isinstance(underlying, bytearray):
+                    underlying = bytearray(underlying)
                 underlying.extend(bytearray(new_length - len(underlying)))
                 buffers[i] = memoryview(underlying)
             buffers[i][:new_length] = encoded
@@ -499,6 +513,8 @@ class StringArrayProperty:
                 if str_size > len(old_buffer):
                     underlying: bytearray = old_buffer.obj
                     old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
                     underlying.extend(bytearray(str_size - len(underlying)))
                     buffers.append(memoryview(underlying))
                     lengths.append(str_size)
@@ -742,7 +758,6 @@ class MessageArrayProperty:
             count += message.get_segment_count()
         return count
 
-
 class PointerProperty:
     def __init__(self, name: str):
         self.name = f"_{name}_data"
@@ -773,6 +788,8 @@ class PointerProperty:
             # Resize the buffer
             underlying: bytearray = buffer.obj
             buffer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             buffer = memoryview(underlying)
             setattr(obj, self.name, buffer)
@@ -794,6 +811,8 @@ class PointerProperty:
         if new_length > old_length:
             underlying: bytearray = pointer.obj
             pointer.release()
+            if not isinstance(underlying, bytearray):
+                underlying = bytearray(underlying)
             underlying.extend(bytearray(new_length - old_length))
             setattr(obj, self.name, memoryview(underlying))
 
@@ -821,6 +840,229 @@ class PointerProperty:
             return 0
         return 1
 
+class PointerVectorProperty:
+    def __init__(self, name: str):
+        self.name = f"_{name}_data"
+        self.lengths_name = f"_{name}_lengths"
+
+    def __get__(self, obj, objtype=None):
+        if not hasattr(obj, self.name) or not hasattr(obj, self.lengths_name):
+            return []
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        return [buffers[i][: lengths[i]] for i in range(len(buffers))]
+    
+    def __set__(self, obj, value: List[memoryview]):
+        if not all(isinstance(v, memoryview) for v in value):
+            raise ValueError("All elements must be of type memoryview")
+
+        buffers = []
+        lengths = []
+        if hasattr(obj, self.name):
+            buffers = getattr(obj, self.name)
+            lengths = getattr(obj, self.lengths_name)
+
+        for i, val in enumerate(value):
+            new_length = len(val)
+            if i < len(buffers):
+                old_buffer = buffers[i]
+                if new_length > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
+                    underlying.extend(bytearray(new_length - len(underlying)))
+                    buffers[i] = memoryview(underlying)
+                buffers[i][:new_length] = val
+                lengths[i] = new_length
+            else:
+                buffers.append(val)
+                lengths.append(new_length)
+
+        buffers = buffers[: len(value)]
+        setattr(obj, self.name, buffers)
+        setattr(obj, self.lengths_name, lengths)
+
+    def resize(
+        self, obj: object, buffer: bytearray, offset: Serializable.Offset
+    ) -> None:
+        new_length = struct.unpack_from("I", buffer, offset.value)[0]
+        offset.value += 4
+
+        old_buffers = None
+        old_length = 0
+        if hasattr(obj, self.name):
+            old_buffers = getattr(obj, self.name)
+            old_length = len(old_buffers)
+
+        buffers = []
+        lengths = []
+        for i in range(new_length):
+            ptr_size = struct.unpack_from("I", buffer, offset.value)[0]
+            offset.value += 4
+            if i < old_length and old_buffers is not None:
+                old_buffer = old_buffers[i]
+                if ptr_size > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
+                    underlying.extend(bytearray(ptr_size - len(underlying)))
+                    buffers.append(memoryview(underlying))
+                    lengths.append(ptr_size)
+                else:
+                    buffers.append(old_buffer)
+                    lengths.append(ptr_size)
+            else:
+                buffers.append(memoryview(bytearray(ptr_size)))
+                lengths.append(ptr_size)
+        setattr(obj, self.name, buffers)
+        setattr(obj, self.lengths_name, lengths)
+
+    def get_prefix_len(self, obj) -> int:
+        length = 4  # For the number of pointers
+        if hasattr(obj, self.name):
+            length += len(getattr(obj, self.name)) * 4  # Each pointer length is a uint32
+        return length
+    
+    def get_prefix(self, obj, buffer: bytearray, offset: Serializable.Offset) -> None:
+        ptr_count = 0
+        if hasattr(obj, self.name):
+            ptr_count = len(getattr(obj, self.name))
+        struct.pack_into("I", buffer, offset.value, ptr_count)
+        offset.value += 4
+        if hasattr(obj, self.name):
+            lengths = getattr(obj, self.lengths_name)
+            for i in range(ptr_count):
+                struct.pack_into("I", buffer, offset.value, lengths[i])
+                offset.value += 4
+    
+    def get_segments(self, obj) -> List[memoryview]:
+        if not hasattr(obj, self.name):
+            return [memoryview(bytearray())]
+
+        # Return a segment for each pointer
+        segments = []
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        for i in range(len(lengths)):
+            segments.append(buffers[i][: lengths[i]])
+        return segments
+    
+    def get_segment_count(self, obj) -> int:
+        if not hasattr(obj, self.name):
+            return 0
+        return len(getattr(obj, self.name))
+    
+class PointerArrayProperty:
+    def __init__(self, name: str, length: int):
+        self.name = f"_{name}_data"
+        self.lengths_name = f"_{name}_lengths"
+        self.length = length
+
+    def __get__(self, obj, objtype=None):
+        if not hasattr(obj, self.name):
+            return []
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        return [buffers[i][: lengths[i]] for i in range(len(buffers))]
+
+    def __set__(self, obj, value: List[memoryview]):
+        if not isinstance(value, list):
+            raise ValueError(f"Value must be of type list, got {type(value)}")
+        if not all(isinstance(item, memoryview) for item in value):
+            raise ValueError("All elements must be of type memoryview")
+        if len(value) != self.length:
+            raise ValueError(f"Array must be of length {self.length}, got {len(value)}")
+
+        buffers = []
+        lengths = []
+        if hasattr(obj, self.name) and hasattr(obj, self.lengths_name):
+            buffers = getattr(obj, self.name)
+            lengths = getattr(obj, self.lengths_name)
+        else:
+            buffers = [memoryview(bytearray()) for _ in range(self.length)]
+            lengths = [0 for _ in range(self.length)]
+
+        for i, val in enumerate(value):
+            new_length = len(val)
+            old_buffer = buffers[i]
+            if new_length > len(old_buffer):
+                underlying: bytearray = old_buffer.obj
+                old_buffer.release()
+                if not isinstance(underlying, bytearray):
+                    underlying = bytearray(underlying)
+                underlying.extend(bytearray(new_length - len(underlying)))
+                buffers[i] = memoryview(underlying)
+            buffers[i][:new_length] = val
+            lengths[i] = new_length
+
+        setattr(obj, self.name, buffers)
+        setattr(obj, self.lengths_name, lengths)
+    
+    def resize(self, obj: object, buffer: bytearray, offset: Serializable.Offset) -> None:
+        old_buffers = None
+        old_length = 0
+        if hasattr(obj, self.name):
+            old_buffers = getattr(obj, self.name)
+            old_length = len(old_buffers)
+
+        buffers = []
+        lengths = []
+        for i in range(self.length):
+            ptr_size = struct.unpack_from("I", buffer, offset.value)[0]
+            offset.value += 4
+            if i < old_length and old_buffers is not None:
+                old_buffer = old_buffers[i]
+                if ptr_size > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    if not isinstance(underlying, bytearray):
+                        underlying = bytearray(underlying)
+                    underlying.extend(bytearray(ptr_size - len(old_buffer)))
+                    buffers.append(memoryview(underlying))
+                    lengths.append(ptr_size)
+                else:
+                    buffers.append(old_buffer)
+                    lengths.append(ptr_size)
+            else:
+                buffers.append(memoryview(bytearray(ptr_size)))
+                lengths.append(ptr_size)
+        setattr(obj, self.name, buffers)
+        setattr(obj, self.lengths_name, lengths)
+
+    def get_prefix_len(self, obj) -> int:
+        length = 0
+        if hasattr(obj, self.name):
+            length += len(getattr(obj, self.name)) * 4  # Each pointer length is a uint32
+        return length
+    
+    def get_prefix(self, obj, buffer: bytearray, offset: Serializable.Offset) -> None:
+        if not hasattr(obj, self.name):
+            return
+        lengths = getattr(obj, self.lengths_name)
+        for i in range(len(lengths)):
+            str_length = lengths[i]
+            struct.pack_into("I", buffer, offset.value, str_length)
+            offset.value += 4
+
+    def get_segments(self, obj) -> List[memoryview]:
+        if not hasattr(obj, self.name):
+            return [memoryview(bytearray(0))]
+
+        # Return a segment for each pointer
+        segments = []
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        for i in range(len(lengths)):
+            segments.append(buffers[i][: lengths[i]])
+        return segments
+    
+    def get_segment_count(self, obj) -> int:
+        if not hasattr(obj, self.name):
+            return 0
+        ptr_count = len(getattr(obj, self.name))
+        return ptr_count
 
 def init_string(obj: object, property_name: str) -> None:
     setattr(obj.__class__, property_name, StringProperty(property_name))
@@ -1102,6 +1344,14 @@ def init_message_array(
 
 def init_pointer(obj: object, property_name: str) -> None:
     setattr(obj.__class__, property_name, PointerProperty(property_name))
+
+
+def init_pointer_vector(obj: object, property_name: str) -> None:
+    setattr(obj.__class__, property_name, PointerVectorProperty(property_name))
+
+
+def init_pointer_array(obj: object, property_name: str, length: int) -> None:
+    setattr(obj.__class__, property_name, PointerArrayProperty(property_name, length))
 
 
 def resize(obj: object, name: str, buffer: bytes, offset: Serializable.Offset) -> None:
