@@ -44,6 +44,9 @@ inline size_t get_segment_count(const std::vector<std::string>& vec) { return ve
 // Overload for std::array<std::string, N>
 template <size_t N> inline size_t get_segment_count(const std::array<std::string, N>& arr) { return N; }
 
+// Overload for ptr_t
+inline size_t get_segment_count(const ptr_t& ptr) { return ptr.get() != nullptr && ptr.size() > 0 ? 1 : 0; }
+
 // ===== NON-CONST GET_SEGMENT HELPERS =====
 
 // Primary template for arithmetic types (integers, floats, bool, etc.)
@@ -108,6 +111,13 @@ template <size_t N>
 inline void get_segments(std::array<std::string, N>& arr, MessageSegment* segments, size_t& offset) {
   for (auto& str : arr) {
     segments[offset++] = MessageSegment(reinterpret_cast<uint8_t*>(str.data()), str.size());
+  }
+}
+
+// Overload for ptr_t
+inline void get_segments(ptr_t& ptr, MessageSegment* segments, size_t& offset) {
+  if (ptr.get() != nullptr && ptr.size() > 0) {
+    segments[offset++] = MessageSegment(reinterpret_cast<uint8_t*>(ptr.get()), ptr.size());
   }
 }
 
@@ -178,12 +188,17 @@ inline void get_segments(const std::array<std::string, N>& arr, ConstMessageSegm
   }
 }
 
+// Overload for const ptr_t
+inline void get_segments(const ptr_t& ptr, ConstMessageSegment* segments, size_t& offset) {
+  if (ptr.get() != nullptr && ptr.size() > 0) {
+    segments[offset++] = ConstMessageSegment(reinterpret_cast<const uint8_t*>(ptr.get()), ptr.size());
+  }
+}
+
 // ===== GET_PREFIX_LEN HELPERS =====
 
 // Overload for std::string
-inline uint32_t get_prefix_len(const std::string& str) {
-  return 4; // uint32_t for size
-}
+inline uint32_t get_prefix_len(const std::string& /*str*/) { return 4; }
 
 // Overload for Message types
 inline uint32_t get_prefix_len(const Message& msg) { return msg.get_prefix_len(); }
@@ -228,6 +243,9 @@ template <size_t N> inline uint32_t get_prefix_len(const std::array<std::string,
   uint32_t total_len = 4 * static_cast<uint32_t>(N); // uint32_t for each string size
   return total_len;
 }
+
+// Overload for ptr_t
+inline uint32_t get_prefix_len(const ptr_t& /*ptr*/) { return 4; }
 
 // ===== GET_PREFIX HELPERS =====
 
@@ -283,6 +301,12 @@ template <size_t N> inline void get_prefix(const std::array<std::string, N>& arr
     *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(str.size());
     offset += 4;
   }
+}
+
+// Overload for ptr_t
+inline void get_prefix(const ptr_t& ptr, uint8_t* sizes, size_t& offset) {
+  *reinterpret_cast<uint32_t*>(sizes + offset) = static_cast<uint32_t>(ptr.size());
+  offset += 4;
 }
 
 // ===== RESIZE HELPERS =====
@@ -348,5 +372,13 @@ template <size_t N> inline void resize(std::array<std::string, N>& arr, const ui
     offset += 4;
   }
 }
+
+// Overload for ptr_t
+inline void resize(ptr_t& ptr, const uint8_t* sizes, size_t& offset) {
+  uint32_t size = *reinterpret_cast<const uint32_t*>(sizes + offset);
+  offset += 4;
+  ptr.resize(size);
+}
+
 } // namespace detail
 } // namespace rix

@@ -45,6 +45,19 @@ class Serializable(ABC):
 class Message(Serializable):
     """Abstract base class for messages with zero-copy serialization support."""
 
+    def set_raw(self, property_name: str, buffer: bytes, length: int) -> None:
+        """Set the raw ctypes data for a property."""
+        prop_descriptor = type(self).__dict__.get(property_name)
+        if prop_descriptor is None:
+            raise AttributeError(f"Property '{property_name}' not found")
+        if hasattr(prop_descriptor, "set_raw"):
+            prop_descriptor.set_raw(self, buffer, length)
+            return
+        internal_name = f"_{property_name}_data"
+        array_type = (ctypes.c_uint8 * length)
+        array = array_type.from_buffer_copy(buffer)
+        setattr(self, internal_name, array)
+
     def get_raw(self, property_name: str) -> Any:
         """Get the raw ctypes data for a property."""
         prop_descriptor = type(self).__dict__.get(property_name)
@@ -127,14 +140,14 @@ class Message(Serializable):
         pass
 
     @abstractmethod
-    def get_segments(self) -> List[Tuple[int, int]]:
+    def get_segments(self) -> List[memoryview]:
         pass
 
     def size(self) -> int:
         msg_size = self.get_prefix_len()
         segments = self.get_segments()
         for seg in segments:
-            msg_size += seg[1]
+            msg_size += len(seg)
         return msg_size
 
     def serialize(self) -> bytes:
@@ -148,11 +161,9 @@ class Message(Serializable):
         # Write segments
         segments = self.get_segments()
         for seg in segments:
-            if seg[1] > 0:
-                seg_data = (ctypes.c_uint8 * seg[1]).from_address(seg[0])
-                # ctypes.memmove(buffer[offset.value : offset.value + seg[1]], seg_data, seg[1])
-                buffer[offset.value : offset.value + seg[1]] = bytearray(seg_data)
-                offset.value += seg[1]
+            seg_length = len(seg)
+            buffer[offset.value : offset.value + seg_length] = seg
+            offset.value += seg_length
 
         return bytes(buffer)
 
@@ -164,8 +175,7 @@ class Message(Serializable):
         # Read segments
         segments = self.get_segments()
         for seg in segments:
-            if seg[1] > 0:
-                seg_data = (ctypes.c_uint8 * seg[1]).from_address(seg[0])
-                ctypes.memmove(seg_data, data[offset.value : offset.value + seg[1]], seg[1])
-                offset.value += seg[1]
+            seg_length = len(seg)
+            seg[:] = data[offset.value : offset.value + seg_length]
+            offset.value += seg_length
         return True

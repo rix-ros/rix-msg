@@ -42,6 +42,7 @@ from .types import (
     init_message,
     init_message_vector,
     init_message_array,
+    init_pointer,
     resize,
     get_prefix_len,
     get_prefix,

@@ -16,6 +16,7 @@ PY_TYPE_INITIALIZERS = {
     "double": "0.0",
     "bool": "False",
     "string": '""',
+    "pointer": "memoryview(bytearray())",
 }
 
 PY_TYPE_HINTS = {
@@ -32,6 +33,7 @@ PY_TYPE_HINTS = {
     "double": "float",
     "bool": "bool",
     "string": "str",
+    "pointer": "memoryview",
 }
 
 
@@ -61,7 +63,7 @@ def get_init_functions(fields: List[Field]) -> str:
 def get_property_names(fields: list[Field]) -> str:
     if len(fields) == 0:
         return "self._property_names = []\n"
-        
+
     property_names = "self._property_names = ["
     for field in fields:
         property_names += f"'{field.name}', "
@@ -93,7 +95,9 @@ def create_rixmsg_py_imports(fields: list[Field]) -> str:
         if not field.value_is_base:
             field_type = field.value_type
             if field.package is not None:
-                includes.add(f"from rix.{field.package}.{field_type} import {field_type}")
+                includes.add(
+                    f"from rix.{field.package}.{field_type} import {field_type}"
+                )
             else:
                 raise ValueError(
                     f"Error: No package specified for type {field.type_str}"
@@ -120,6 +124,7 @@ def create_rixmsg_py_resize(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
@@ -133,6 +138,7 @@ def create_rixmsg_py_get_prefix_len(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
@@ -150,6 +156,7 @@ def create_rixmsg_py_get_prefix(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
@@ -213,7 +220,7 @@ class {msg.name}(Message):
         {create_rixmsg_py_get_segment_count(msg.fields).replace(n, n + '        ')}
         return count
 
-    def get_segments(self) -> list[tuple[int, int]]:
+    def get_segments(self) -> list[memoryview]:
         segments = []
         for prop_name in self._property_names:
             prop_descriptor = type(self).__dict__[prop_name]

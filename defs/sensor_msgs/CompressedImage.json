@@ -10,7 +10,7 @@
         },
         {
             "name": "data",
-            "type": "uint8[]"
+            "type": "pointer"
         }
     ]
 }

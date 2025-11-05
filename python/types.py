@@ -1,42 +1,47 @@
-import ctypes
 import struct
 from typing import List, Tuple, Any
 
 from rix.msg import Serializable
 
-py_to_ctypes = {
-    bytes: [ctypes.c_char],
-    bool: [ctypes.c_bool],
-    int: [
-        ctypes.c_uint8,
-        ctypes.c_uint16,
-        ctypes.c_uint32,
-        ctypes.c_uint64,
-        ctypes.c_int8,
-        ctypes.c_int16,
-        ctypes.c_int32,
-        ctypes.c_int64,
-    ],
-    float: [ctypes.c_float, ctypes.c_double],
+py_to_raw_type: dict[type, List[str]] = {
+    bytes: ["c"],
+    bool: ["?"],
+    int: ["B", "b", "H", "h", "I", "i", "Q", "q"],
+    float: ["f", "d"],
 }
 
-ctypes_to_py = {
-    ctypes.c_char: bytes,
-    ctypes.c_bool: bool,
-    ctypes.c_uint8: int,
-    ctypes.c_uint16: int,
-    ctypes.c_uint32: int,
-    ctypes.c_uint64: int,
-    ctypes.c_int8: int,
-    ctypes.c_int16: int,
-    ctypes.c_int32: int,
-    ctypes.c_int64: int,
-    ctypes.c_float: float,
-    ctypes.c_double: float,
+raw_type_to_py: dict[str, type] = {
+    "c": bytes,
+    "?": bool,
+    "B": int,
+    "b": int,
+    "H": int,
+    "h": int,
+    "I": int,
+    "i": int,
+    "Q": int,
+    "q": int,
+    "f": float,
+    "d": float,
+}
+
+raw_type_to_size: dict[str, int] = {
+    "c": 1,
+    "?": 1,
+    "B": 1,
+    "b": 1,
+    "H": 2,
+    "h": 2,
+    "I": 4,
+    "i": 4,
+    "Q": 8,
+    "q": 8,
+    "f": 4,
+    "d": 8,
 }
 
 
-def validate_python_type(py_value: Any, ctypes_type: type) -> None:
+def validate_python_type(py_value: Any, ctypes_type: str) -> None:
     if isinstance(py_value, list):
         if len(py_value) == 0:
             return
@@ -49,14 +54,18 @@ def validate_python_type(py_value: Any, ctypes_type: type) -> None:
         return
 
     py_type = type(py_value)
-    if py_type not in py_to_ctypes or ctypes_type not in py_to_ctypes[py_type]:
+    if py_type not in py_to_raw_type or ctypes_type not in py_to_raw_type[py_type]:
         raise TypeError(
-            f"Type mismatch: Expected {ctypes_to_py[ctypes_type]} for {ctypes_type}, got {py_type}."
+            f"Type mismatch: Expected {raw_type_to_py[ctypes_type]} for {ctypes_type}, got {py_type}."
         )
 
 
 class ArithmeticProperty:
-    def __init__(self, name: str, type: object):
+    def __init__(self, name: str, type: str):
+        if type not in raw_type_to_py:
+            raise TypeError(
+                f"Arithmetic type must be one of the following: {raw_type_to_py.keys}, got: {type}"
+            )
         self.name = f"_{name}_data"
         self.type = type
 
@@ -64,36 +73,52 @@ class ArithmeticProperty:
         # Return default if not set
         if not hasattr(obj, self.name):
             return 0
-        # Return value
-        return getattr(obj, self.name).value
+        # Convert buffer based on type
+        buffer = getattr(obj, self.name)
+        return struct.unpack_from(self.type, buffer)[0]
 
     def __set__(self, obj, value: Any):
         # Validate type
         validate_python_type(value, self.type)
 
-        # Set value
-        if hasattr(obj, self.name):
-            c_value = getattr(obj, self.name)
-            c_value.value = value
-        else:
-            setattr(obj, self.name, self.type(value))
+        # Initialize buffer if it does not exist
+        if not hasattr(obj, self.name):
+            setattr(obj, self.name, memoryview(bytearray(raw_type_to_size[self.type])))
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+        # Copy integer into buffer
+        buffer = getattr(obj, self.name)
+        struct.pack_into(self.type, buffer, 0, value)
+
+    def get_segments(self, obj) -> List[memoryview]:
         # If not set, return empty segment
         if not hasattr(obj, self.name):
-            return [(0, 0)]
-        # Return address and size of the ctype value
-        c_value = getattr(obj, self.name)
-        return [(ctypes.addressof(c_value), ctypes.sizeof(c_value))]
+            return [memoryview(bytearray())]
+        # Return underlying buffer
+        buffer = getattr(obj, self.name)
+        return [buffer]
 
 
 class ArithmeticVectorProperty:
-    def __init__(self, name: str, type: object):
+    def __init__(self, name: str, type: str):
+        if type not in raw_type_to_py:
+            raise TypeError(
+                f"Arithmetic type must be one of the following: {raw_type_to_py.keys}, got: {type}"
+            )
         self.name = f"_{name}_data"
         self.length_name = f"_{name}_length"
         self.type = type
 
-    def get_raw(self, obj) -> Tuple[ctypes.Array, int] | None:
+    def set_raw(self, obj, buffer: memoryview, length: int) -> None:
+        if not isinstance(buffer, memoryview):
+            raise TypeError("Buffer must be a memoryview")
+        if length > len(buffer):
+            raise ValueError(
+                "Length parameter must be less than or equal to the actual length of the buffer"
+            )
+        setattr(obj, self.name, buffer)
+        setattr(obj, self.length_name, length)
+
+    def get_raw(self, obj) -> Tuple[memoryview, int] | None:
         if not hasattr(obj, self.name):
             return None
         return getattr(obj, self.name), getattr(obj, self.length_name)
@@ -101,9 +126,10 @@ class ArithmeticVectorProperty:
     def __get__(self, obj, objtype=None):
         if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
             return []
-        array = getattr(obj, self.name)
+        buffer = getattr(obj, self.name)
         length = getattr(obj, self.length_name)
-        return array[:length]
+        format_str: str = self.type * (length // raw_type_to_size[self.type])
+        return list(struct.unpack_from(format_str, buffer, 0))
 
     def __len__(self, obj) -> int:
         if not hasattr(obj, self.length_name):
@@ -113,48 +139,60 @@ class ArithmeticVectorProperty:
     def __set__(self, obj, values: List[Any]):
         # If empty list, set to empty array
         if len(values) == 0:
-            setattr(obj, self.name, [])
+            setattr(obj, self.name, memoryview(bytearray()))
+            setattr(obj, self.length_name, 0)
             return
 
         # Validate type of first element
         validate_python_type(values, self.type)
 
-        # If array exists, resize or update
-        if hasattr(obj, self.name):
-            array = getattr(obj, self.name)
-            capacity = len(array)
-            if len(values) > capacity:
-                # Resize the array
-                array_type = self.type * len(values)
-                array = array_type(*values)
-                setattr(obj, self.name, array)
-                setattr(obj, self.length_name, len(values))
-            else:
-                # Update existing array
-                array[: len(values)] = values
-                setattr(obj, self.length_name, len(values))
-        else:
-            # Create new array
-            array_type = self.type * len(values)
-            array = array_type(*values)
-            setattr(obj, self.name, array)
-            setattr(obj, self.length_name, len(values))
+        # If buffer does not exist, create it
+        new_length: int = len(values) * raw_type_to_size[self.type]
+        if not hasattr(obj, self.name):
+            # Create new buffer
+            format_str = self.type * len(values)
+            buffer = memoryview(bytearray(new_length))
+            struct.pack_into(format_str, buffer, 0, *values)
+            setattr(obj, self.name, buffer)
+            setattr(obj, self.length_name, new_length)
+            return
 
-    def resize(
-        self, obj: object, buffer: bytearray, offset: Serializable.Offset
-    ) -> None:
-        new_size = struct.unpack_from("<I", buffer, offset.value)[0]
+        buffer: memoryview = getattr(obj, self.name)
+        old_length: int = getattr(obj, self.length_name)
+        if new_length > old_length:
+            # Resize the buffer
+            underlying: bytearray = buffer.obj
+            buffer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            buffer = memoryview(underlying)
+            setattr(obj, self.name, buffer)
+
+        # Update buffer and length
+        format_str = self.type * len(values)
+        struct.pack_into(format_str, buffer, 0, *values)
+        setattr(obj, self.length_name, new_length)
+
+    def resize(self, obj: object, src: memoryview, offset: Serializable.Offset) -> None:
+        new_length = (
+            struct.unpack_from("I", src, offset.value)[0] * raw_type_to_size[self.type]
+        )
         offset.value += 4
-        new_array = (self.type * new_size)()
-        if hasattr(obj, self.name):
-            array = getattr(obj, self.name)
-            length = getattr(obj, self.length_name)
-            new_array[: min(length, new_size)] = array[: min(length, new_size)]
-            setattr(obj, self.name, new_array)
-            setattr(obj, self.length_name, new_size)
-        else:
-            setattr(obj, self.name, new_array)
-            setattr(obj, self.length_name, new_size)
+
+        if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
+            setattr(obj, self.name, memoryview(bytearray(new_length)))
+            setattr(obj, self.length_name, new_length)
+            return
+
+        buffer: memoryview = getattr(obj, self.name)
+        old_length: int = getattr(obj, self.length_name)
+        if new_length > old_length:
+            # Resize the buffer
+            underlying: bytearray = buffer.obj
+            buffer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            setattr(obj, self.name, memoryview(underlying))
+
+        setattr(obj, self.length_name, new_length)
 
     def get_prefix_len(self, obj) -> int:
         return 4
@@ -162,20 +200,20 @@ class ArithmeticVectorProperty:
     def get_prefix(self, obj, buffer: bytearray, offset: Serializable.Offset) -> None:
         length = 0
         if hasattr(obj, self.length_name):
-            length = getattr(obj, self.length_name)
-        struct.pack_into("<I", buffer, offset.value, length)
+            length = getattr(obj, self.length_name) // raw_type_to_size[self.type]
+        struct.pack_into("I", buffer, offset.value, length)
         offset.value += 4
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+    def get_segments(self, obj) -> List[memoryview]:
         if not hasattr(obj, self.name):
-            return [(0, 0)]
-        array = getattr(obj, self.name)
+            return [memoryview(bytearray())]
+        buffer = getattr(obj, self.name)
         length = getattr(obj, self.length_name)
-        return [(ctypes.addressof(array), ctypes.sizeof(self.type) * length)]
+        return [buffer[:length]]
 
 
 class ArithmeticArrayProperty:
-    def __init__(self, name: str, type: object, length: int):
+    def __init__(self, name: str, type: str, length: int):
         self.name = f"_{name}_data"
         self.type = type
         self.length = length
@@ -183,35 +221,34 @@ class ArithmeticArrayProperty:
     def __get__(self, obj, objtype=None):
         if not hasattr(obj, self.name):
             return []
-        array = getattr(obj, self.name)
-        return array[:]
+        buffer = getattr(obj, self.name)
+        format_str: str = self.type * self.length
+        return list(struct.unpack_from(format_str, buffer, 0))
 
     def __set__(self, obj, values: List[Any]):
-        # If empty list, set to empty array
         if len(values) != self.length:
             raise ValueError(
                 f"Array must be of length {self.length}, got {len(values)}"
             )
 
-        # Validate type of first element
+        # Validate type of list elements
         validate_python_type(values, self.type)
 
-        # If array exists, resize or update
+        # If array exists, update
+        format_str: str = self.type * self.length
         if hasattr(obj, self.name):
-            array = getattr(obj, self.name)
-            capacity = len(array)
-            array[:] = values
+            buffer = getattr(obj, self.name)
+            struct.pack_into(format_str, buffer, 0, *values)
         else:
             # Create new array
-            array_type = self.type * len(values)
-            array = array_type(*values)
-            setattr(obj, self.name, array)
+            buffer = memoryview(bytearray(self.length * raw_type_to_size[self.type]))
+            struct.pack_into(format_str, buffer, 0, *values)
+            setattr(obj, self.name, buffer)
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+    def get_segments(self, obj) -> List[memoryview]:
         if not hasattr(obj, self.name):
-            return [(0, 0)]
-        array = getattr(obj, self.name)
-        return [(ctypes.addressof(array), ctypes.sizeof(self.type) * len(array))]
+            return [memoryview(bytearray())]
+        return [getattr(obj, self.name)]
 
 
 class StringProperty:
@@ -220,43 +257,52 @@ class StringProperty:
         self.length_name = f"_{name}_length"
 
     def __get__(self, obj, objtype=None):
-        if not hasattr(obj, self.name):
+        if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
             return ""
-        ptr = getattr(obj, self.name)
-        return ptr.value.decode("utf-8")
+        buffer = getattr(obj, self.name)
+        length = getattr(obj, self.length_name)
+        return buffer.obj.decode("utf-8")[:length]
 
     def __set__(self, obj, value: str):
         if not isinstance(value, str):
             raise ValueError(f"Value must be of type str, got {type(value)}")
-        if hasattr(obj, self.name):
-            ptr = getattr(obj, self.name)
-            encoded = value.encode("utf-8")
-            # Resize the buffer if necessary
-            if len(encoded) != len(ptr.value):
-                new_ptr = ctypes.create_string_buffer(encoded)
-                setattr(obj, self.name, new_ptr)
-                setattr(obj, self.length_name, len(encoded))
-            else:
-                ctypes.memmove(ptr, encoded, len(encoded) + 1)
-        else:
-            encoded = value.encode("utf-8")
-            ptr = ctypes.create_string_buffer(encoded)
-            setattr(obj, self.name, ptr)
-            setattr(obj, self.length_name, len(encoded))
 
-    def resize(self, obj: object, buffer: bytearray, offset: Serializable.Offset) -> None:
-        new_size = struct.unpack_from("<I", buffer, offset.value)[0]
+        encoded = value.encode("utf-8")
+        new_length = len(encoded)
+        if not hasattr(obj, self.name):
+            setattr(obj, self.name, memoryview(bytearray(encoded)))
+            setattr(obj, self.length_name, new_length)
+            return
+
+        buffer: memoryview = getattr(obj, self.name)
+        old_length = getattr(obj, self.length_name)
+        if new_length > old_length:
+            underlying: bytearray = buffer.obj
+            buffer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            buffer = memoryview(underlying)
+        buffer[:new_length] = encoded
+        setattr(obj, self.name, buffer)
+        setattr(obj, self.length_name, new_length)
+
+    def resize(self, obj: object, src: bytearray, offset: Serializable.Offset) -> None:
+        new_length = struct.unpack_from("I", src, offset.value)[0]
         offset.value += 4
-        if hasattr(obj, self.name):
-            ptr = getattr(obj, self.name)
-            new_ptr = ctypes.create_string_buffer(new_size)
-            ctypes.memmove(new_ptr, ptr, min(len(ptr), new_size))
-            setattr(obj, self.name, new_ptr)
-            setattr(obj, self.length_name, new_size)
-        else:
-            new_ptr = ctypes.create_string_buffer(new_size)
-            setattr(obj, self.name, new_ptr)
-            setattr(obj, self.length_name, new_size)
+
+        if not hasattr(obj, self.name):
+            setattr(obj, self.name, memoryview(bytearray(new_length)))
+            setattr(obj, self.length_name, new_length)
+            return
+
+        buffer: memoryview = getattr(obj, self.name)
+        old_length: int = getattr(obj, self.length_name)
+        if new_length > old_length:
+            underlying: bytearray = buffer.obj
+            buffer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            setattr(obj, self.name, memoryview(underlying))
+
+        setattr(obj, self.length_name, new_length)
 
     def get_prefix_len(self, obj) -> int:
         return 4
@@ -265,15 +311,13 @@ class StringProperty:
         length = 0
         if hasattr(obj, self.length_name):
             length = getattr(obj, self.length_name)
-        struct.pack_into("<I", buffer, offset.value, length)
+        struct.pack_into("I", buffer, offset.value, length)
         offset.value += 4
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+    def get_segments(self, obj) -> List[memoryview]:
         if not hasattr(obj, self.name):
-            return [(0, 0)]
-        ptr = getattr(obj, self.name)
-        length = getattr(obj, self.length_name)
-        return [(ctypes.addressof(ptr), length)]
+            return [memoryview(bytearray())]
+        return [getattr(obj, self.name)]
 
 
 class StringVectorProperty:
@@ -282,51 +326,75 @@ class StringVectorProperty:
         self.lengths_name = f"_{name}_lengths"
 
     def __get__(self, obj, objtype=None):
-        if not hasattr(obj, self.name):
+        if not hasattr(obj, self.name) or not hasattr(obj, self.lengths_name):
             return []
-        array = getattr(obj, self.name)
-        return [array[i].value.decode("utf-8") for i in range(len(array))]
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        return [
+            buffers[i].obj[: lengths[i]].decode("utf-8") for i in range(len(buffers))
+        ]
 
     def __set__(self, obj, value: List[str]):
         if not all(isinstance(v, str) for v in value):
             raise ValueError("All elements must be of type str")
-        ptr_list = []
-        lengths = []
-        for val in value:
-            encoded = val.encode("utf-8")
-            ptr = ctypes.create_string_buffer(encoded)
-            ptr_list.append(ptr)
-            lengths.append(len(encoded))
 
-        setattr(obj, self.name, ptr_list)
+        buffers = []
+        lengths = []
+        if hasattr(obj, self.name):
+            buffers = getattr(obj, self.name)
+            lengths = getattr(obj, self.lengths_name)
+
+        for i, val in enumerate(value):
+            encoded = val.encode("utf-8")
+            new_length = len(encoded)
+            if i < len(buffers):
+                old_buffer = buffers[i]
+                if new_length > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    underlying.extend(bytearray(new_length - len(old_buffer)))
+                    buffers[i] = memoryview(underlying)
+                buffers[i][:new_length] = encoded
+                lengths[i] = new_length
+            else:
+                buffers.append(memoryview(bytearray(encoded)))
+                lengths.append(new_length)
+
+        setattr(obj, self.name, buffers)
         setattr(obj, self.lengths_name, lengths)
 
     def resize(
         self, obj: object, buffer: bytearray, offset: Serializable.Offset
     ) -> None:
-        new_size = struct.unpack_from("<I", buffer, offset.value)[0]
+        new_length = struct.unpack_from("I", buffer, offset.value)[0]
         offset.value += 4
-        old_array = None
+
+        old_buffers = None
         old_length = 0
         if hasattr(obj, self.name):
-            old_array = getattr(obj, self.name)
-            old_length = len(old_array)
-        ptr_list = []
+            old_buffers = getattr(obj, self.name)
+            old_length = len(old_buffers)
+
+        buffers = []
         lengths = []
-        for i in range(new_size):
-            str_size = struct.unpack_from("<I", buffer, offset.value)[0]
+        for i in range(new_length):
+            str_size = struct.unpack_from("I", buffer, offset.value)[0]
             offset.value += 4
-            if i < old_length and old_array is not None:
-                old_ptr = old_array[i]
-                new_ptr = ctypes.create_string_buffer(str_size)
-                ctypes.memmove(new_ptr, old_ptr, min(len(old_ptr), str_size))
-                ptr_list.append(new_ptr)
-                lengths.append(str_size)
+            if i < old_length and old_buffers is not None:
+                old_buffer = old_buffers[i]
+                if str_size > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    underlying.extend(bytearray(str_size - len(old_buffer)))
+                    buffers.append(memoryview(underlying))
+                    lengths.append(str_size)
+                else:
+                    buffers.append(old_buffer)
+                    lengths.append(str_size)
             else:
-                new_ptr = ctypes.create_string_buffer(str_size)
-                ptr_list.append(new_ptr)
+                buffers.append(memoryview(bytearray(str_size)))
                 lengths.append(str_size)
-        setattr(obj, self.name, ptr_list)
+        setattr(obj, self.name, buffers)
         setattr(obj, self.lengths_name, lengths)
 
     def get_prefix_len(self, obj) -> int:
@@ -339,34 +407,30 @@ class StringVectorProperty:
         str_count = 0
         if hasattr(obj, self.name):
             str_count = len(getattr(obj, self.name))
-        struct.pack_into("<I", buffer, offset.value, str_count)
+        struct.pack_into("I", buffer, offset.value, str_count)
         offset.value += 4
         if hasattr(obj, self.name):
             lengths = getattr(obj, self.lengths_name)
             for i in range(str_count):
-                str_length = lengths[i]
-                struct.pack_into("<I", buffer, offset.value, str_length)
+                struct.pack_into("I", buffer, offset.value, lengths[i])
                 offset.value += 4
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+    def get_segments(self, obj) -> List[memoryview]:
         if not hasattr(obj, self.name):
-            return [(0, 0)]
+            return [memoryview(bytearray())]
 
         # Return a segment for each string
         segments = []
-        array = getattr(obj, self.name)
+        buffers = getattr(obj, self.name)
         lengths = getattr(obj, self.lengths_name)
         for i in range(len(lengths)):
-            ptr = array[i]
-            str_length = lengths[i]
-            segments.append((ctypes.addressof(ptr), str_length))
+            segments.append(buffers[i][: lengths[i]])
         return segments
 
     def get_segment_count(self, obj) -> int:
         if not hasattr(obj, self.name):
             return 0
-        str_count = len(getattr(obj, self.name))
-        return str_count
+        return len(getattr(obj, self.name))
 
 
 class StringArrayProperty:
@@ -378,8 +442,11 @@ class StringArrayProperty:
     def __get__(self, obj, objtype=None):
         if not hasattr(obj, self.name):
             return []
-        array = getattr(obj, self.name)
-        return [array[i].value.decode("utf-8") for i in range(len(array))]
+        buffers = getattr(obj, self.name)
+        lengths = getattr(obj, self.lengths_name)
+        return [
+            buffers[i].obj[: lengths[i]].decode("utf-8") for i in range(len(buffers))
+        ]
 
     def __set__(self, obj, value: List[str]):
         if not isinstance(value, list):
@@ -388,39 +455,60 @@ class StringArrayProperty:
             raise ValueError("All elements must be of type str")
         if len(value) != self.length:
             raise ValueError(f"Array must be of length {self.length}, got {len(value)}")
-        ptr_list = []
+
+        buffers = []
         lengths = []
-        for val in value:
-            ptr = ctypes.create_string_buffer(val.encode("utf-8"))
-            ptr_list.append(ptr)
-            lengths.append(len(val))
-        setattr(obj, self.name, ptr_list)
+        if hasattr(obj, self.name) and hasattr(obj, self.lengths_name):
+            buffers = getattr(obj, self.name)
+            lengths = getattr(obj, self.lengths_name)
+        else:
+            buffers = [memoryview(bytearray()) for _ in range(self.length)]
+            lengths = [0 for _ in range(self.length)]
+
+        for i, val in enumerate(value):
+            encoded = val.encode("utf-8")
+            new_length = len(encoded)
+            old_buffer = buffers[i]
+            if new_length > len(old_buffer):
+                underlying: bytearray = old_buffer.obj
+                old_buffer.release()
+                underlying.extend(bytearray(new_length - len(underlying)))
+                buffers[i] = memoryview(underlying)
+            buffers[i][:new_length] = encoded
+            lengths[i] = new_length
+
+        setattr(obj, self.name, buffers)
         setattr(obj, self.lengths_name, lengths)
 
     def resize(
         self, obj: object, buffer: bytearray, offset: Serializable.Offset
     ) -> None:
-        old_array = None
+        old_buffers = None
         old_length = 0
         if hasattr(obj, self.name):
-            old_array = getattr(obj, self.name)
-            old_length = len(old_array)
-        ptr_list = []
+            old_buffers = getattr(obj, self.name)
+            old_length = len(old_buffers)
+
+        buffers = []
         lengths = []
         for i in range(self.length):
-            str_size = struct.unpack_from("<I", buffer, offset.value)[0]
+            str_size = struct.unpack_from("I", buffer, offset.value)[0]
             offset.value += 4
-            if i < old_length and old_array is not None:
-                old_ptr = old_array[i]
-                new_ptr = ctypes.create_string_buffer(str_size)
-                ctypes.memmove(new_ptr, old_ptr, min(len(old_ptr), str_size))
-                ptr_list.append(new_ptr)
-                lengths.append(str_size)
+            if i < old_length and old_buffers is not None:
+                old_buffer = old_buffers[i]
+                if str_size > len(old_buffer):
+                    underlying: bytearray = old_buffer.obj
+                    old_buffer.release()
+                    underlying.extend(bytearray(str_size - len(underlying)))
+                    buffers.append(memoryview(underlying))
+                    lengths.append(str_size)
+                else:
+                    buffers.append(old_buffer)
+                    lengths.append(str_size)
             else:
-                new_ptr = ctypes.create_string_buffer(str_size)
-                ptr_list.append(new_ptr)
+                buffers.append(memoryview(bytearray(str_size)))
                 lengths.append(str_size)
-        setattr(obj, self.name, ptr_list)
+        setattr(obj, self.name, buffers)
         setattr(obj, self.lengths_name, lengths)
 
     def get_prefix_len(self, obj) -> int:
@@ -436,21 +524,19 @@ class StringArrayProperty:
             str_count = len(lengths)
             for i in range(str_count):
                 str_length = lengths[i]
-                struct.pack_into("<I", buffer, offset.value, str_length)
+                struct.pack_into("I", buffer, offset.value, str_length)
                 offset.value += 4
 
-    def get_segments(self, obj) -> List[Tuple[int, int]]:
+    def get_segments(self, obj) -> List[memoryview]:
         if not hasattr(obj, self.name):
-            return [(0, 0)]
+            return [memoryview(bytearray(0))]
 
         # Return a segment for each string
         segments = []
-        array = getattr(obj, self.name)
+        buffers = getattr(obj, self.name)
         lengths = getattr(obj, self.lengths_name)
         for i in range(len(lengths)):
-            ptr = array[i]
-            str_length = lengths[i]
-            segments.append((ctypes.addressof(ptr), str_length))
+            segments.append(buffers[i][: lengths[i]])
         return segments
 
     def get_segment_count(self, obj) -> int:
@@ -499,7 +585,7 @@ class MessageProperty:
             return [(0, 0)]
         message = getattr(obj, self.name)
         return message.get_segments()
-    
+
     def get_segment_count(self, obj) -> int:
         if not hasattr(obj, self.name):
             return 0
@@ -527,7 +613,7 @@ class MessageVectorProperty:
     def resize(
         self, obj: object, buffer: bytearray, offset: Serializable.Offset
     ) -> None:
-        new_size = struct.unpack_from("<I", buffer, offset.value)[0]
+        new_size = struct.unpack_from("I", buffer, offset.value)[0]
         offset.value += 4
         old_array = None
         old_length = 0
@@ -557,7 +643,7 @@ class MessageVectorProperty:
         if hasattr(obj, self.name):
             array = getattr(obj, self.name)
             msg_count = len(array)
-        struct.pack_into("<I", buffer, offset.value, msg_count)
+        struct.pack_into("I", buffer, offset.value, msg_count)
         offset.value += 4
         if hasattr(obj, self.name):
             array = getattr(obj, self.name)
@@ -657,6 +743,85 @@ class MessageArrayProperty:
         return count
 
 
+class PointerProperty:
+    def __init__(self, name: str):
+        self.name = f"_{name}_data"
+        self.length_name = f"_{name}_length"
+
+    def __get__(self, obj, objtype=None):
+        if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
+            return None
+        buffer = getattr(obj, self.name)
+        length = getattr(obj, self.length_name)
+        return buffer[:length]
+
+    def __set__(self, obj, value: Any):
+        if not isinstance(value, memoryview):
+            raise ValueError(f"Value must be of type memoryview, got {type(value)}")
+
+        # If buffer does not exist, create it
+        new_length: int = len(value)
+        if not hasattr(obj, self.name):
+            # Create new buffer
+            setattr(obj, self.name, value)
+            setattr(obj, self.length_name, new_length)
+            return
+
+        buffer: memoryview = getattr(obj, self.name)
+        old_length: int = getattr(obj, self.length_name)
+        if new_length > old_length:
+            # Resize the buffer
+            underlying: bytearray = buffer.obj
+            buffer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            buffer = memoryview(underlying)
+            setattr(obj, self.name, buffer)
+
+        # Update buffer and length
+        buffer[:new_length] = value
+        setattr(obj, self.length_name, new_length)
+
+    def resize(self, obj, buffer, offset) -> None:
+        new_length = struct.unpack_from("I", buffer, offset.value)[0]
+        offset.value += 4
+        if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
+            setattr(obj, self.name, memoryview(bytearray(new_length)))
+            setattr(obj, self.length_name, new_length)
+            return
+        
+        pointer = getattr(obj, self.name)
+        old_length = len(pointer)
+        if new_length > old_length:
+            underlying: bytearray = pointer.obj
+            pointer.release()
+            underlying.extend(bytearray(new_length - old_length))
+            setattr(obj, self.name, memoryview(underlying))
+
+        setattr(obj, self.length_name, new_length)
+
+    def get_prefix_len(self, obj) -> int:
+        return 4
+
+    def get_prefix(self, obj, buffer: bytearray, offset: Serializable.Offset) -> None:
+        length = 0
+        if hasattr(obj, self.length_name):
+            length = getattr(obj, self.length_name)
+        struct.pack_into("I", buffer, offset.value, length)
+        offset.value += 4
+
+    def get_segments(self, obj) -> List[memoryview]:
+        if not hasattr(obj, self.name) or not hasattr(obj, self.length_name):
+            return [memoryview(bytearray())]
+        buffer = getattr(obj, self.name)
+        length = getattr(obj, self.length_name)
+        return [buffer[:length]]
+
+    def get_segment_count(self, obj) -> int:
+        if not hasattr(obj, self.name):
+            return 0
+        return 1
+
+
 def init_string(obj: object, property_name: str) -> None:
     setattr(obj.__class__, property_name, StringProperty(property_name))
 
@@ -674,82 +839,58 @@ def init_string_array(obj: object, property_name: str, length: int) -> None:
 
 
 def init_bool(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_bool)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "?"))
 
 
 def init_char(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_char)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "c"))
 
 
 def init_int8(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_int8)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "b"))
 
 
 def init_uint8(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_uint8)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "B"))
 
 
 def init_int16(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_int16)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "h"))
 
 
 def init_uint16(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_uint16)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "H"))
 
 
 def init_int32(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_int32)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "i"))
 
 
 def init_uint32(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_uint32)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "I"))
 
 
 def init_int64(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_int64)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "q"))
 
 
 def init_uint64(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_uint64)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "Q"))
 
 
 def init_float(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_float)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "f"))
 
 
 def init_double(obj: object, property_name: str) -> None:
-    setattr(
-        obj.__class__, property_name, ArithmeticProperty(property_name, ctypes.c_double)
-    )
+    setattr(obj.__class__, property_name, ArithmeticProperty(property_name, "d"))
 
 
 def init_bool_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_bool),
+        ArithmeticVectorProperty(property_name, "?"),
     )
 
 
@@ -757,7 +898,7 @@ def init_char_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_char),
+        ArithmeticVectorProperty(property_name, "c"),
     )
 
 
@@ -765,7 +906,7 @@ def init_int8_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_int8),
+        ArithmeticVectorProperty(property_name, "b"),
     )
 
 
@@ -773,7 +914,7 @@ def init_uint8_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_uint8),
+        ArithmeticVectorProperty(property_name, "B"),
     )
 
 
@@ -781,7 +922,7 @@ def init_int16_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_int16),
+        ArithmeticVectorProperty(property_name, "h"),
     )
 
 
@@ -789,7 +930,7 @@ def init_uint16_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_uint16),
+        ArithmeticVectorProperty(property_name, "H"),
     )
 
 
@@ -797,7 +938,7 @@ def init_int32_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_int32),
+        ArithmeticVectorProperty(property_name, "i"),
     )
 
 
@@ -805,7 +946,7 @@ def init_uint32_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_uint32),
+        ArithmeticVectorProperty(property_name, "I"),
     )
 
 
@@ -813,7 +954,7 @@ def init_int64_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_int64),
+        ArithmeticVectorProperty(property_name, "q"),
     )
 
 
@@ -821,7 +962,7 @@ def init_uint64_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_uint64),
+        ArithmeticVectorProperty(property_name, "Q"),
     )
 
 
@@ -829,7 +970,7 @@ def init_float_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_float),
+        ArithmeticVectorProperty(property_name, "f"),
     )
 
 
@@ -837,7 +978,7 @@ def init_double_vector(obj: object, property_name: str) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticVectorProperty(property_name, ctypes.c_double),
+        ArithmeticVectorProperty(property_name, "d"),
     )
 
 
@@ -845,7 +986,7 @@ def init_bool_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_bool, length),
+        ArithmeticArrayProperty(property_name, "?", length),
     )
 
 
@@ -853,7 +994,7 @@ def init_char_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_char, length),
+        ArithmeticArrayProperty(property_name, "c", length),
     )
 
 
@@ -861,7 +1002,7 @@ def init_int8_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_int8, length),
+        ArithmeticArrayProperty(property_name, "b", length),
     )
 
 
@@ -869,7 +1010,7 @@ def init_uint8_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_uint8, length),
+        ArithmeticArrayProperty(property_name, "B", length),
     )
 
 
@@ -877,7 +1018,7 @@ def init_int16_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_int16, length),
+        ArithmeticArrayProperty(property_name, "h", length),
     )
 
 
@@ -885,7 +1026,7 @@ def init_uint16_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_uint16, length),
+        ArithmeticArrayProperty(property_name, "H", length),
     )
 
 
@@ -893,7 +1034,7 @@ def init_int32_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_int32, length),
+        ArithmeticArrayProperty(property_name, "i", length),
     )
 
 
@@ -901,7 +1042,7 @@ def init_uint32_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_uint32, length),
+        ArithmeticArrayProperty(property_name, "I", length),
     )
 
 
@@ -909,7 +1050,7 @@ def init_int64_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_int64, length),
+        ArithmeticArrayProperty(property_name, "q", length),
     )
 
 
@@ -917,7 +1058,7 @@ def init_uint64_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_uint64, length),
+        ArithmeticArrayProperty(property_name, "Q", length),
     )
 
 
@@ -925,7 +1066,7 @@ def init_float_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_float, length),
+        ArithmeticArrayProperty(property_name, "f", length),
     )
 
 
@@ -933,7 +1074,7 @@ def init_double_array(obj: object, property_name: str, length: int) -> None:
     setattr(
         obj.__class__,
         property_name,
-        ArithmeticArrayProperty(property_name, ctypes.c_double, length),
+        ArithmeticArrayProperty(property_name, "d", length),
     )
 
 
@@ -957,6 +1098,10 @@ def init_message_array(
         property_name,
         MessageArrayProperty(property_name, message_type, length),
     )
+
+
+def init_pointer(obj: object, property_name: str) -> None:
+    setattr(obj.__class__, property_name, PointerProperty(property_name))
 
 
 def resize(obj: object, name: str, buffer: bytes, offset: Serializable.Offset) -> None:

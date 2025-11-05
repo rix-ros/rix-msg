@@ -96,6 +96,7 @@ def is_base_type(input_text: str | None) -> bool:
         - double
         - bool
         - string
+        - pointer
     """
     if input_text is None:
         return False

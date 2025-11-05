@@ -2,8 +2,11 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
+
+namespace rix {
 
 template <typename T> class MessageSegmentBase {
 public:
@@ -139,3 +142,76 @@ private:
     return true;
   }
 };
+
+class ptr_t {
+private:
+  std::shared_ptr<uint8_t> owned_ptr_;
+  uint8_t* raw_ptr_;
+  size_t size_;
+  bool owned_;
+
+public:
+  ptr_t() : owned_ptr_(nullptr), raw_ptr_(nullptr), size_(0), owned_(false) {}
+  ptr_t(size_t size_)
+      : owned_ptr_(new uint8_t[size_], std::default_delete<uint8_t[]>()), raw_ptr_(owned_ptr_.get()), size_(size_),
+        owned_(true) {}
+  ptr_t(uint8_t* raw_ptr_, size_t size_) : owned_ptr_(nullptr), raw_ptr_(raw_ptr_), size_(size_), owned_(false) {}
+
+  ~ptr_t() = default;
+
+  ptr_t(const ptr_t& other)
+      : owned_ptr_(other.owned_ptr_), raw_ptr_(other.raw_ptr_), size_(other.size_), owned_(other.owned_) {}
+  ptr_t& operator=(const ptr_t& other) {
+    if (this != &other) {
+      owned_ptr_ = other.owned_ptr_;
+      raw_ptr_ = other.raw_ptr_;
+      size_ = other.size_;
+      owned_ = other.owned_;
+    }
+    return *this;
+  }
+  ptr_t(ptr_t&& other) noexcept
+      : owned_ptr_(std::move(other.owned_ptr_)), raw_ptr_(other.raw_ptr_), size_(other.size_), owned_(other.owned_) {
+    other.raw_ptr_ = nullptr;
+    other.size_ = 0;
+    other.owned_ = false;
+  }
+  ptr_t& operator=(ptr_t&& other) noexcept {
+    if (this != &other) {
+      owned_ptr_ = std::move(other.owned_ptr_);
+      raw_ptr_ = other.raw_ptr_;
+      size_ = other.size_;
+      owned_ = other.owned_;
+      other.raw_ptr_ = nullptr;
+      other.size_ = 0;
+      other.owned_ = false;
+    }
+    return *this;
+  }
+
+  bool operator==(const ptr_t& other) const {
+    if (size_ != other.size_) {
+      return false;
+    }
+    if (raw_ptr_ == other.raw_ptr_) {
+      return true;
+    }
+    return true;
+  }
+
+  bool operator!=(const ptr_t& other) const { return !(*this == other); }
+
+  uint8_t* get() { return raw_ptr_; }
+  const uint8_t* get() const { return raw_ptr_; }
+  size_t size() const { return size_; }
+  bool owned() const { return owned_; }
+
+  void resize(size_t new_size_) {
+    owned_ptr_.reset(new uint8_t[new_size_], std::default_delete<uint8_t[]>());
+    raw_ptr_ = owned_ptr_.get();
+    size_ = new_size_;
+    owned_ = true;
+  }
+};
+
+} // namespace rix

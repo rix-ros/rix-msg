@@ -15,6 +15,7 @@ CPP_TYPE_BINDINGS = {
     "double": "double",
     "bool": "bool",
     "string": "std::string",
+    "pointer": "ptr_t"
 }
 
 
@@ -116,6 +117,7 @@ def create_rixmsg_cpp_get_prefix_len(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
@@ -131,6 +133,7 @@ def create_rixmsg_cpp_get_prefix(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
@@ -144,6 +147,7 @@ def create_rixmsg_cpp_resize(fields: list[Field]) -> str:
         is_dynamic = (
             field.is_dynamic_array
             or (field.value_type == "string")
+            or (field.value_type == "pointer")
             or not field.value_is_base
         )
         if is_dynamic:
