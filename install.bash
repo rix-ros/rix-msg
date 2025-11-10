@@ -2,14 +2,21 @@
 
 set -e
 
-python3 -m venv venv
+# Check if python3.12 is available
+if ! command -v python3.12 &>/dev/null; then
+    echo "Error: python3.12 is not installed or not in PATH."
+    echo "Please install Python 3.12 and try again."
+    exit 1
+fi
+
+python3.12 -m venv venv
 source venv/bin/activate
 
 # Install the required packages
 pip install -r requirements.txt
 
 # Create the executable
-python3 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
+python3.12 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
 
 # Check if the executable was created
 if [ ! -f "dist/rixmsg/rixmsg" ]; then
