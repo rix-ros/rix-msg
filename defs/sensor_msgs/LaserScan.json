@@ -1,0 +1,48 @@
+{
+    "name": "LaserScan",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "angle_min",
+            "type": "float"
+        },
+        {
+            "name": "angle_max",
+            "type": "float"
+        },
+        {
+            "name": "angle_increment",
+            "type": "float"
+        },
+        {
+            "name": "time_increment",
+            "type": "float"
+        },
+        {
+            "name": "scan_time",
+            "type": "float"
+        },
+        {
+            "name": "range_min",
+            "type": "float"
+        },
+        {
+            "name": "range_max",
+            "type": "float"
+        },
+        {
+            "name": "ranges",
+            "type": "float[]"
+        },
+        {
+            "name": "intensities",
+            "type": "float[]"
+        }
+    ]
+}

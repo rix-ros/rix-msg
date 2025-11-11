@@ -1,0 +1,17 @@
+{
+    "name": "JS",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "stamp",
+            "type": "Time",
+            "package": "std_msgs"
+        },
+        {
+            "name": "joint_states",
+            "type": "JointState[]",
+            "package": "sensor_msgs"
+        }
+    ]
+}

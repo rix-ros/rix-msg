@@ -1,0 +1,16 @@
+{
+    "name": "SrvResponse",
+    "version": "1.0.0",
+    "package": "sys_msgs",
+    "fields": [
+        {
+            "name": "error",
+            "type": "uint8"
+        },
+        {
+            "name": "srv_info",
+            "type": "SrvInfo",
+            "package": "sys_msgs"
+        }
+    ]
+}

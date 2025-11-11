@@ -19,7 +19,7 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -29,7 +29,7 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -39,7 +39,7 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -49,7 +49,7 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -60,8 +60,8 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/package/MyNewType.hpp\"\n"
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/package/MyNewType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -74,9 +74,9 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType[256]', 'package': 'new_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "#include \"rix/msg/new_package/AnotherNewType.hpp\"\n"
-            "#include \"rix/msg/package/MyNewType.hpp\"\n"
-            "#include \"rix/msg/package/MyType.hpp\"\n"
+            "#include \"rix/new_package/AnotherNewType.hpp\"\n"
+            "#include \"rix/package/MyNewType.hpp\"\n"
+            "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -88,10 +88,10 @@ class TestCreateRixmsgCppInclude(unittest.TestCase):
                   {'name': 'field4', 'type': 'AnotherNewType[]', 'package': 'new_package'},
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
-        expected = ("#include \"rix/msg/diff_package/AnotherNewType.hpp\"\n"
-                    "#include \"rix/msg/new_package/AnotherNewType.hpp\"\n"
-                    "#include \"rix/msg/package/MyNewType.hpp\"\n"
-                    "#include \"rix/msg/package/MyType.hpp\"\n"
+        expected = ("#include \"rix/diff_package/AnotherNewType.hpp\"\n"
+                    "#include \"rix/new_package/AnotherNewType.hpp\"\n"
+                    "#include \"rix/package/MyNewType.hpp\"\n"
+                    "#include \"rix/package/MyType.hpp\"\n"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
         self.assertEqual(create_rixmsg_cpp_include(message.fields), expected)
@@ -241,120 +241,114 @@ class TestCreateRixmsgCppFields(unittest.TestCase):
             message = Message("test", "test_package", "1234567887654321", fields)
             create_rixmsg_cpp_fields(message.fields)
 
-class TestCreateRixmsgCppSize(unittest.TestCase):
-    def test_create_rixmsg_cpp_size_simple(self):
+class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
+    def test_create_rixmsg_cpp_get_segment_count_simple(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'float[]'},
                   {'name': 'field3', 'type': 'int16[24]'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_number_vector(field2);\n"
-            "size += size_number_array(field3);"
+            "count += 3;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_string(self):
+    def test_create_rixmsg_cpp_get_segment_count_string(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_string(field2);\n"
-            "size += size_number_vector(field3);"
+            "count += 3;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_string_vector(self):
+    def test_create_rixmsg_cpp_get_segment_count_string_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_string_vector(field2);\n"
-            "size += size_number_vector(field3);"
+            "count += 2;\n"
+            "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
     
-    def test_create_rixmsg_cpp_size_string_array(self):
+    def test_create_rixmsg_cpp_get_segment_count_string_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[128]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_string_array(field2);\n"
-            "size += size_number_vector(field3);"
+            "count += 2;\n"
+            "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
     
-    def test_create_rixmsg_cpp_size_message(self):
+    def test_create_rixmsg_cpp_get_segment_count_message(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_message_vector(self):
+    def test_create_rixmsg_cpp_get_segment_count_message_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);\n"
-            "size += size_message_vector(field3);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);\n"
+            "count += detail::get_segment_count(this->field3);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_message_array(self):
+    def test_create_rixmsg_cpp_get_segment_count_message_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);\n"
-            "size += size_message_array(field3);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);\n"
+            "count += detail::get_segment_count(this->field3);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_message_multi(self):
+    def test_create_rixmsg_cpp_get_segment_count_message_multi(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);\n"
-            "size += size_message(field3);\n"
-            "size += size_message(field4);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);\n"
+            "count += detail::get_segment_count(this->field3);\n"
+            "count += detail::get_segment_count(this->field4);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_message_multi_pkg(self):
+    def test_create_rixmsg_cpp_get_segment_count_message_multi_pkg(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
                   {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);\n"
-            "size += size_message(field3);\n"
-            "size += size_message(field4);\n"
-            "size += size_message(field5);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);\n"
+            "count += detail::get_segment_count(this->field3);\n"
+            "count += detail::get_segment_count(this->field4);\n"
+            "count += detail::get_segment_count(this->field5);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_message_multi_pkg_dup(self):
+    def test_create_rixmsg_cpp_get_segment_count_message_multi_pkg_dup(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
@@ -362,142 +356,131 @@ class TestCreateRixmsgCppSize(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "size += size_number(field1);\n"
-            "size += size_message(field2);\n"
-            "size += size_message(field3);\n"
-            "size += size_message(field4);\n"
-            "size += size_message(field5);\n"
-            "size += size_message(field6);"
+            "count += 1;\n"
+            "count += detail::get_segment_count(this->field2);\n"
+            "count += detail::get_segment_count(this->field3);\n"
+            "count += detail::get_segment_count(this->field4);\n"
+            "count += detail::get_segment_count(this->field5);\n"
+            "count += detail::get_segment_count(this->field6);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_size_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
-    def test_create_rixmsg_cpp_size_failure(self):
-        fields = [{'name': 'field1', 'type': 'int32'}, 
-                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
-                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
-                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
-                  {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
-                  {'name': 'field6', 'type': 'YetAnotherNewType'}, # No package defined for nonstandard type
-                  {'name': 'field7', 'type': 'MyType', 'package': 'package'}]
-        with self.assertRaises(ValueError):
-            message = Message("test", "test_package", "1234567887654321", fields)
-            create_rixmsg_cpp_size_function(message.fields)
 
-class TestCreateRixmsgCppSerialize(unittest.TestCase):
-    def test_create_rixmsg_cpp_serialize_number(self):
+class TestCreateRixmsgCppGetSegments(unittest.TestCase):
+    def test_create_rixmsg_cpp_get_segments_number(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'float[]'},
                   {'name': 'field3', 'type': 'int16[24]'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_number_vector(dst, offset, field2);\n"
-            "serialize_number_array(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_string(self):
+    def test_create_rixmsg_cpp_get_segments_string(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_string(dst, offset, field2);\n"
-            "serialize_number_vector(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_string_vector(self):
+    def test_create_rixmsg_cpp_get_segments_string_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_string_vector(dst, offset, field2);\n"
-            "serialize_number_vector(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_string_array(self):
+    def test_create_rixmsg_cpp_get_segments_string_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[128]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_string_array(dst, offset, field2);\n"
-            "serialize_number_vector(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
     
-    def test_create_rixmsg_cpp_serialize_message(self):
+    def test_create_rixmsg_cpp_get_segments_message(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_message_vector(self):
+    def test_create_rixmsg_cpp_get_segments_message_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);\n"
-            "serialize_message_vector(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_message_array(self):
+    def test_create_rixmsg_cpp_get_segments_message_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);\n"
-            "serialize_message_array(dst, offset, field3);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_message_multi(self):
+    def test_create_rixmsg_cpp_get_segments_message_multi(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);\n"
-            "serialize_message(dst, offset, field3);\n"
-            "serialize_message(dst, offset, field4);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);\n"
+            "detail::get_segments(this->field4, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_message_multi_pkg(self):
+    def test_create_rixmsg_cpp_get_segments_message_multi_pkg(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
                   {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);\n"
-            "serialize_message(dst, offset, field3);\n"
-            "serialize_message(dst, offset, field4);\n"
-            "serialize_message(dst, offset, field5);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);\n"
+            "detail::get_segments(this->field4, segments, offset);\n"
+            "detail::get_segments(this->field5, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_message_multi_pkg_dup(self):
+    def test_create_rixmsg_cpp_get_segments_message_multi_pkg_dup(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
@@ -505,142 +488,140 @@ class TestCreateRixmsgCppSerialize(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "serialize_number(dst, offset, field1);\n"
-            "serialize_message(dst, offset, field2);\n"
-            "serialize_message(dst, offset, field3);\n"
-            "serialize_message(dst, offset, field4);\n"
-            "serialize_message(dst, offset, field5);\n"
-            "serialize_message(dst, offset, field6);"
+            "detail::get_segments(this->field1, segments, offset);\n"
+            "detail::get_segments(this->field2, segments, offset);\n"
+            "detail::get_segments(this->field3, segments, offset);\n"
+            "detail::get_segments(this->field4, segments, offset);\n"
+            "detail::get_segments(this->field5, segments, offset);\n"
+            "detail::get_segments(this->field6, segments, offset);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_serialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segments(message.fields), expected)
 
-    def test_create_rixmsg_cpp_serialize_failure(self):
-        fields = [{'name': 'field1', 'type': 'int32'}, 
-                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
-                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
-                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
-                  {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
-                  {'name': 'field6', 'type': 'YetAnotherNewType'}, # No package defined for nonstandard type
-                  {'name': 'field7', 'type': 'MyType', 'package': 'package'}]
-        with self.assertRaises(ValueError):
-            message = Message("test", "test_package", "1234567887654321", fields)
-            create_rixmsg_cpp_serialize_function(message.fields)
 
-class TestCreateRixmsgCppDeserialize(unittest.TestCase):
-    def test_create_rixmsg_cpp_deserialize_number(self):
+class TestCreateRixmsgCppEqualTo(unittest.TestCase):
+    def test_create_rixmsg_cpp_get_segments_number(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'float[]'},
                   {'name': 'field3', 'type': 'int16[24]'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_number_vector(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_number_array(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_string(self):
+    def test_create_rixmsg_cpp_equal_to_string(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_string(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_number_vector(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_string_vector(self):
+    def test_create_rixmsg_cpp_equal_to_string_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_string_vector(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_number_vector(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
-    
-    def test_create_rixmsg_cpp_deserialize_string_array(self):
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
+
+    def test_create_rixmsg_cpp_equal_to_string_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'string[128]'},
                   {'name': 'field3', 'type': 'float[]'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_string_array(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_number_vector(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
     
-    def test_create_rixmsg_cpp_deserialize_message(self):
+    def test_create_rixmsg_cpp_equal_to_message(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_message_vector(self):
+    def test_create_rixmsg_cpp_equal_to_message_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message_vector(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_message_array(self):
+    def test_create_rixmsg_cpp_equal_to_message_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message_array(field3, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_message_multi(self):
+    def test_create_rixmsg_cpp_equal_to_message_multi(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field3, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field4, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "if (this->field4 != other.field4) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_message_multi_pkg(self):
+    def test_create_rixmsg_cpp_equal_to_message_multi_pkg(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
                   {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field3, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field4, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field5, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "if (this->field4 != other.field4) { return false; }\n"
+            "if (this->field5 != other.field5) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_message_multi_pkg_dup(self):
+    def test_create_rixmsg_cpp_equal_to_message_multi_pkg_dup(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
@@ -648,27 +629,379 @@ class TestCreateRixmsgCppDeserialize(unittest.TestCase):
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
                   {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
         expected = (
-            "if (!deserialize_number(field1, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field2, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field3, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field4, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field5, src, size, offset)) { return false; };\n"
-            "if (!deserialize_message(field6, src, size, offset)) { return false; };"
+            "if (this->field1 != other.field1) { return false; }\n"
+            "if (this->field2 != other.field2) { return false; }\n"
+            "if (this->field3 != other.field3) { return false; }\n"
+            "if (this->field4 != other.field4) { return false; }\n"
+            "if (this->field5 != other.field5) { return false; }\n"
+            "if (this->field6 != other.field6) { return false; }\n"
+            "return true;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_deserialize_function(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_equal_to(message.fields), expected)
 
-    def test_create_rixmsg_cpp_deserialize_failure(self):
+
+class TestCreateRixmsgCppGetPrefixLen(unittest.TestCase):
+    def test_create_rixmsg_cpp_get_prefix_len_number(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'float[]'},
+                  {'name': 'field3', 'type': 'int16[24]'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_string(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_string_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_string_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[128]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+    
+    def test_create_rixmsg_cpp_get_prefix_len_message(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_message_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_message_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_message_multi(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);\n"
+            "len += detail::get_prefix_len(this->field4);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_message_multi_pkg(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
+                  {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);\n"
+            "len += detail::get_prefix_len(this->field4);\n"
+            "len += detail::get_prefix_len(this->field5);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_len_message_multi_pkg_dup(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
                   {'name': 'field2', 'type': 'MyType', 'package': 'package'},
                   {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
                   {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
                   {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
-                  {'name': 'field6', 'type': 'YetAnotherNewType'}, # No package defined for nonstandard type
-                  {'name': 'field7', 'type': 'MyType', 'package': 'package'}]
-        with self.assertRaises(ValueError):
-            message = Message("test", "test_package", "1234567887654321", fields)
-            create_rixmsg_cpp_deserialize_function(message.fields)
+                  {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "len += detail::get_prefix_len(this->field2);\n"
+            "len += detail::get_prefix_len(this->field3);\n"
+            "len += detail::get_prefix_len(this->field4);\n"
+            "len += detail::get_prefix_len(this->field5);\n"
+            "len += detail::get_prefix_len(this->field6);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix_len(message.fields), expected)
+
+
+class TestCreateRixmsgCppGetPrefix(unittest.TestCase):
+    def test_create_rixmsg_cpp_get_prefix_number(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'float[]'},
+                  {'name': 'field3', 'type': 'int16[24]'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_string(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_string_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_string_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[128]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+    
+    def test_create_rixmsg_cpp_get_prefix_message(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_message_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_message_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_message_multi(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);\n"
+            "detail::get_prefix(this->field4, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_message_multi_pkg(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
+                  {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);\n"
+            "detail::get_prefix(this->field4, dst, offset);\n"
+            "detail::get_prefix(this->field5, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+    def test_create_rixmsg_cpp_get_prefix_message_multi_pkg_dup(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
+                  {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
+                  {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::get_prefix(this->field2, dst, offset);\n"
+            "detail::get_prefix(this->field3, dst, offset);\n"
+            "detail::get_prefix(this->field4, dst, offset);\n"
+            "detail::get_prefix(this->field5, dst, offset);\n"
+            "detail::get_prefix(this->field6, dst, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_get_prefix(message.fields), expected)
+
+
+class TestCreateRixmsgCppResize(unittest.TestCase):
+    def test_create_rixmsg_cpp_resize_number(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'float[]'},
+                  {'name': 'field3', 'type': 'int16[24]'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_string(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_string_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+    
+    def test_create_rixmsg_cpp_resize_string_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'string[128]'},
+                  {'name': 'field3', 'type': 'float[]'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+    
+    def test_create_rixmsg_cpp_resize_message(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_message_vector(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[]', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_message_array(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyType[10]', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_message_multi(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);\n"
+            "detail::resize(this->field4, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_message_multi_pkg(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
+                  {'name': 'field5', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);\n"
+            "detail::resize(this->field4, src, offset);\n"
+            "detail::resize(this->field5, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
+
+    def test_create_rixmsg_cpp_resize_message_multi_pkg_dup(self):
+        fields = [{'name': 'field1', 'type': 'int32'}, 
+                  {'name': 'field2', 'type': 'MyType', 'package': 'package'},
+                  {'name': 'field3', 'type': 'MyNewType', 'package': 'package'},
+                  {'name': 'field4', 'type': 'AnotherNewType', 'package': 'new_package'},
+                  {'name': 'field5', 'type': 'AnotherNewType', 'package': 'diff_package'},
+                  {'name': 'field6', 'type': 'MyType', 'package': 'package'}]
+        expected = (
+            "detail::resize(this->field2, src, offset);\n"
+            "detail::resize(this->field3, src, offset);\n"
+            "detail::resize(this->field4, src, offset);\n"
+            "detail::resize(this->field5, src, offset);\n"
+            "detail::resize(this->field6, src, offset);"
+        )
+        message = Message("test", "test_package", "1234567887654321", fields)
+        self.assertEqual(create_rixmsg_cpp_resize(message.fields), expected)
 
 class TestCreateRixmsgCppFullTest(unittest.TestCase):
     def test_create_rixmsg_cpp_full(self):
@@ -677,20 +1010,21 @@ class TestCreateRixmsgCppFullTest(unittest.TestCase):
 #include <cstdint>
 #include <vector>
 #include <array>
-#include <map>
 #include <string>
 #include <cstring>
 
-#include "rix/msg/serialization.hpp"
 #include "rix/msg/message.hpp"
-#include "rix/msg/example/OtherMessage.hpp"
+#include "rix/msg/serialization.hpp"
+#include "rix/example/OtherMessage.hpp"
 
 namespace rix {
-namespace msg {
 namespace example {
 
 class ExampleMessage : public Message {
   public:
+    using Message::get_prefix;
+    using Message::get_segments;
+
     uint32_t number{};
     std::string word{};
     bool flag{};
@@ -706,58 +1040,111 @@ class ExampleMessage : public Message {
     ExampleMessage(const ExampleMessage &other) = default;
     ~ExampleMessage() = default;
 
-    size_t size() const override {
-        using namespace detail;
-        size_t size = 0;
-        size += size_number(number);
-        size += size_string(word);
-        size += size_number(flag);
-        size += size_message(object);
-        size += size_number_vector(array);
-        size += size_number_array(static_array);
-        size += size_string_vector(array_of_words);
-        size += size_string_array(static_array_of_words);
-        size += size_message_vector(array_of_objects);
-        size += size_message_array(static_array_of_objects);
-        return size;
-    }
-
     std::array<uint64_t, 2> hash() const override {
         return {0xi_am_thirty_two_ULL, 0xcharacters_long!ULL};
     }
 
-    void serialize(uint8_t *dst, size_t &offset) const override {
-        using namespace detail;
-        serialize_number(dst, offset, number);
-        serialize_string(dst, offset, word);
-        serialize_number(dst, offset, flag);
-        serialize_message(dst, offset, object);
-        serialize_number_vector(dst, offset, array);
-        serialize_number_array(dst, offset, static_array);
-        serialize_string_vector(dst, offset, array_of_words);
-        serialize_string_array(dst, offset, static_array_of_words);
-        serialize_message_vector(dst, offset, array_of_objects);
-        serialize_message_array(dst, offset, static_array_of_objects);
+    bool operator==(const ExampleMessage &other) const {
+        if (this->number != other.number) { return false; }
+        if (this->word != other.word) { return false; }
+        if (this->flag != other.flag) { return false; }
+        if (this->object != other.object) { return false; }
+        if (this->array != other.array) { return false; }
+        if (this->static_array != other.static_array) { return false; }
+        if (this->array_of_words != other.array_of_words) { return false; }
+        if (this->static_array_of_words != other.static_array_of_words) { return false; }
+        if (this->array_of_objects != other.array_of_objects) { return false; }
+        if (this->static_array_of_objects != other.static_array_of_objects) { return false; }
+        return true;
     }
 
-    bool deserialize(const uint8_t *src, size_t size, size_t &offset) override {
-        using namespace detail;
-        if (!deserialize_number(number, src, size, offset)) { return false; };
-        if (!deserialize_string(word, src, size, offset)) { return false; };
-        if (!deserialize_number(flag, src, size, offset)) { return false; };
-        if (!deserialize_message(object, src, size, offset)) { return false; };
-        if (!deserialize_number_vector(array, src, size, offset)) { return false; };
-        if (!deserialize_number_array(static_array, src, size, offset)) { return false; };
-        if (!deserialize_string_vector(array_of_words, src, size, offset)) { return false; };
-        if (!deserialize_string_array(static_array_of_words, src, size, offset)) { return false; };
-        if (!deserialize_message_vector(array_of_objects, src, size, offset)) { return false; };
-        if (!deserialize_message_array(static_array_of_objects, src, size, offset)) { return false; };
+    bool operator!=(const ExampleMessage &other) const {
+        return !(*this == other);
+    }
+
+    size_t get_segment_count() const override {
+        size_t count = 0;
+        count += 5;
+        count += detail::get_segment_count(this->object);
+        count += detail::get_segment_count(this->array_of_words);
+        count += detail::get_segment_count(this->static_array_of_words);
+        count += detail::get_segment_count(this->array_of_objects);
+        count += detail::get_segment_count(this->static_array_of_objects);
+        return count;
+    }
+
+    bool get_segments(MessageSegment *segments, size_t len, size_t &offset) override {
+        if (len < offset + get_segment_count()) {
+            return false;
+        }
+        detail::get_segments(this->number, segments, offset);
+        detail::get_segments(this->word, segments, offset);
+        detail::get_segments(this->flag, segments, offset);
+        detail::get_segments(this->object, segments, offset);
+        detail::get_segments(this->array, segments, offset);
+        detail::get_segments(this->static_array, segments, offset);
+        detail::get_segments(this->array_of_words, segments, offset);
+        detail::get_segments(this->static_array_of_words, segments, offset);
+        detail::get_segments(this->array_of_objects, segments, offset);
+        detail::get_segments(this->static_array_of_objects, segments, offset);
+        return true;
+    }
+
+    bool get_segments(ConstMessageSegment *segments, size_t len, size_t &offset) const override {
+        if (len < offset + get_segment_count()) {
+            return false;
+        }
+        detail::get_segments(this->number, segments, offset);
+        detail::get_segments(this->word, segments, offset);
+        detail::get_segments(this->flag, segments, offset);
+        detail::get_segments(this->object, segments, offset);
+        detail::get_segments(this->array, segments, offset);
+        detail::get_segments(this->static_array, segments, offset);
+        detail::get_segments(this->array_of_words, segments, offset);
+        detail::get_segments(this->static_array_of_words, segments, offset);
+        detail::get_segments(this->array_of_objects, segments, offset);
+        detail::get_segments(this->static_array_of_objects, segments, offset);
+        return true;
+    }
+
+    uint32_t get_prefix_len() const override {
+        uint32_t len = 0;
+        len += detail::get_prefix_len(this->word);
+        len += detail::get_prefix_len(this->object);
+        len += detail::get_prefix_len(this->array);
+        len += detail::get_prefix_len(this->array_of_words);
+        len += detail::get_prefix_len(this->static_array_of_words);
+        len += detail::get_prefix_len(this->array_of_objects);
+        len += detail::get_prefix_len(this->static_array_of_objects);
+        return len;
+    }
+
+    void get_prefix(uint8_t *dst, size_t &offset) const override {
+        detail::get_prefix(this->word, dst, offset);
+        detail::get_prefix(this->object, dst, offset);
+        detail::get_prefix(this->array, dst, offset);
+        detail::get_prefix(this->array_of_words, dst, offset);
+        detail::get_prefix(this->static_array_of_words, dst, offset);
+        detail::get_prefix(this->array_of_objects, dst, offset);
+        detail::get_prefix(this->static_array_of_objects, dst, offset);
+    }
+
+    bool resize(const uint8_t *src, size_t len, size_t &offset) override {
+        if (len < offset + get_prefix_len()) {
+            return false;
+        }
+        detail::resize(this->word, src, offset);
+        detail::resize(this->object, src, offset);
+        detail::resize(this->array, src, offset);
+        detail::resize(this->array_of_words, src, offset);
+        detail::resize(this->static_array_of_words, src, offset);
+        detail::resize(this->array_of_objects, src, offset);
+        detail::resize(this->static_array_of_objects, src, offset);
         return true;
     }
 };
 
 } // namespace example
-} // namespace msg
 } // namespace rix"""
 
         msg = {'name': 'ExampleMessage', 'package': 'example', 'fields': [

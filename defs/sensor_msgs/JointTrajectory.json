@@ -1,0 +1,12 @@
+{
+    "name": "JointTrajectory",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "points",
+            "type": "JS[]",
+            "package": "sensor_msgs"
+        }
+    ]
+}

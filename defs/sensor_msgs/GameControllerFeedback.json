@@ -1,0 +1,21 @@
+{
+    "name": "GameControllerFeedback",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "intensities",
+            "type": "float[]"
+        },
+        {
+            "name": "durations",
+            "type": "Duration[]",
+            "package": "std_msgs"
+        }
+    ]
+}

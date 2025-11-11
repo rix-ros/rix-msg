@@ -1,0 +1,15 @@
+{
+    "name": "OtherMessage",
+    "version": "1.0.0",
+    "package": "example_msgs",
+    "fields": [
+        {
+            "name": "num",
+            "type": "double"
+        },
+        {
+            "name": "flag",
+            "type": "bool"
+        }
+    ]
+}

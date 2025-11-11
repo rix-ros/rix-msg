@@ -12,6 +12,7 @@ BaseTypes = {
     "double",
     "bool",
     "string",
+    "pointer",
 }
 BaseTypesSizes = {
     "char": 1,

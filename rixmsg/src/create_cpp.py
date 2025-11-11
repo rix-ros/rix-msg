@@ -15,6 +15,7 @@ CPP_TYPE_BINDINGS = {
     "double": "double",
     "bool": "bool",
     "string": "std::string",
+    "pointer": "ptr_t"
 }
 
 
@@ -24,7 +25,7 @@ def create_rixmsg_cpp_include(fields: list[Field]) -> str:
         if not field.value_is_base:
             if field.package is not None:
                 includes.add(
-                    f'#include "rix/msg/{field.package}/{field.value_type}.hpp"'
+                    f'#include "rix/{field.package}/{field.value_type}.hpp"'
                 )
             else:
                 raise ValueError(
@@ -45,9 +46,6 @@ def create_rixmsg_cpp_fields(fields: list[Field]) -> str:
             # If we have a static array of base types
             elif field.is_static_array:
                 fields_str += f"std::array<{CPP_TYPE_BINDINGS[field.value_type]}, {field.static_array_size}> {field.name}{{}};\n"
-            # If we have a map type
-            elif field.is_map and field.key_is_base:
-                fields_str += f"std::map<{CPP_TYPE_BINDINGS[field.key_type]}, {CPP_TYPE_BINDINGS[field.value_type]}> {field.name}{{}};\n"
             # If we have a single base type
             else:
                 fields_str += f"{CPP_TYPE_BINDINGS[field.type_str]} {field.name}{{}};\n"
@@ -60,9 +58,6 @@ def create_rixmsg_cpp_fields(fields: list[Field]) -> str:
             elif field.is_static_array:
                 arr_size = field.static_array_size
                 fields_str += f"std::array<{field.package}::{field.value_type}, {arr_size}> {field.name}{{}};\n"
-            # If we have a map type
-            elif field.is_map and field.key_is_base:
-                fields_str += f"std::map<{CPP_TYPE_BINDINGS[field.key_type]}, {field.package}::{field.value_type}> {field.name}{{}};\n"
             # If we have a single custom type
             else:
                 fields_str += f"{field.package}::{field.value_type} {field.name}{{}};\n"
@@ -72,175 +67,95 @@ def create_rixmsg_cpp_fields(fields: list[Field]) -> str:
 
     return fields_str[:-1] if len(fields_str) > 0 else fields_str
 
-def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
-    equal_str = ""
-    for field in fields:
-        equal_str += f"if ({field.name} != other.{field.name}) {{ return false; }}\n"
-    equal_str += "return true;"
-    return equal_str
-
-def create_rixmsg_cpp_size_function(fields: list[Field]) -> str:
-    size_str = ""
-    for field in fields:
-        # If we have a string
-        if field.value_type == "string":
-            if field.is_dynamic_array:
-                size_str += f"size += size_string_vector({field.name});\n"
-            elif field.is_static_array:
-                size_str += f"size += size_string_array({field.name});\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    size_str += f"size += size_string_to_string_map({field.name});\n"
-                else:
-                    size_str += f"size += size_number_to_string_map({field.name});\n"
-            else:
-                size_str += f"size += size_string({field.name});\n"
-        # If we have a base type other than a string
-        elif field.value_is_base:
-            if field.is_dynamic_array:
-                size_str += f"size += size_number_vector({field.name});\n"
-            # If we have a static array of base types
-            elif field.is_static_array:
-                size_str += f"size += size_number_array({field.name});\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    size_str += f"size += size_string_to_number_map({field.name});\n"
-                else:
-                    size_str += f"size += size_number_to_number_map({field.name});\n"
-            else:
-                size_str += f"size += size_number({field.name});\n"
-        # If we have a custom type (package specified)
-        elif field.package is not None:
-            if field.is_dynamic_array:
-                size_str += f"size += size_message_vector({field.name});\n"
-            elif field.is_static_array:
-                size_str += f"size += size_message_array({field.name});\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    size_str += f"size += size_string_to_message_map({field.name});\n"
-                else:
-                    size_str += f"size += size_number_to_message_map({field.name});\n"
-            else:
-                size_str += f"size += size_message({field.name});\n"
-        # If the package is not specified for the custom type, raise an error
-        else:
-            raise ValueError(f"Error: No package specified for type {field.type_str}")
-
-    return size_str[:-1] if len(size_str) > 0 else size_str
-
 
 def create_rixmsg_cpp_hash(hash: str) -> str:
     return f"{{0x{hash[0:16]}ULL, 0x{hash[16:32]}ULL}}"
 
 
-def create_rixmsg_cpp_serialize_function(fields: list[Field]) -> str:
-    serialize_str = ""
+def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
+    equal_str = ""
     for field in fields:
-        if field.value_type == "string":
-            if field.is_dynamic_array:
-                serialize_str += (
-                    f"serialize_string_vector(dst, offset, {field.name});\n"
-                )
-            elif field.is_static_array:
-                serialize_str += f"serialize_string_array(dst, offset, {field.name});\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    serialize_str += (
-                        f"serialize_string_to_string_map(dst, offset, {field.name});\n"
-                    )
-                else:
-                    serialize_str += (
-                        f"serialize_number_to_string_map(dst, offset, {field.name});\n"
-                    )
-            else:
-                serialize_str += f"serialize_string(dst, offset, {field.name});\n"
-        elif field.value_is_base:
-            if field.is_dynamic_array:
-                serialize_str += (
-                    f"serialize_number_vector(dst, offset, {field.name});\n"
-                )
-            elif field.is_static_array:
-                serialize_str += f"serialize_number_array(dst, offset, {field.name});\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    serialize_str += (
-                        f"serialize_string_to_number_map(dst, offset, {field.name});\n"
-                    )
-                else:
-                    serialize_str += (
-                        f"serialize_number_to_number_map(dst, offset, {field.name});\n"
-                    )
-            else:
-                serialize_str += f"serialize_number(dst, offset, {field.name});\n"
-        elif field.package is not None:
-            if field.is_dynamic_array:
-                serialize_str += (
-                    f"serialize_message_vector(dst, offset, {field.name});\n"
-                )
-            elif field.is_static_array:
-                serialize_str += (
-                    f"serialize_message_array(dst, offset, {field.name});\n"
-                )
-            elif field.is_map:
-                if field.key_type == "string":
-                    serialize_str += (
-                        f"serialize_string_to_message_map(dst, offset, {field.name});\n"
-                    )
-                else:
-                    serialize_str += (
-                        f"serialize_number_to_message_map(dst, offset, {field.name});\n"
-                    )
-            else:
-                serialize_str += f"serialize_message(dst, offset, {field.name});\n"
-        else:
-            raise ValueError(f"Error: No package specified for type {field.type_str}")
-
-    return serialize_str[:-1] if len(serialize_str) > 0 else serialize_str
+        equal_str += f"if (this->{field.name} != other.{field.name}) {{ return false; }}\n"
+    equal_str += "return true;"
+    return equal_str
 
 
-def create_rixmsg_cpp_deserialize_function(fields: list[Field]) -> str:
-    deserialize_str = ""
+def create_rixmsg_cpp_get_segment_count(fields: list[Field]) -> str:
+    segment_count_str = ""
+
+    # Each non-dynamic field adds one segment. A dynamic field here is a vector of strings, array of strings, a vector of custom types, or a custom type.
+    segment_count = 0
+    dynamic_fields: list[Field] = []
     for field in fields:
-        if field.value_type == "string":
-            if field.is_dynamic_array:
-                deserialize_str += f"if (!deserialize_string_vector({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_static_array:
-                deserialize_str += f"if (!deserialize_string_array({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    deserialize_str += f"if (!deserialize_string_to_string_map({field.name}, src, size, offset)) {{ return false; }};\n"
-                else:
-                    deserialize_str += f"if (!deserialize_number_to_string_map({field.name}, src, size, offset)) {{ return false; }};\n"
-            else:
-                deserialize_str += f"if (!deserialize_string({field.name}, src, size, offset)) {{ return false; }};\n"
-        elif field.value_is_base:
-            if field.is_dynamic_array:
-                deserialize_str += f"if (!deserialize_number_vector({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_static_array:
-                deserialize_str += f"if (!deserialize_number_array({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    deserialize_str += f"if (!deserialize_string_to_number_map({field.name}, src, size, offset)) {{ return false; }};\n"
-                else:
-                    deserialize_str += f"if (!deserialize_number_to_number_map({field.name}, src, size, offset)) {{ return false; }};\n"
-            else:
-                deserialize_str += f"if (!deserialize_number({field.name}, src, size, offset)) {{ return false; }};\n"
-        elif field.package is not None:
-            if field.is_dynamic_array:
-                deserialize_str += f"if (!deserialize_message_vector({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_static_array:
-                deserialize_str += f"if (!deserialize_message_array({field.name}, src, size, offset)) {{ return false; }};\n"
-            elif field.is_map:
-                if field.key_type == "string":
-                    deserialize_str += f"if (!deserialize_string_to_message_map({field.name}, src, size, offset)) {{ return false; }};\n"
-                else:
-                    deserialize_str += f"if (!deserialize_number_to_message_map({field.name}, src, size, offset)) {{ return false; }};\n"
-            else:
-                deserialize_str += f"if (!deserialize_message({field.name}, src, size, offset)) {{ return false; }};\n"
+        is_dynamic = (
+            (field.is_dynamic_array and field.value_type == "string") or
+            (field.is_static_array and field.value_type == "string") or
+            (field.is_dynamic_array and field.value_type == "pointer") or
+            (field.is_static_array and field.value_type == "pointer") or
+            (field.is_dynamic_array and not field.value_is_base) or
+            (not field.value_is_base)
+        )
+        if is_dynamic:
+            dynamic_fields.append(field)
         else:
-            raise ValueError(f"Error: No package specified for type {field.type_str}")
+            segment_count += 1
 
-    return deserialize_str[:-1] if len(deserialize_str) > 0 else deserialize_str
+    segment_count_str += f"count += {segment_count};\n"
+    for field in dynamic_fields:
+        segment_count_str += f"count += detail::get_segment_count(this->{field.name});\n"
+
+    return segment_count_str[:-1] if len(segment_count_str) > 0 else segment_count_str
+
+
+def create_rixmsg_cpp_get_segments(fields: list[Field]) -> str:
+    get_segments_str = ""
+    for field in fields:
+        get_segments_str += f"detail::get_segments(this->{field.name}, segments, offset);\n"
+    return get_segments_str[:-1] if len(get_segments_str) > 0 else get_segments_str
+
+
+def create_rixmsg_cpp_get_prefix_len(fields: list[Field]) -> str:
+    get_prefix_len_str = ""
+    for field in fields:
+        is_dynamic = (
+            field.is_dynamic_array
+            or (field.value_type == "string")
+            or (field.value_type == "pointer")
+            or not field.value_is_base
+        )
+        if is_dynamic:
+            get_prefix_len_str += f"len += detail::get_prefix_len(this->{field.name});\n"
+    return (
+        get_prefix_len_str[:-1] if len(get_prefix_len_str) > 0 else get_prefix_len_str
+    )
+
+
+def create_rixmsg_cpp_get_prefix(fields: list[Field]) -> str:
+    get_prefix_str = ""
+    for field in fields:
+        is_dynamic = (
+            field.is_dynamic_array
+            or (field.value_type == "string")
+            or (field.value_type == "pointer")
+            or not field.value_is_base
+        )
+        if is_dynamic:
+            get_prefix_str += f"detail::get_prefix(this->{field.name}, dst, offset);\n"
+    return get_prefix_str[:-1] if len(get_prefix_str) > 0 else get_prefix_str
+
+
+def create_rixmsg_cpp_resize(fields: list[Field]) -> str:
+    resize_str = ""
+    for field in fields:
+        is_dynamic = (
+            field.is_dynamic_array
+            or (field.value_type == "string")
+            or (field.value_type == "pointer")
+            or not field.value_is_base
+        )
+        if is_dynamic:
+            resize_str += f"detail::resize(this->{field.name}, src, offset);\n"
+    return resize_str[:-1] if len(resize_str) > 0 else resize_str
 
 
 def create_rixmsg_cpp(msg: Message) -> str:
@@ -250,24 +165,29 @@ def create_rixmsg_cpp(msg: Message) -> str:
 #include <cstdint>
 #include <vector>
 #include <array>
-#include <map>
 #include <string>
 #include <cstring>
 
-#include "rix/msg/serialization.hpp"
 #include "rix/msg/message.hpp"
+#include "rix/msg/serialization.hpp"
 {create_rixmsg_cpp_include(msg.fields)}
 namespace rix {{
-namespace msg {{
 namespace {msg.package} {{
 
 class {msg.name} : public Message {{
   public:
+    using Message::get_prefix;
+    using Message::get_segments;
+
     {create_rixmsg_cpp_fields(msg.fields).replace(n, n + '    ')}
 
     {msg.name}() = default;
     {msg.name}(const {msg.name} &other) = default;
     ~{msg.name}() = default;
+
+    std::array<uint64_t, 2> hash() const override {{
+        return {create_rixmsg_cpp_hash(msg.hash)};
+    }}
 
     bool operator==(const {msg.name} &other) const {{
         {create_rixmsg_cpp_equal_to(msg.fields).replace(n, n + '        ')}
@@ -277,29 +197,46 @@ class {msg.name} : public Message {{
         return !(*this == other);
     }}
 
-    size_t size() const override {{
-        using namespace detail;
-        size_t size = 0;
-        {create_rixmsg_cpp_size_function(msg.fields).replace(n, n + '        ')}
-        return size;
+    size_t get_segment_count() const override {{
+        size_t count = 0;
+        {create_rixmsg_cpp_get_segment_count(msg.fields).replace(n, n + '        ')}
+        return count;
     }}
 
-    std::array<uint64_t, 2> hash() const override {{
-        return {create_rixmsg_cpp_hash(msg.hash)};
+    bool get_segments(MessageSegment *segments, size_t len, size_t &offset) override {{
+        if (len < offset + get_segment_count()) {{
+            return false;
+        }}
+        {create_rixmsg_cpp_get_segments(msg.fields).replace(n, n + '        ')}
+        return true;
     }}
 
-    void serialize(uint8_t *dst, size_t &offset) const override {{
-        using namespace detail;
-        {create_rixmsg_cpp_serialize_function(msg.fields).replace(n, n + '        ')}
+    bool get_segments(ConstMessageSegment *segments, size_t len, size_t &offset) const override {{
+        if (len < offset + get_segment_count()) {{
+            return false;
+        }}
+        {create_rixmsg_cpp_get_segments(msg.fields).replace(n, n + '        ')}
+        return true;
     }}
 
-    bool deserialize(const uint8_t *src, size_t size, size_t &offset) override {{
-        using namespace detail;
-        {create_rixmsg_cpp_deserialize_function(msg.fields).replace(n, n + '        ')}
+    uint32_t get_prefix_len() const override {{
+        uint32_t len = 0;
+        {create_rixmsg_cpp_get_prefix_len(msg.fields).replace(n, n + '        ')}
+        return len;
+    }}
+
+    void get_prefix(uint8_t *dst, size_t &offset) const override {{
+        {create_rixmsg_cpp_get_prefix(msg.fields).replace(n, n + '        ')}
+    }}
+
+    bool resize(const uint8_t *src, size_t len, size_t &offset) override {{
+        if (len < offset + get_prefix_len()) {{
+            return false;
+        }}
+        {create_rixmsg_cpp_resize(msg.fields).replace(n, n + '        ')}
         return true;
     }}
 }};
 
 }} // namespace {msg.package}
-}} // namespace msg
 }} // namespace rix"""

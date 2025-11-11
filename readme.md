@@ -2,10 +2,11 @@
 
 ## Fast, Modular Message Serialization for Robotics
 
-**RIX-MSG** is a high-performance, cross-language message definition and serialization library for robotics and distributed systems. It provides a robust foundation for defining, generating, and serializing messages in C++, Python, and JavaScript—empowering you to build scalable, reliable robot software architectures.
+**RIX-MSG** is a high-performance, cross-language message definition and serialization library for robotics and distributed systems. It provides a robust foundation for defining, generating, and serializing messages in C++ and Python—empowering you to build scalable, reliable robot software architectures.
 
-- 🌐 **Multi-Language:** Automatically generates C++, Python, and JavaScript implementations from a single message definition.
-- 🧩 **Flexible Schema:** Supports arrays, nested messages, and maps for complex data structures.
+- 🌐 **Multi-Language:** Automatically generates C++ and Python implementations from a single message definition.
+- ⚡ **Zero-Copy Serialization:** Optimized for low-latency communication with vectored I/O support.
+- 🧩 **Flexible Schema:** Supports arithmetic types, strings, arrays, vectors, and nested messages for complex data structures.
 - 🔒 **Type-Safe:** Enforces strict type checking and schema validation across all supported languages.
 - 📝 **Human-Readable Definitions:** Message formats are defined in clear, versioned JSON files.
 
@@ -25,10 +26,9 @@ bash install.sh
 
 This will:
 - Build and install the `rixmsg` CLI tool to `$HOME/.rix/bin/rixmsg`
-- Generate default message serialization files for C++, Python, and JavaScript in:
+- Generate default message serialization files for C++ and Python in:
   - `$HOME/.rix/include/rix/msg/`
   - `$HOME/.rix/python/rixmsg/`
-  - `$HOME/.rix/js/rixmsg/`
 
 ---
 
@@ -64,9 +64,9 @@ Example usage:
 ```bash
 rixmsg packages
 rixmsg package geometry
-rixmsg show standard/Header
-rixmsg create defs/example/
-rixmsg validate defs/geometry/Point.json
+rixmsg show std_msgs/Header
+rixmsg create defs/example_msgs/
+rixmsg validate defs/geometry_msgs/Point.json
 ```
 
 ---
@@ -75,21 +75,20 @@ rixmsg validate defs/geometry/Point.json
 
 Message definitions use a simple JSON schema. Supported types include:
 
-- Base types: `char`, `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float`, `double`, `bool`, `string`
+- Base types: `char`, `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float`, `double`, `bool`, `string`, `pointer`
 - Arrays: `type[]` (dynamic), `type[N]` (fixed-size)
 - Nested messages: `{ "type": "<name>", "package": "<package>" }`
-- Maps: `{ "type": "<value_type>[<key_type>]" }` (key type cannot be a custom message)
 
-Example (`standard/Header.json`):
+Example (`std_msgs/Header.json`):
 
 ```json
 {
   "version": "1.0.0",
-  "package": "standard",
+  "package": "std_msgs",
   "name": "Header",
   "fields": [
     { "name": "seq", "type": "uint32" },
-    { "name": "stamp", "type": "Time", "package": "standard" },
+    { "name": "stamp", "type": "Time", "package": "std_msgs" },
     { "name": "frame_id", "type": "string" }
   ]
 }
@@ -102,14 +101,13 @@ Example (`standard/Header.json`):
 After defining your messages, generate code for all supported languages:
 
 ```bash
-rixmsg create defs/example/
+rixmsg create defs/example_msgs/
 ```
 
 Generated files will be placed in:
 
 - C++: `~/.rix/include/rix/msg/<package>/<Message>.hpp`
 - Python: `~/.rix/python/rixmsg/rixmsg/<package>/<Message>.py`
-- JavaScript: `~/.rix/js/rixmsg/<package>/<Message>.js`
 
 ---
 
@@ -118,25 +116,16 @@ Generated files will be placed in:
 Include generated message headers in your C++ project:
 
 ```cpp
-#include "rix/msg/standard/Header.hpp"
+#include "rix/std_msgs/Header.hpp"
 
-using rix::msg::standard::Header;
+using rix::std_msgs::Header;
 
-Header msg;
-msg.seq = 42;
-msg.frame_id = "robot_1";
-```
-
-CMake integration:
-
-```cmake
-cmake_minimum_required(VERSION 3.16)
-set(CMAKE_CXX_STANDARD 20)
-
-project(my_cmake_project)
-
-add_executable(main main.cpp)
-target_include_directories(main PRIVATE "$ENV{HOME}/.rix/include")
+int main() {
+    Header msg;
+    msg.seq = 42;
+    msg.frame_id = "robot_1";
+    return 0;
+}
 ```
 
 ---
@@ -146,51 +135,12 @@ target_include_directories(main PRIVATE "$ENV{HOME}/.rix/include")
 Import generated message classes in Python:
 
 ```python
-from rixmsg.standard.Header import Header
+from rix.std_msgs import Header
 
 msg = Header()
 msg.seq = 42
 msg.frame_id = "robot_1"
 ```
-
-Install and run tests:
-
-```bash
-cd test/python/
-python3 -m venv venv
-source venv/bin/activate
-pip install ~/.rix/python/rixmsg/
-python3 test_example.py
-```
-
----
-
-## JavaScript Example
-
-Import generated message classes in JavaScript:
-
-```js
-import { Header } from "rixmsg/standard/Header.js";
-
-const msg = new Header();
-msg.seq = 42;
-msg.frame_id = "robot_1";
-```
-
-Install and run tests:
-
-```bash
-cd test/js/
-npm link ~/.rix/js/rixmsg/
-npm install
-node test_example.js
-```
-
----
-
-## Tests
-
-RIX-MSG includes tests for C++, Python, and JavaScript. See the `test/` directory for examples.
 
 ---
 

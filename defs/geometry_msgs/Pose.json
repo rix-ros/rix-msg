@@ -1,0 +1,17 @@
+{
+    "name": "Pose",
+    "version": "1.0.0",
+    "package": "geometry_msgs",
+    "fields": [
+        {
+            "name": "position",
+            "type": "Point",
+            "package": "geometry_msgs"
+        },
+        {
+            "name": "orientation",
+            "type": "Quaternion",
+            "package": "geometry_msgs"
+        }
+    ]
+}

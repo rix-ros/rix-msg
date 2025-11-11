@@ -1,0 +1,28 @@
+{
+    "name": "Image",
+    "version": "1.0.0",
+    "package": "sensor_msgs",
+    "fields": [
+        {
+            "name": "header",
+            "type": "Header",
+            "package": "std_msgs"
+        },
+        {
+            "name": "width",
+            "type": "uint32"
+        },
+        {
+            "name": "height",
+            "type": "uint32"
+        },
+        {
+            "name": "channels",
+            "type": "uint32"
+        },
+        {
+            "name": "data",
+            "type": "pointer"
+        }
+    ]
+}

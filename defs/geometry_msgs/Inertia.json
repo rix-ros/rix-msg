@@ -1,0 +1,40 @@
+{
+    "name": "Inertia",
+    "version": "1.0.0",
+    "package": "geometry_msgs",
+    "fields": [
+        {
+            "name": "mass",
+            "type": "double"
+        },
+        {
+            "name": "center_of_mass",
+            "type": "Vector3",
+            "package": "geometry_msgs"
+        },
+        {
+            "name": "ixx",
+            "type": "double"
+        },
+        {
+            "name": "ixy",
+            "type": "double"
+        },
+        {
+            "name": "ixz",
+            "type": "double"
+        },
+        {
+            "name": "iyy",
+            "type": "double"
+        },
+        {
+            "name": "iyz",
+            "type": "double"
+        },
+        {
+            "name": "izz",
+            "type": "double"
+        }
+    ]
+}
