@@ -80,7 +80,7 @@ def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
     return equal_str
 
 
-def create_rixmsg_cpp_segment_count(fields: list[Field]) -> str:
+def create_rixmsg_cpp_get_segment_count(fields: list[Field]) -> str:
     segment_count_str = ""
 
     # Each non-dynamic field adds one segment. A dynamic field here is a vector of strings, array of strings, a vector of custom types, or a custom type.
@@ -199,7 +199,7 @@ class {msg.name} : public Message {{
 
     size_t get_segment_count() const override {{
         size_t count = 0;
-        {create_rixmsg_cpp_segment_count(msg.fields).replace(n, n + '        ')}
+        {create_rixmsg_cpp_get_segment_count(msg.fields).replace(n, n + '        ')}
         return count;
     }}
 

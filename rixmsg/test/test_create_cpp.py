@@ -250,7 +250,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += 3;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_string(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -260,7 +260,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += 3;"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_string_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -271,7 +271,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
     
     def test_create_rixmsg_cpp_get_segment_count_string_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -282,7 +282,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
     
     def test_create_rixmsg_cpp_get_segment_count_message(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -292,7 +292,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field2);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_message_vector(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -304,7 +304,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field3);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_message_array(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -316,7 +316,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field3);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_message_multi(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -330,7 +330,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field4);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_message_multi_pkg(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -346,7 +346,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field5);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
     def test_create_rixmsg_cpp_get_segment_count_message_multi_pkg_dup(self):
         fields = [{'name': 'field1', 'type': 'int32'}, 
@@ -364,7 +364,7 @@ class TestCreateRixmsgCppGetSegmentCount(unittest.TestCase):
             "count += detail::get_segment_count(this->field6);"
         )
         message = Message("test", "test_package", "1234567887654321", fields)
-        self.assertEqual(create_rixmsg_cpp_segment_count(message.fields), expected)
+        self.assertEqual(create_rixmsg_cpp_get_segment_count(message.fields), expected)
 
 
 class TestCreateRixmsgCppGetSegments(unittest.TestCase):

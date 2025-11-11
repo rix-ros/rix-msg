@@ -53,7 +53,7 @@ def get_init_functions(fields: List[Field]) -> str:
             if field.is_dynamic_array:
                 init_str += f"_vector(self, '{field.name}', {field.value_type})\n"
             elif field.is_static_array:
-                init_str += f"_array(self, '{field.name}', {field.static_array_size}, {field.value_type})\n"
+                init_str += f"_array(self, '{field.name}', {field.value_type}, {field.static_array_size})\n"
             else:
                 init_str += f"(self, '{field.name}', {field.value_type})\n"
 
