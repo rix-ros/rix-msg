@@ -31,7 +31,6 @@ mkdir -p "$HOME/.rix/include/rix/msg/"
 
 # Copy rixmsg setup files
 cp -r cpp/* "$HOME/.rix/include/rix/msg/"
-cp -r js/* "$HOME/.rix/js/rixmsg/"
 cp python/* "$HOME/.rix/python/rix/rix/msg/"
 
 echo "Installation completed successfully."
