@@ -174,9 +174,12 @@ def create_rixmsg_py_get_segment_count(fields: list[Field]) -> str:
     dynamic_fields: list[Field] = []
     for field in fields:
         is_dynamic = (
-            (field.is_dynamic_array and field.value_type == "string")
-            or (field.is_dynamic_array and not field.value_is_base)
-            or (not field.value_is_base)
+            (field.is_dynamic_array and field.value_type == "string") or
+            (field.is_static_array and field.value_type == "string") or
+            (field.is_dynamic_array and field.value_type == "pointer") or
+            (field.is_static_array and field.value_type == "pointer") or
+            (field.is_dynamic_array and not field.value_is_base) or
+            (not field.value_is_base)
         )
         if is_dynamic:
             dynamic_fields.append(field)

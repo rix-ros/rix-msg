@@ -75,7 +75,7 @@ def create_rixmsg_cpp_hash(hash: str) -> str:
 def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
     equal_str = ""
     for field in fields:
-        equal_str += f"if ({field.name} != other.{field.name}) {{ return false; }}\n"
+        equal_str += f"if (this->{field.name} != other.{field.name}) {{ return false; }}\n"
     equal_str += "return true;"
     return equal_str
 
@@ -83,12 +83,15 @@ def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
 def create_rixmsg_cpp_segment_count(fields: list[Field]) -> str:
     segment_count_str = ""
 
-    # Each non-dynamic field adds one segment. A dynamic field here is a vector of strings, a vector of custom types, or a custom type.
+    # Each non-dynamic field adds one segment. A dynamic field here is a vector of strings, array of strings, a vector of custom types, or a custom type.
     segment_count = 0
     dynamic_fields: list[Field] = []
     for field in fields:
         is_dynamic = (
             (field.is_dynamic_array and field.value_type == "string") or
+            (field.is_static_array and field.value_type == "string") or
+            (field.is_dynamic_array and field.value_type == "pointer") or
+            (field.is_static_array and field.value_type == "pointer") or
             (field.is_dynamic_array and not field.value_is_base) or
             (not field.value_is_base)
         )
