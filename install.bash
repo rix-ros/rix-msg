@@ -15,33 +15,19 @@ source venv/bin/activate
 # Install the required packages
 pip install -r requirements.txt
 
-# Create the executable
-python3.12 -m PyInstaller --clean --strip --optimize 2 --paths rixmsg/src/ --hidden-import jsonschema --onedir --noupx --name rixmsg rixmsg/src/main.py
+# Copy rixmsg
+cp -r rixmsg "$HOME/.rix/"
 
-# Check if the executable was created
-if [ ! -f "dist/rixmsg/rixmsg" ]; then
-    echo "Error: rixmsg executable not found in dist/rixmsg/"
-    exit 1
-fi
-
-# Copy the required files
-mkdir -p "$HOME/.rix/"
-cp -r dist/rixmsg "$HOME/.rix/"
+# Ensure main.py is executable
+chmod +x "$HOME/.rix/rixmsg/src/main.py"
 
 # Create symbolic link to rixmsg
 mkdir -p "$HOME/.rix/bin/"
-ln -sf "$HOME/.rix/rixmsg/rixmsg" "$HOME/.rix/bin/rixmsg"
-
-# Clean up
-rm -r build/ dist/
+ln -sf "$HOME/.rix/rixmsg/src/main.py" "$HOME/.rix/bin/rixmsg"
 
 # Create directories for rixmsg libraries
-mkdir -p "$HOME/.rix/js/rixmsg"
 mkdir -p "$HOME/.rix/python/rix/rix/msg"
 mkdir -p "$HOME/.rix/include/rix/msg/"
-
-# Copy schema to rixmsg directory
-cp rixmsg/schema.json "$HOME/.rix/rixmsg/schema.json"
 
 # Copy rixmsg setup files
 cp -r cpp/* "$HOME/.rix/include/rix/msg/"
@@ -60,5 +46,3 @@ echo "Default rix message implementation files created successfully."
 
 deactivate
 rm -r venv
-
-exit 0
