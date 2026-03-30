@@ -19,11 +19,11 @@ pip install -r requirements.txt
 cp -r rixmsg "$HOME/.rix/"
 
 # Ensure main.py is executable
-chmod +x "$HOME/.rix/rixmsg/src/main.py"
+chmod +x "$HOME/.rix/rixmsg/rixmsg/main.py"
 
 # Create symbolic link to rixmsg
 mkdir -p "$HOME/.rix/bin/"
-ln -sf "$HOME/.rix/rixmsg/src/main.py" "$HOME/.rix/bin/rixmsg"
+ln -sf "$HOME/.rix/rixmsg/rixmsg/main.py" "$HOME/.rix/bin/rixmsg"
 
 # Create directories for rixmsg libraries
 mkdir -p "$HOME/.rix/python/rix/rix/msg"

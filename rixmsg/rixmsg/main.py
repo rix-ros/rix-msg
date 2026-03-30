@@ -15,7 +15,6 @@ from validate_json import (
 )
 from message import Message
 from create_cpp import create_rixmsg_cpp
-from create_js import create_rixmsg_js
 from create_py import create_rixmsg_py
 
 ROOT = os.getenv("HOME")
@@ -178,13 +177,6 @@ def create(input_path: str) -> None:
         file_name = dir_name + f"{msg.name}.hpp"
         with open(file_name, "w") as f:
             f.write(create_rixmsg_cpp(msg))
-
-        # # Generate the JavaScript implementation files
-        # dir_name = f"{ROOT}/.rix/js/rixmsg/{msg.package}/"
-        # os.makedirs(dir_name, exist_ok=True)
-        # file_name = dir_name + f"{msg.name}.js"
-        # with open(file_name, "w") as f:
-        #     f.write(create_rixmsg_js(msg))
 
         # Generate the Python implementation files
         dir_name = f"{ROOT}/.rix/python/rix/rix/{msg.package}/"

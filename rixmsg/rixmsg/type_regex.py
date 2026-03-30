@@ -13,9 +13,7 @@ def is_valid(input_text: str | None) -> bool:
     """
     if input_text is None:
         return False
-    pattern = re.compile(
-        r"^([a-zA-Z][a-zA-Z0-9_]*\[([0-9]*)\]|[a-zA-Z][a-zA-Z0-9_]*)$"
-    )
+    pattern = re.compile(r"^([a-zA-Z][a-zA-Z0-9_]*\[([0-9]*)\]|[a-zA-Z][a-zA-Z0-9_]*)$")
     return pattern.match(input_text) is not None
 
 
@@ -39,6 +37,7 @@ def get_value_type(input_text: str | None) -> str | None:
     if match:
         return match.group(1)
     return None
+
 
 def is_static_array(input_text: str | None) -> bool:
     """

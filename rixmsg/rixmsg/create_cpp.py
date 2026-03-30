@@ -15,7 +15,7 @@ CPP_TYPE_BINDINGS = {
     "double": "double",
     "bool": "bool",
     "string": "std::string",
-    "pointer": "ptr_t"
+    "pointer": "ptr_t",
 }
 
 
@@ -24,9 +24,7 @@ def create_rixmsg_cpp_include(fields: list[Field]) -> str:
     for field in fields:
         if not field.value_is_base:
             if field.package is not None:
-                includes.add(
-                    f'#include "rix/{field.package}/{field.value_type}.hpp"'
-                )
+                includes.add(f'#include "rix/{field.package}/{field.value_type}.hpp"')
             else:
                 raise ValueError(
                     f"Error: No package specified for type {field.value_type}"
@@ -75,7 +73,9 @@ def create_rixmsg_cpp_hash(hash: str) -> str:
 def create_rixmsg_cpp_equal_to(fields: list[Field]) -> str:
     equal_str = ""
     for field in fields:
-        equal_str += f"if (this->{field.name} != other.{field.name}) {{ return false; }}\n"
+        equal_str += (
+            f"if (this->{field.name} != other.{field.name}) {{ return false; }}\n"
+        )
     equal_str += "return true;"
     return equal_str
 
@@ -88,12 +88,12 @@ def create_rixmsg_cpp_get_segment_count(fields: list[Field]) -> str:
     dynamic_fields: list[Field] = []
     for field in fields:
         is_dynamic = (
-            (field.is_dynamic_array and field.value_type == "string") or
-            (field.is_static_array and field.value_type == "string") or
-            (field.is_dynamic_array and field.value_type == "pointer") or
-            (field.is_static_array and field.value_type == "pointer") or
-            (field.is_dynamic_array and not field.value_is_base) or
-            (not field.value_is_base)
+            (field.is_dynamic_array and field.value_type == "string")
+            or (field.is_static_array and field.value_type == "string")
+            or (field.is_dynamic_array and field.value_type == "pointer")
+            or (field.is_static_array and field.value_type == "pointer")
+            or (field.is_dynamic_array and not field.value_is_base)
+            or (not field.value_is_base)
         )
         if is_dynamic:
             dynamic_fields.append(field)
@@ -102,7 +102,9 @@ def create_rixmsg_cpp_get_segment_count(fields: list[Field]) -> str:
 
     segment_count_str += f"count += {segment_count};\n"
     for field in dynamic_fields:
-        segment_count_str += f"count += detail::get_segment_count(this->{field.name});\n"
+        segment_count_str += (
+            f"count += detail::get_segment_count(this->{field.name});\n"
+        )
 
     return segment_count_str[:-1] if len(segment_count_str) > 0 else segment_count_str
 
@@ -110,7 +112,9 @@ def create_rixmsg_cpp_get_segment_count(fields: list[Field]) -> str:
 def create_rixmsg_cpp_get_segments(fields: list[Field]) -> str:
     get_segments_str = ""
     for field in fields:
-        get_segments_str += f"detail::get_segments(this->{field.name}, segments, offset);\n"
+        get_segments_str += (
+            f"detail::get_segments(this->{field.name}, segments, offset);\n"
+        )
     return get_segments_str[:-1] if len(get_segments_str) > 0 else get_segments_str
 
 
@@ -124,7 +128,9 @@ def create_rixmsg_cpp_get_prefix_len(fields: list[Field]) -> str:
             or not field.value_is_base
         )
         if is_dynamic:
-            get_prefix_len_str += f"len += detail::get_prefix_len(this->{field.name});\n"
+            get_prefix_len_str += (
+                f"len += detail::get_prefix_len(this->{field.name});\n"
+            )
     return (
         get_prefix_len_str[:-1] if len(get_prefix_len_str) > 0 else get_prefix_len_str
     )

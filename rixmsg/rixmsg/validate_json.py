@@ -6,6 +6,7 @@ from typing import Any
 
 Json = dict[str, Any]
 
+
 def get_schema(json_file: str) -> Json:
     """
     Get the JSON schema from a file.

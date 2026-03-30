@@ -1,7 +1,7 @@
 import unittest
 import os
 
-os.sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../src")
+os.sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../rixmsg")
 from type_regex import (
     is_valid,
     is_static_array,
