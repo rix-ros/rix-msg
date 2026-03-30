@@ -15,6 +15,9 @@ source venv/bin/activate
 # Install the required packages
 pip install -r requirements.txt
 
+# Ensure the install directory exists
+mkdir -p "$HOME/.rix"
+
 # Copy rixmsg
 cp -r rixmsg "$HOME/.rix/"
 
